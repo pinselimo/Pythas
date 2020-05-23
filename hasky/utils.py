@@ -4,6 +4,7 @@ import os
 import sys
 
 from .haskell.types import hs_type_to_py
+from .haskell.utils import process_hs_lines
 
 REGEX_HS_VERSION = b'(?<=[a-z A-Z])[0-9.]{5}'
 REGEX_C_CONSTANTS = '#define[ \t\n\r\f\v]+([a-zA-Z0-9_]+)[ \t\n\r\f\v]+([0-9+])' # This causes warning: '#define\s+(\w+)\s+([0-9]+)'
@@ -94,7 +95,7 @@ def get_exported(hs_file):
 def _get_exported(hs_file):
     with open(hs_file, 'r') as f:
         for line in f.readlines():
-            yield from _exported(line)
+            yield from process_hs_lines(line, _exported)
 
 def _exported(hs_line):
     if hs_line.startswith('foreign export ccall'):

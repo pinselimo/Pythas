@@ -1,20 +1,15 @@
 import os.path
 
+from .utils import process_hs_lines
+
 def get_type_decls(hs_file):
     with open(hs_file, 'r') as f:
         for l in f.readlines():
-            yield from _get_type_decl(l)
+            yield from process_hs_lines(l, _get_type_decl)
 
 def _get_type_decl(hs_line):
-    in_comment = False
-    for hs_line in hs_line.split(';'):
-        in_comment = '{-' in hs_line
-        if in_comment:
-            in_comment = not '-}' in hs_line
-        if in_comment or hs_line.startswith('--'):
-            continue
-        if '::' in hs_line:
-            yield hs_line
+    if '::' in hs_line:
+        yield hs_line
 
 def get_functions_to_export(type_decls):
     type_decls = tuple(type_decls)
@@ -26,7 +21,7 @@ def get_functions_to_export(type_decls):
     foreigns.add('foreign')
     return filter(
         lambda n: not n[0] in foreigns, 
-        ((t.split(' ')[0],t.split(' :: ')[-1].strip()) for t in type_decls)
+        ((t.split(' ')[0],t.split('::')[-1].strip()) for t in type_decls)
         )
 
 def create_ffi_file(import_name, module_name, ffi_filename, expose_name_types_tuples):
