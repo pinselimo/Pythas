@@ -1,2 +1,6 @@
 *.o
 *.so
+*.hi
+*_stub.h
+*_hasky_ffi.hs
+*.pyc
