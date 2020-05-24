@@ -7,6 +7,9 @@ import Foreign.Marshal.Alloc
 
 --(HASKY-EXCLUDE someComplicatedFunc
 
+someConstant :: Int
+someConstant = 63
+
 hello :: IO ()
 hello = putStrLn "Hello from Haskell!"
 
