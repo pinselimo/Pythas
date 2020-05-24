@@ -1,3 +1,5 @@
+from .types import hs_type_to_py
+
 def remove_trailing_comment(hs_line):
     if '--' in hs_line:
         return hs_line.split('--')[0].strip()
@@ -14,3 +16,17 @@ def process_hs_lines(hs_line, f):
         if in_comment or hs_line.startswith('--'):
             continue
         f(hs_line)
+
+def get_exported(hs_file):
+    return dict(_get_exported(hs_file))
+
+def _get_exported(hs_file):
+    with open(hs_file, 'r') as f:
+        for line in f.readlines():
+            yield from process_hs_lines(line, _exported)
+
+def _exported(hs_line):
+    if hs_line.startswith('foreign export ccall'):
+        func_export,type = hs_line.split('::')
+        *_,name = func_export.strip().split(' ')
+        yield name, hs_type_to_py(type)

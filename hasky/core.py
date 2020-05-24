@@ -6,8 +6,10 @@ from functools import partial
 from sys import meta_path
 import os.path
 
-from .utils import GHC_VERSION, ghc_compile_cmd, custom_attr_getter, findhs, is_external_library, get_exported
+from .haskell.ghc import GHC_VERSION, ghc_compile_cmd
 from .haskell.createffi import create_ffi
+from .haskell.utils import get_exported
+from .utils import custom_attr_getter, findhs, is_external_library
 
 from importlib.abc import MetaPathFinder
 
