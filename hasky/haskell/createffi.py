@@ -1,17 +1,24 @@
 import os.path
 
-from .utils import process_hs_lines
+from .utils import process_hs_lines, TAG_EXCLUDE
 
-def get_type_decls(hs_file):
+def get_from_hsfile(hs_file, func):
     with open(hs_file, 'r') as f:
         for l in f.readlines():
-            yield from process_hs_lines(l, _get_type_decl)
+            yield from process_hs_lines(l, func)
 
 def _get_type_decl(hs_line):
     if '::' in hs_line:
         yield hs_line
 
-def get_functions_to_export(type_decls):
+def _get_excluded_name(hs_line):
+    if hs_line.startswith(TAG_EXCLUDE):
+        yield hs_line.split(TAG_EXCLUDE)[-1].strip()
+
+get_type_decls = lambda hs_file: get_from_hsfile(hs_file, _get_type_decl)
+get_excluded_names = lambda hs_file: get_from_hsfile(hs_file, _get_excluded_name)
+
+def get_functions_to_export(type_decls, excluded_names):
     type_decls = tuple(type_decls)
     foreigns = {
         t.split(' ')[3]
@@ -20,7 +27,7 @@ def get_functions_to_export(type_decls):
         }
     foreigns.add('foreign')
     return filter(
-        lambda n: not n[0] in foreigns, 
+        lambda n: not (n[0] in foreigns or n[0] in excluded_names), 
         ((t.split(' ')[0],t.split('::')[-1].strip()) for t in type_decls)
         )
 
@@ -65,7 +72,8 @@ def create_ffi(hs_file):
     ffi_files = []
 
     type_decls = tuple(get_type_decls(hs_file))
-    name_type_tuples = tuple(get_functions_to_export(type_decls))
+    excluded_names = set(get_excluded_names(hs_file))
+    name_type_tuples = tuple(get_functions_to_export(type_decls, excluded_names))
 
     if len(name_type_tuples) < len(type_decls): # foreign stuff declared in hs_file
         ffi_files.append(hs_file)

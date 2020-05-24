@@ -42,7 +42,7 @@ def get_ghc_version():
         return get_ghc_version_from_header()
 
 def ghc_compile_cmd(filename, libname, filedir, optimisation=2):
-    RESOURCES = os.path.join(os.path.dirname(os.path.abspath(__file__)),os.path.pardir, "res")
+    RESOURCES = os.path.join(os.path.dirname(os.path.abspath(__file__)),os.path.pardir,os.path.pardir, "res")
     HS_BRACKET_C = os.path.join(RESOURCES,"hswrap.c")
 
     GHC_CMD = "ghc-" + GHC_VERSION
