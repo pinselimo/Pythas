@@ -8,24 +8,25 @@ def remove_trailing_comment(hs_line):
     else:
         return hs_line
 
-def process_hs_lines(hs_line, f):
-    hs_line = remove_trailing_comment(hs_line)
-    in_comment = False
-    for hs_line in hs_line.split(';'):
-        in_comment = '{-' in hs_line
-        if in_comment:
-            in_comment = not '-}' in hs_line
-        if in_comment or hs_line.startswith('\n') or (hs_line.startswith('--') and not hs_line.startswith(TAG_EXCLUDE)):
-            continue
-        yield from f(hs_line.strip())
+def get_from_hsfile(hs_file, func):
+    with open(hs_file, 'r') as f:
+        in_comment = False
+        for hs_line in f.readlines():
+            hs_line = remove_trailing_comment(hs_line)
+            for hs_line in hs_line.split(';'):
+                in_comment = '{-' in hs_line
+                if in_comment:
+                    in_comment = not '-}' in hs_line
+                if (in_comment or hs_line.startswith('\n') 
+                or (hs_line.startswith('--') and not hs_line.startswith(TAG_EXCLUDE))):
+                    continue
+                yield from func(hs_line.strip())
 
 def get_exported(hs_file):
     return dict(_get_exported(hs_file))
 
 def _get_exported(hs_file):
-    with open(hs_file, 'r') as f:
-        for line in f.readlines():
-            yield from process_hs_lines(line, _exported)
+    yield from get_from_hsfile(hs_file, _exported)
 
 def _exported(hs_line):
     if hs_line.startswith('foreign export ccall'):

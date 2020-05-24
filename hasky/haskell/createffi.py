@@ -1,11 +1,6 @@
 import os.path
 
-from .utils import process_hs_lines, TAG_EXCLUDE
-
-def get_from_hsfile(hs_file, func):
-    with open(hs_file, 'r') as f:
-        for l in f.readlines():
-            yield from process_hs_lines(l, func)
+from .utils import get_from_hsfile, TAG_EXCLUDE
 
 def _get_type_decl(hs_line):
     if '::' in hs_line:
