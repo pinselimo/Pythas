@@ -5,13 +5,18 @@ import Foreign.Ptr
 import Foreign.Storable
 import Foreign.Marshal.Alloc
 
+--(HASKY-EXCLUDE someComplicatedFunc
+
 hello :: IO ()
 hello = putStrLn "Hello from Haskell!"
 
 square :: CInt -> CInt
 square i = i * i
 
-foreign export ccall hssin :: Int -> Double -> Double
+foreign export ccall multisin :: Int -> Double -> Double
 
-hssin :: Int -> Double -> Double
-hssin x y = (fromIntegral x) * (sin y)
+multisin :: Int -> Double -> Double --HaskpyInclude
+multisin x y = (fromIntegral x) * (sin y)
+
+someComplicatedFunc :: String -> IO Int
+someComplicatedFunc s@(c:cs) =  return $ length s
