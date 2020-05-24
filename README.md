@@ -50,5 +50,11 @@ All Haskell constants are imported as functions, not only those in the IO monad.
 
 ## License
 
-The Software in this repository is licensed under the MIT License © Simon Plakolb 2020
-See LICENSE file for details.
+The Software in this repository is licensed under the LGPLv3 License.
+See COPYING.LESSER file for details.
+
+    Hasky  Copyright (C) 2020  SimonPlakolb
+    This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
+    This is free software, and you are welcome to redistribute it
+    under certain conditions; see COPYING and COPYING.LESSER.
+    
