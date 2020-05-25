@@ -15,27 +15,26 @@ from importlib.abc import MetaPathFinder
 
 class HaskyMetaFinder(MetaPathFinder):
     def find_spec(self, fullname, path, target=None):
-        if path is None or path == "":
-            path = [os.getcwd()]
+        path = os.getcwd()
 
         if DOT in fullname:
-            *_,name = fullname.split(DOT)
+            *pack,name = fullname.split(DOT)
         else:
             name = fullname
-        
-        for p in path:
-            # let's assume it's a python module
-            subname = os.path.join(p, name)
-            if os.path.isdir(subname):
-                filename = os.path.join(subname,'__init__.py')
-            else:
-                filename = subname + '.py'
-            # and check if this module exists
-            if not os.path.exists(filename):
-                # in case it doesn't look for a haskell file of that name
-                for haskellfile in findSource(name, p):
-                    return spec_from_file_location(name, haskellfile, loader=HaskyLoader(haskellfile),
-                        submodule_search_locations=None)
+            pack = []
+        path = os.path.join(path,*pack)
+        # let's assume it's a python module
+        subname = os.path.join(path, name)
+        if os.path.isdir(subname):
+            filename = os.path.join(subname,'__init__.py')
+        else:
+            filename = subname + '.py'
+        # and check if this module exists
+        if not os.path.exists(filename):
+            # in case it doesn't look for a haskell file of that name
+            for haskellfile in findSource(name, path):
+                return spec_from_file_location(name, haskellfile, loader=HaskyLoader(haskellfile),
+                    submodule_search_locations=None)
 
         # Let the other finders handle this
         return None 
