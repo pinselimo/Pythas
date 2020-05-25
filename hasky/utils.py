@@ -1,12 +1,14 @@
 import os
 import sys
 
-def findhs(name, path):
-    hsName = name.capitalize() + ".hs"
-    for root,_,files in os.walk(path):
-        for file in files:
-            if file == hsName:
-                return [os.path.join(root,file)]
+DOT = '.'
+
+def findSource(name, path, extension='.hs', transform=lambda s:s.capitalize()):
+    hsName = transform(name) + extension
+    print(hsName)
+    for file in os.listdir(path):
+        if file == hsName:
+            return [os.path.join(path,file)]
     else:
         return []
 
@@ -22,9 +24,3 @@ def custom_attr_getter(obj, name):
             return f
     else:
         raise not_found
-    
-def is_external_library(pack):
-    if "hasky" in pack:
-        return False
-    else:
-        return pack[-1] in sys.modules.keys()

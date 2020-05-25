@@ -9,7 +9,7 @@ import os.path
 from .haskell.ghc import GHC_VERSION, ghc_compile_cmd
 from .haskell.createffi import create_ffi
 from .haskell.utils import get_exported
-from .utils import custom_attr_getter, findhs, is_external_library
+from .utils import custom_attr_getter, findSource, DOT
 
 from importlib.abc import MetaPathFinder
 
@@ -18,25 +18,23 @@ class HaskyMetaFinder(MetaPathFinder):
         if path is None or path == "":
             path = [os.getcwd()]
 
-        if '.' in fullname:
-            *pack,name = fullname.split('.')[-1]
-            if is_external_library(pack):
-                return None
+        if DOT in fullname:
+            *_,name = fullname.split(DOT)
         else:
             name = fullname
-
-        for entry in path:
+        
+        for p in path:
             # let's assume it's a python module
-            subname = os.path.join(entry, name)
+            subname = os.path.join(p, name)
             if os.path.isdir(subname):
                 filename = os.path.join(subname,'__init__.py')
             else:
-                filename = subname + ".py"
+                filename = subname + '.py'
             # and check if this module exists
             if not os.path.exists(filename):
                 # in case it doesn't look for a haskell file of that name
-                for haskellfile in findhs(name, os.getcwd()):
-                    return spec_from_file_location(fullname, haskellfile, loader=HaskyLoader(haskellfile),
+                for haskellfile in findSource(name, p):
+                    return spec_from_file_location(name, haskellfile, loader=HaskyLoader(haskellfile),
                         submodule_search_locations=None)
 
         # Let the other finders handle this
