@@ -5,7 +5,6 @@ DOT = '.'
 
 def findSource(name, path, extension='.hs', transform=lambda s:s.capitalize()):
     hsName = transform(name) + extension
-    print(hsName)
     for file in os.listdir(path):
         if file == hsName:
             return [os.path.join(path,file)]
