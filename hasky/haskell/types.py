@@ -41,19 +41,19 @@ class TypeConverter:
         }
 
     @property
-    def PY2HS(self):
+    def HS2HS(self):
         '''
-        PY2HS defined which Haskell input type
+        HS2HS defined which Haskell input type
         requires which Haskell side type conversion
         '''
-        return dict()
+        return {}
 
 def pyCArr(data):
     if any(not isinstance(elem, cl._SimpleCData) for elem in data):
         raise TypeError('Only sequences of <ctypes._SimpleCData allowed.')
     if len(data) > 0:
-        array_type = data[0]
-        if not all(isinstance(elem,type(), array_type) for elem in data):
+        array_type = type(data[0])
+        if not all(type(elem) == array_type for elem in data):
             raise TypeError('Multiple types encountered in sequence')
         return (array_type * len(data))(*data)
 
@@ -63,8 +63,8 @@ def strip_io(tp):
     looks the same as CDouble from Python's side. So we remove
     the monadic part from our type to process the rest.
     '''
-    if tp.startswith('IO'):
-        return tp[3:]
+    if tp.startswith('IO '):
+        return tp[3:].strip('()')   
     else:
         return tp
 
@@ -75,6 +75,6 @@ def hs_type_to_py(hs_type):
     tc = TypeConverter()
     
     return ( # c_int is the standard set by ctypes.cdll
-        [tc.HS2PY[i] if i in tc.HS2PY else cl.c_int for i in inp], # argtypes
-        tc.HS2PY[out] if out in tc.HS2PY else cl.c_int # restype
+        [tc.HS2PY[i] if i in tc.HS2PY else cl.POINTER(cl.c_int) for i in inp], # argtypes
+        tc.HS2PY[out] if out in tc.HS2PY else cl.POINTER(cl.c_int) # restype
         )
