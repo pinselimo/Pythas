@@ -3,7 +3,7 @@ from importlib.util import spec_from_file_location
 from subprocess import run
 from ctypes import cdll
 from functools import partial
-from sys import meta_path
+from sys import meta_path, platform
 import os.path
 
 from .haskell.ghc import GHC_VERSION, ghc_compile_cmd
@@ -15,29 +15,30 @@ from importlib.abc import MetaPathFinder
 
 class HaskyMetaFinder(MetaPathFinder):
     def find_spec(self, fullname, path, target=None):
-        path = os.getcwd()
+        if path is None:
+            path = [os.getcwd()]
 
         if DOT in fullname:
-            *pack,name = fullname.split(DOT)
+            *_,name = fullname.split(DOT)
         else:
             name = fullname
-            pack = []
-        path = os.path.join(path,*pack)
-        # let's assume it's a python module
-        subname = os.path.join(path, name)
-        if os.path.isdir(subname):
-            filename = os.path.join(subname,'__init__.py')
-        else:
-            filename = subname + '.py'
-        # and check if this module exists
-        if not os.path.exists(filename):
-            # in case it doesn't look for a haskell file of that name
-            for haskellfile in findSource(name, path):
-                return spec_from_file_location(name, haskellfile, loader=HaskyLoader(haskellfile),
-                    submodule_search_locations=None)
+        
+        for p in path:
+            # let's assume it's a python module
+            subname = os.path.join(p, name)
+            if os.path.isdir(subname):
+                filename = os.path.join(subname,'__init__.py')
+            else:
+                filename = subname + '.py'
+            # and check if this module exists
+            if not os.path.exists(filename):
+                # in case it doesn't look for a haskell file of that name
+                for haskellfile in findSource(name, p):
+                    return spec_from_file_location(name, p, loader=HaskyLoader(haskellfile),
+                        submodule_search_locations=None)
 
         # Let the other finders handle this
-        return None 
+        return None
 
 class HaskyLoader(Loader):
     def __init__(self, filename):
@@ -50,6 +51,8 @@ class HaskyLoader(Loader):
         libs = [(cdll.LoadLibrary(libname),funcs)
             for libname,funcs in create_shared_libs(self.filename)]
         setattr(module, 'ffi_libs', libs)
+        print(dir(module))
+        print(module.__package__)
         module.__getattr__ = partial(custom_attr_getter,module)
 
 def create_shared_libs(filename):
@@ -58,8 +61,12 @@ def create_shared_libs(filename):
 def ghc_compile(filename):
     filedir = os.path.dirname(filename)
     name = os.path.basename(filename).split('.')[0].lower()
-    libname = os.path.join(filedir,'lib'+name+'.so')
-    cmd = ghc_compile_cmd(filename, libname, filedir)
+    libname = os.path.join(filedir,'lib'+name)
+    if platform.startswith('linux'):
+        libname += '.so'
+    elif platform.startswith('win32'):
+        libname += '.dll'
+    cmd = ghc_compile_cmd(filename, libname, filedir, platform)
     run(cmd)
     return libname, get_exported(filename)
 
