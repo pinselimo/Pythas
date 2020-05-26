@@ -18,7 +18,7 @@ square i = i * i
 
 foreign export ccall multisin :: Int -> Double -> Double
 
-multisin :: Int -> Double -> Double --HaskpyInclude
+multisin :: Int -> Double -> Double
 multisin x y = (fromIntegral x) * (sin y)
 
 someComplicatedFunc :: String -> IO Int
