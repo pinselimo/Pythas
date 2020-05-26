@@ -3,7 +3,7 @@ from importlib.util import spec_from_file_location
 from subprocess import run
 from ctypes import cdll
 from functools import partial
-from sys import meta_path
+from sys import meta_path, platform
 import os.path
 
 from .haskell.ghc import GHC_VERSION, ghc_compile_cmd
@@ -58,8 +58,12 @@ def create_shared_libs(filename):
 def ghc_compile(filename):
     filedir = os.path.dirname(filename)
     name = os.path.basename(filename).split('.')[0].lower()
-    libname = os.path.join(filedir,'lib'+name+'.so')
-    cmd = ghc_compile_cmd(filename, libname, filedir)
+    libname = os.path.join(filedir,'lib'+name)
+    if platform.startswith('linux'):
+        libname += '.so'
+    elif platform.startswith('win32'):
+        libname += '.dll'
+    cmd = ghc_compile_cmd(filename, libname, filedir, platform)
     run(cmd)
     return libname, get_exported(filename)
 

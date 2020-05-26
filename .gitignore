@@ -4,3 +4,5 @@
 *_stub.h
 *_hasky_ffi.hs
 *.pyc
+*.dll
+*.dll.a
