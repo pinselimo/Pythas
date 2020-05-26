@@ -22,7 +22,7 @@ class HaskyMetaFinder(MetaPathFinder):
             *_,name = fullname.split(DOT)
         else:
             name = fullname
-        
+            
         for p in path:
             # let's assume it's a python module
             subname = os.path.join(p, name)
@@ -34,7 +34,7 @@ class HaskyMetaFinder(MetaPathFinder):
             if not os.path.exists(filename):
                 # in case it doesn't look for a haskell file of that name
                 for haskellfile in findSource(name, p):
-                    return spec_from_file_location(name, p, loader=HaskyLoader(haskellfile),
+                    return spec_from_file_location(fullname, p, loader=HaskyLoader(haskellfile),
                         submodule_search_locations=None)
 
         # Let the other finders handle this
@@ -51,8 +51,6 @@ class HaskyLoader(Loader):
         libs = [(cdll.LoadLibrary(libname),funcs)
             for libname,funcs in create_shared_libs(self.filename)]
         setattr(module, 'ffi_libs', libs)
-        print(dir(module))
-        print(module.__package__)
         module.__getattr__ = partial(custom_attr_getter,module)
 
 def create_shared_libs(filename):
