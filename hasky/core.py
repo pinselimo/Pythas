@@ -51,7 +51,7 @@ class HaskyLoader(Loader):
         libs = [(cdll.LoadLibrary(libname),funcs)
             for libname,funcs in create_shared_libs(self.filename)]
         setattr(module, 'ffi_libs', libs)
-        module.__getattr__ = partial(custom_attr_getter,module)
+        module.__getattr__ = partial(custom_attr_getter, module)
 
 def create_shared_libs(filename):
     yield from (ghc_compile(fn) for fn in create_ffi(filename))
