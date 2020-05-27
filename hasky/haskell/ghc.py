@@ -46,6 +46,7 @@ def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2):
     HS_BRACKET_C = os.path.join(RESOURCES,"hswrap.c")
     GHC_OPT_OPTIMISATION = ["","-O","-O2","-optc-O3"]
     GHC_OUT = "-o"
+    HASKY_TYPES = [os.path.join(RESOURCES,t) for t in ['HaskyArray.hs','HaskyList.hs',]]
     cmd = []
 
     if platform.startswith('linux'):
@@ -54,7 +55,7 @@ def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2):
         LIB_HS_RTS = "-lHSrts-ghc" + GHC_VERSION
         cmd = [
             GHC_CMD, GHC_OPT_OPTIMISATION[optimisation], *GHC_OPTIONS,
-            GHC_OUT, libname, filename, HS_BRACKET_C, LIB_HS_RTS
+            GHC_OUT, libname, filename, *HASKY_TYPES, HS_BRACKET_C, LIB_HS_RTS
             ]
     elif platform.startswith('win32'):
         # https://downloads.haskell.org/~ghc/7.6.3/docs/html/users_guide/win32-dlls.html
@@ -62,7 +63,7 @@ def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2):
         GHC_OPTIONS = ["-shared","-fPIC","-i:"+filedir] # "-fexternal-dynamic-refs"
         cmd = [
             GHC_CMD, GHC_OPT_OPTIMISATION[optimisation], *GHC_OPTIONS,
-            GHC_OUT, libname, filename, HS_BRACKET_C
+            GHC_OUT, libname, filename, *HASKY_TYPES, HS_BRACKET_C
             ]
     return cmd
 
