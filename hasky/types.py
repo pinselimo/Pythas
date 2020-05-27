@@ -41,7 +41,7 @@ def from_linked_list(ll):
 
 def to_c_array(cls, seq):
     seq = check_ctype_seq(seq)
-    return (cls * len(seq))(*seq), len(seq)
+    return (cls * len(seq))(*map(cls,seq)), len(seq)
 
 def from_c_array(cp_array, length):
     return [cp_array[i] for i in range(length)]
