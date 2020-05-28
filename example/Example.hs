@@ -1,9 +1,6 @@
 module Example where
 
-import Foreign.C.Types
-import Foreign.Ptr
-import Foreign.Storable
-import Foreign.Marshal.Alloc
+import Foreign.C.Types (CInt)
 
 --(HASKY-EXCLUDE someComplicatedFunc
 
