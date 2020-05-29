@@ -7,7 +7,7 @@ def create_ffi_file(filename, parse_info):
     if parse_info.exported_ffi:
         res.append((filename, parse_info))
     if parse_info.exported_mod:
-        res.append((_create_ffi_file(parse_info)))
+        res.append(_create_ffi_file(parse_info))
     return res
 
 def _create_ffi_file(parse_info):
@@ -34,6 +34,7 @@ def _create_ffi_file(parse_info):
     IMPORT_HS = "import qualified {} ({})".format(parse_info.name, ', '.join(parse_info.exported_mod))
     FOREIGN_EXPORT = "foreign export ccall {} :: {}"
     INTERNAL_DEF = "{} = {}.{}"
+    SIMPLE_DEF = "{} = {}"
     DESTRUCTOR_TYPE = "{} -> IO ()"
 
     file = [
@@ -66,7 +67,7 @@ def _create_ffi_file(parse_info):
                 FOREIGN_EXPORT.format(dest_name, destr_type)
             )
             file.append(
-                INTERNAL_DEF.format(dest_name, func_info.destructor)
+                SIMPLE_DEF.format(dest_name, func_info.destructor)
             )
 
 

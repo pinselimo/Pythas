@@ -147,7 +147,7 @@ def reconstruct_hs_type(constraints, inp, io, out):
         t +=  ' -> '.join(inp) + ' -> '
     if out == '()' and io:
         t += 'IO ()'
-    elif io:
+    elif io or 'CList' in out or 'CArray' in out:
         t += 'IO ({})'.format(out)
     else:
         t += '{}'.format(out)
