@@ -18,5 +18,5 @@ foreign export ccall multisin :: Int -> Double -> Double
 multisin :: Int -> Double -> Double
 multisin x y = (fromIntegral x) * (sin y)
 
-someComplicatedFunc :: String -> IO Int
-someComplicatedFunc s@(c:cs) =  return $ length s
+haskyLen :: [Integer] -> Int
+haskyLen = length
