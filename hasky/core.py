@@ -7,8 +7,8 @@ from sys import meta_path, platform
 import os.path
 
 from .haskell.ghc import GHC_VERSION, ghc_compile_cmd
-from .haskell.createffi import create_ffi
-from .haskell.utils import get_exported
+from .haskell.parse_file import parse_haskell
+from .haskell.ffi import create_ffi_file
 from .utils import custom_attr_getter, findSource, DOT
 
 from importlib.abc import MetaPathFinder
@@ -48,17 +48,19 @@ class HaskyLoader(Loader):
         return None
 
     def exec_module(self, module):
-        libs = [(cdll.LoadLibrary(libname),funcs)
-            for libname,funcs in create_shared_libs(self.filename)]
+        parse_info = parse_haskell(self.filename)
+        ffi_files = create_ffi_file(self.filename, parse_info)
+        libs = [(cdll.LoadLibrary(libname),info)
+            for libname,info in create_shared_libs(ffi_files)]
         setattr(module, 'ffi_libs', libs)
         module.__getattr__ = partial(custom_attr_getter, module)
 
-def create_shared_libs(filename):
-    yield from (ghc_compile(fn) for fn in create_ffi(filename))
+def create_shared_libs(ffi_files):
+    yield from (ghc_compile(fn, info) for fn,info in ffi_files)
 
-def ghc_compile(filename):
-    filedir = os.path.dirname(filename)
-    name = os.path.basename(filename).split('.')[0].lower()
+def ghc_compile(filename, parse_info):
+    filedir = parse_info.dir
+    name = parse_info.name.lower()
     libname = os.path.join(filedir,'lib'+name)
     if platform.startswith('linux'):
         libname += '.so'
@@ -66,7 +68,7 @@ def ghc_compile(filename):
         libname += '.dll'
     cmd = ghc_compile_cmd(filename, libname, filedir, platform)
     run(cmd)
-    return libname, get_exported(filename)
+    return libname, parse_info
 
 def install():
     meta_path.insert(0, HaskyMetaFinder())

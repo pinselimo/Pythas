@@ -19,17 +19,17 @@ def flatten(seq):
     return list(flat(seq))
 
 class HaskyFunc:
-    def __init__(self, name, funcPtr, argtypes, constructors, restype, reconstructor, destructor=None):
+    def __init__(self, name, func_info, funcPtr):
         self.__name__ = name
         self._funcPtr = funcPtr
-        self.argtypes = argtypes
-        self.constructors = constructors
-        self.reconstructor = reconstructor
-        self.restype = restype
-        self.destructor = destructor
+        self.argtypes = func_info.argtypes
+        self.constructors = func_info.constructors
+        self.reconstructor = func_info.reconstructor
+        self.restype = func_info.restype
+        self.destructor = func_info.destructor
 
-        self._funcPtr.argtypes = list(argtypes)
-        self._funcPtr.restype = restype
+        self._funcPtr.argtypes = list(func_info.argtypes)
+        self._funcPtr.restype = func_info.restype
 
     def __call__(self, *args):
         args = flatten([constr(a) for constr,a in zip(self.constructors, args)])
@@ -50,15 +50,11 @@ def findSource(name, path, extension='.hs', transform=lambda s:s.capitalize()):
 def custom_attr_getter(obj, name):
     ffi_libs = obj.ffi_libs
     not_found = AttributeError("{} object has no attribute {} and no Haskell module containing it.".format(obj.__name__,repr(name)))
-    for lib, funcs in ffi_libs:
-        if name in funcs:
+    for lib, info in ffi_libs:
+        if name in info.exported_ffi:
             f = getattr(lib,name)
-            argTuples, resTuple = funcs[name]
-            needs_finalizer = thd(resTuple)
+            func_infos = info.func_infos[name]
             
-            if needs_finalizer:
-                finalizer = getattr(lib,name+'Finalizer')
-            
-            return HaskyFunc(name, f, map(fst,argTuples), map(snd,argTuples), fst(resTuple), snd(resTuple), finalizer)
+            return HaskyFunc(name, func_infos, f)
     else:
         raise not_found
