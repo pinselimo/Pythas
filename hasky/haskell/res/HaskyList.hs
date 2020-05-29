@@ -1,8 +1,9 @@
-module HaskyList (CList, newList, peekList, withList, freeList) where
+module HaskyList (CList, newList, peekList, withList, freeList, fromList) where
 
 import Foreign.Ptr
 import Foreign.Storable
 import Foreign.Marshal.Alloc
+import System.IO.Unsafe (unsafePerformIO)
 
 type CList a = Ptr (ListElem a)
 
@@ -55,6 +56,9 @@ peekList lp = do
     else do
         li <- peekList n 
         return (x:li)
+
+fromList :: (Storable a) => CList a -> [a]
+fromList = unsafePerformIO . peekList
 
 withList :: Storable a => CList a -> ([a] -> [a]) -> IO (CList a)
 withList cl f = do
