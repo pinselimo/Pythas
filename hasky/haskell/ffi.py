@@ -2,25 +2,32 @@ import os.path
 
 from .parse_file import parse_haskell
 
+FFI_INDICATOR = '_hasky_ffi'
+
 def create_ffi_file(filename, parse_info):
     res = []
     if parse_info.exported_ffi:
         res.append((filename, parse_info))
     if parse_info.exported_mod:
-        res.append(_create_ffi_file(parse_info))
+        file_name = ffi_filename(parse_info)
+        file_content = _create_ffi_file(parse_info)
+        with open(file_name, 'w') as f:
+            f.write('\n'.join(file_content))
+        res.append((file_name, parse_haskell(file_name)))
     return res
+
+def ffi_filename(parse_info):
+    module_name = parse_info.name + FFI_INDICATOR
+    return os.path.join(parse_info.dir,module_name+'.hs')
 
 def _create_ffi_file(parse_info):
     '''
     Creates a .hs module <module_name> as <ffi_filename> holding the foreign exports 
     for the exported functions of module <import_name>.
     '''
-    module_name = parse_info.name + '_hasky_ffi'
-    ffi_filename = os.path.join(parse_info.dir,module_name+'.hs')
-
     LINE_SEP = ''
     LANGUAGE_FFI = "{-# LANGUAGE ForeignFunctionInterface #-}"
-    MODULE_DEF = "module {} where".format(module_name)
+    MODULE_DEF = "module {} where".format(parse_info.name + FFI_INDICATOR)
     IMPORT_FOREIGN = (
         "import Foreign",
         "import Foreign.Ptr",
@@ -60,7 +67,7 @@ def _create_ffi_file(parse_info):
             file.append(
                 construct_func(parse_info.name,func_info)
             )
-        if func_info.destructor:
+        if func_info.destr_type:
             dest_name = n + 'Finalizer'
             destr_type = DESTRUCTOR_TYPE.format(func_info.destr_type)
             file.append(
@@ -70,11 +77,7 @@ def _create_ffi_file(parse_info):
                 SIMPLE_DEF.format(dest_name, func_info.destructor)
             )
 
-
-    with open(ffi_filename, 'w') as f:
-        f.write('\n'.join(file))
-    
-    return ffi_filename, parse_haskell(ffi_filename)
+    return file
 
 def construct_func(ori_mod_name, func_info):
     n = func_info.name
@@ -88,4 +91,4 @@ def construct_func(ori_mod_name, func_info):
     back = func_info.native_to_c
     if not back:
         back = 'id'
-    return "{} {} = {} $ {} {}".format(n, args, back, qualified_func,arg_convert)
+    return "{} {} = {} $ {} {}".format(n, args, back, qualified_func, arg_convert)
