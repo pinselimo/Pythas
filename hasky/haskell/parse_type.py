@@ -66,6 +66,8 @@ def hs_2_hsc(hs_type):
         
         return hsc_type, from_c, to_c
 
+    elif hs_type.islower():
+        raise TypeError('Typevariables cannot be used with the FFI')
     else:
         raise TypeError('Non-simple type "{}" cannot be used with Hasky'.format(hs_type))
 
