@@ -21,5 +21,8 @@ multisin x y = (fromIntegral x) * (sin y)
 haskyLen :: [Integer] -> Int
 haskyLen = length
 
+someComplicatedFunc :: [a] -> IO a
+someComplicatedFunc = undefined
+
 mapQuarter :: [Integer] -> [Double]
 mapQuarter = map ((*0.25) . fromIntegral)
