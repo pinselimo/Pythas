@@ -52,7 +52,7 @@ def hs_2_hsc(hs_type):
         return HS2HS[hs_type]
 
     elif hs_type.startswith('[') and hs_type.endswith(']'):
-        inner_type, from_c, to_c = hs_2_hsc(hs_type.strip('[ ]'))
+        inner_type, from_c, to_c = hs_2_hsc(hs_type[1:-1])
         if from_c:
             from_c = 'newList $ map {}'.format(from_c)
         else:
@@ -62,7 +62,7 @@ def hs_2_hsc(hs_type):
         else:
             to_c = 'fromList'
 
-        hsc_type = 'CList {}'.format(inner_type)
+        hsc_type = '(CList {})'.format(inner_type)
         
         return hsc_type, from_c, to_c
 
@@ -139,7 +139,7 @@ def strip_io(tp):
     if io < 0:
         return '', tp
     else:
-        return 'IO ',tp[io+3:].strip('( )')
+        return 'IO ',tp[io+3:]
 
 def reconstruct_hs_type(constraints, inp, io, out):
     t = ''
@@ -150,7 +150,7 @@ def reconstruct_hs_type(constraints, inp, io, out):
     if out == '()' and io:
         t += 'IO ()'
     elif io or 'CList' in out or 'CArray' in out:
-        t += 'IO ({})'.format(out)
+        t += 'IO {}'.format(out)
     else:
         t += '{}'.format(out)
     return t
@@ -159,7 +159,7 @@ def parse_type(name, hs_type):
     *constraints,hs_type = hs_type.split('=>')
     types = [t.strip() for t in hs_type.split('->')]
     if any(('(' in t) != (')' in t) for t in types):
-        raise TypeError('Functions like "{}" as arguments not supported.⎄'.format(hs_type))
+        raise TypeError('Functions as arguments like "{}" not supported'.format(hs_type))
 
     *inp,out = types
     io, out = strip_io(out)
