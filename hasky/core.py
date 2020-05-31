@@ -9,7 +9,7 @@ import os.path
 from .haskell.ghc import GHC_VERSION, ghc_compile_cmd
 from .haskell.parse_file import parse_haskell
 from .haskell.ffi import create_ffi_file
-from .utils import custom_attr_getter, findSource, DOT
+from .utils import custom_attr_getter, find_source, DOT
 
 from importlib.abc import MetaPathFinder
 
@@ -33,7 +33,7 @@ class HaskyMetaFinder(MetaPathFinder):
             # and check if this module exists
             if not os.path.exists(filename):
                 # in case it doesn't look for a haskell file of that name
-                for haskellfile in findSource(name, p):
+                for haskellfile in find_source(name, p):
                     return spec_from_file_location(fullname, p, loader=HaskyLoader(haskellfile),
                         submodule_search_locations=None)
 

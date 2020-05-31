@@ -39,7 +39,7 @@ class HaskyFunc:
             self.destructor(retVal)
         return res
 
-def findSource(name, path, extension='.hs', transform=lambda s:s.capitalize()):
+def find_source(name, path, extension='.hs', transform=lambda s:s.capitalize()):
     hsName = transform(name) + extension
     for file in os.listdir(path):
         if file == hsName:
