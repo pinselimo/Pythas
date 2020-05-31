@@ -53,7 +53,7 @@ def find_module_statement(hs_cont, name):
     if module_decl > -1:
         return module_decl + len(module_name)
     else:
-        raise SyntaxError('Haskel file module statement malformed (Case sensitive!)')
+        raise SyntaxError('Haskell file module statement malformed (Case sensitive!)')
 
 def parse_head(hs_lines, name):
     '''
@@ -64,6 +64,7 @@ def parse_head(hs_lines, name):
     Returns a list of names exported.
     '''
     hs_cont = ' '.join(hs_lines)
+    name,*_ = name.split('.')
     module_decl_end = find_module_statement(hs_cont, name)
     head = hs_cont[module_decl_end:hs_cont.find('where')].strip()
     if len(head) == 0:
