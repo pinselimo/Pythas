@@ -19,14 +19,14 @@ def flatten(seq):
     return list(flat(seq))
 
 class HaskyFunc:
-    def __init__(self, name, func_info, funcPtr):
+    def __init__(self, name, func_info, funcPtr, destructorPtr):
         self.__name__ = name
         self._funcPtr = funcPtr
         self.argtypes = func_info.argtypes
         self.constructors = func_info.constructors
         self.reconstructor = func_info.reconstructor
         self.restype = func_info.restype
-        self.destructor = func_info.destructor
+        self.destructor = destructorPtr
 
         self._funcPtr.argtypes = list(func_info.argtypes)
         self._funcPtr.restype = func_info.restype
@@ -54,7 +54,10 @@ def custom_attr_getter(obj, name):
         if name in info.exported_ffi:
             f = getattr(lib,name)
             func_infos = info.func_infos[name]
-            
-            return HaskyFunc(name, func_infos, f)
+            if func_infos.destructor:
+                destrPtr = getattr(lib,name + 'Finalizer')
+            else:
+                destrPtr = None
+            return HaskyFunc(name, func_infos, f, destrPtr)
     else:
         raise not_found
