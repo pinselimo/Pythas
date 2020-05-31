@@ -77,19 +77,23 @@ def parse_head(hs_lines, name):
     
 def parse_line(hs_line, parse_info):
     if TAG_EXCLUDE in hs_line:
-        exclude_name = hs_line[hs_line.rfind(TAG_EXCLUDE)].strip()
+        exclude_name = hs_line[hs_line.find(TAG_EXCLUDE)+len(TAG_EXCLUDE):].strip()
         parse_info.excluded.add( exclude_name.strip() )
 
     elif hs_line.startswith('foreign export ccall'):
         func_export,type_def = hs_line.split('::')
         *_,name = func_export.strip().split(' ')
         name = name.strip()
+        if name in parse_info.excluded:
+            return
         parse_info.exported_ffi.add(name)
         parse_info.func_infos[name] = parse_type(name, type_def)
 
     elif '::' in hs_line:
         name,type_def = hs_line.split('::')
         name = name.strip()
+        if name in parse_info.excluded or name in parse_info.exported_ffi:
+            return
         parse_info.func_infos[name] = parse_type(name, type_def)
 
 def remove_trailing_comment(hs_line):
