@@ -45,6 +45,7 @@ def hs_2_hsc(hs_type):
     hs_type = hs_type.strip('( )')
     if hs_type == "":
         return '()', '', ''
+
     if hs_type in HS2PY or 'CList' in hs_type or 'CArray' in hs_type:
         return hs_type, '', ''
 
@@ -150,7 +151,7 @@ def reconstruct_hs_type(constraints, inp, io, out):
     if out == '()' and io:
         t += 'IO ()'
     elif io or 'CList' in out or 'CArray' in out:
-        t += 'IO {}'.format(out)
+        t += 'IO ({})'.format(out)
     else:
         t += '{}'.format(out)
     return t
