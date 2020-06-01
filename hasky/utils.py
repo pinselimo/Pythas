@@ -54,6 +54,8 @@ def custom_attr_getter(obj, name):
         if name in info.exported_ffi:
             f = getattr(lib,name)
             func_infos = info.func_infos[name]
+            if is_constant(func_infos):
+                return f()
             if func_infos.destructor:
                 destrPtr = getattr(lib,name + 'Finalizer')
             else:
@@ -70,3 +72,6 @@ def check_ctype_seq(seq):
         raise TypeError('Only sequences of <ctypes._SimpleCData allowed.')
     else:
         return seq
+
+def is_constant(func_infos):
+    return not (func_infos.argtypes or 'IO' in func_infos.exporttype)
