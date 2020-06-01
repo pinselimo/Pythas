@@ -14,12 +14,12 @@ data ListElem a = ListElem {
 
 elemSize :: (Storable a) => ListElem a -> Int
 elemSize l = valueSize + ptrSize
-    where ptrSize = sizeOf nullPtr
+    where ptrSize = sizeOf $ next l
           valueSize = sizeOf $ value l
 
 elemAlignment :: (Storable a) => ListElem a -> Int
 elemAlignment l =  valueConstraint + ptrConstraint
-    where ptrConstraint = alignment nullPtr
+    where ptrConstraint = alignment $ next l
           valueConstraint = alignment $ value l
 
 nextListElem :: (Storable a) => CList a -> a -> Ptr (CList a)
