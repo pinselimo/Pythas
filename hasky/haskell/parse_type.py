@@ -1,8 +1,10 @@
 import ctypes as cl
 from functools import partial
 
-from ..types import new_linked_list, to_linked_list, from_linked_list, to_c_array, from_c_array
+from ..types import *
 from ..parser import FuncInfo
+
+USE_LIST = True
 
 HS2PY = {
         ### void ###
@@ -54,16 +56,29 @@ def hs_2_hsc(hs_type):
 
     elif hs_type.startswith('[') and hs_type.endswith(']'):
         inner_type, from_c, to_c = hs_2_hsc(hs_type[1:-1])
-        if from_c:
-            from_c = 'newList $ map {}'.format(from_c)
-        else:
-            from_c = 'newList'
-        if to_c:
-            to_c = '(map {}) $ fromList'.format(to_c)
-        else:
-            to_c = 'fromList'
+        if USE_LIST:
+            if from_c:
+                from_c = 'newList $ map {}'.format(from_c)
+            else:
+                from_c = 'newList'
+            if to_c:
+                to_c = '(map {}) $ fromList'.format(to_c)
+            else:
+                to_c = 'fromList'
 
-        hsc_type = '(CList {})'.format(inner_type)
+            hsc_type = '(CList {})'.format(inner_type)
+        else: # use array
+            if from_c:
+                from_c = 'newArray $ map {}'.format(from_c)
+            else:
+                from_c = 'newArray'
+            if to_c:
+                to_c = '(map {}) $ fromArray'.format(to_c)
+            else:
+                to_c = 'fromArray'
+
+            hsc_type = '(CArray {})'.format(inner_type)
+
         
         return hsc_type, from_c, to_c
 
@@ -94,7 +109,7 @@ def hs2py(hs_type):
     if ll+1 and (ll < arr or arr < 0): ## Linked List first
         cls = cl.POINTER(new_linked_list(hs2py(hs_type[ll+len('CList '):])))
     elif arr+1 and (arr < ll or ll < 0): ## array first
-        cls = cl.POINTER(hs2py(hs_type[arr+len('CArray '):]))
+        cls = cl.POINTER(new_c_array(hs2py(hs_type[arr+len('CArray '):])))
     else: # neither linked list nor array
         cls = simple_hs_2_py(hs_type)
     return cls
@@ -126,7 +141,7 @@ def restype(hs_type):
         if arr < 0:
             return restype, lambda x:x, None, None
         else:
-            return restype, from_c_array, 'free', hs_type
+            return restype, from_c_array, 'freeArray', hs_type
     else:
         return restype, from_linked_list, 'freeList', hs_type
 
