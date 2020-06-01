@@ -11,17 +11,7 @@ If you have a file ```Example.hs``` like in the ```example``` directory, it will
 Hello from Haskell
 ~~~
 
-You can also just ```from * import```:
-
-~~~python
->>>import hasky
->>>from example.example import hello
->>>hello()
-Hello from Haskell
->>>
-~~~
-
-But it doesn't stop at invoking side-effects. Try:
+You can also just ```from * import```. Try:
 
 ~~~python
 >>>from example.example import multisin
@@ -29,11 +19,15 @@ But it doesn't stop at invoking side-effects. Try:
 >>>multisin(2,pi)
 ~~~
 
-or:
+and you*ll see: It doesn't stop at invoking side-effects.
+
+## Sequences
+
+Python ```Sequences``` can be passed as linked lists or as arrays. Depending on which flavour of programming you want to embrace. Change the ```USE_LISTS``` flag in ```hasky.haskell.parse_type``` to switch in between the two. Then try things like:
 
 ~~~python
->>>from example.example import square
->>>square(2)
+>>>from example.example import mapQuarter
+>>>mapQuarter(range(1000,5000,1000))
 ~~~
 
 ## Install
@@ -46,7 +40,7 @@ or:
 
 ## Constraints
 
-Only functions having their type declared will be imported. You can handle the export of the function yourself by adding a ```foreign export ccall``` for the function, otherwise ```Hasky``` will do that for you. To exclude a function from being automatically exported by ```Hasky``` add a comment ```--(HASKY-EXCLUDE <function-name>``` where ```<function-name>``` is the name of the function to be excluded.
+Only functions having their type declared will be imported. You can handle the export of the function yourself by adding a ```foreign export ccall``` for the function, otherwise ```Hasky``` will do that for you. To exclude a function from being automatically exported by ```Hasky``` add a comment ```--(HASKY-EXCLUDE <function-name>``` where ```<function-name>``` is the name of the function to be excluded before the function declaration; Or just ommit the functions type.
 
 All Haskell constants are imported as functions, not only those in the IO monad. The ```Example.hs``` file contains ```someConstant :: Int``` which would look like this in Python:
 
