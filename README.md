@@ -42,12 +42,14 @@ Python ```Sequences``` can be passed as linked lists or as arrays. Depending on 
 
 Only functions having their type declared will be imported. You can handle the export of the function yourself by adding a ```foreign export ccall``` for the function, otherwise ```Hasky``` will do that for you. To exclude a function from being automatically exported by ```Hasky``` add a comment ```--(HASKY-EXCLUDE <function-name>``` where ```<function-name>``` is the name of the function to be excluded before the function declaration; Or just ommit the functions type.
 
-All Haskell constants are imported as functions, not only those in the IO monad. The ```Example.hs``` file contains ```someConstant :: Int``` which would look like this in Python:
+All Haskell constants in the IO monad are imported as functions. Due to lists being turned into ```CArray```s or ```CList```s, also constant lists must be called like a function without arguments:
 
 ~~~python
->>>from example.example import someConstant
->>>someConstant()
+>>>from example.example import someConstant, haskellList
+>>>someConstant
 63
+>>>haskellList()
+[63]
 ~~~
 
  ```Hasky``` enforces the file naming scheme of Haskell for  ```.hs``` files as does the ```GHC```! This is primarily due to  ```GHC``` failing to find the imported module at compile time. Thus, we fail early and raise a ```ModuleNotFoundError```.

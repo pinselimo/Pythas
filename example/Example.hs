@@ -26,3 +26,6 @@ someComplicatedFunc = undefined
 
 mapQuarter :: [Integer] -> [Double]
 mapQuarter = map ((*0.25) . fromIntegral)
+
+haskellList :: [Int]
+haskellList = [63]
