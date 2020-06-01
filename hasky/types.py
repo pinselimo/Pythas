@@ -1,14 +1,4 @@
 import ctypes as cl
-from collections.abc import Iterable
-
-def check_ctype_seq(seq):
-    def _check(seq):
-        return any(not isinstance(e, cl._SimpleCData) if not isinstance(e,Iterable) else _check(e) for e in seq)
-
-    if not _check(seq):
-        raise TypeError('Only sequences of <ctypes._SimpleCData allowed.')
-    else:
-        return seq
 
 def new_linked_list(ctype):
     class c_linked_list(cl.Structure):
@@ -39,9 +29,20 @@ def from_linked_list(ll):
         next = next.contents.next
     return res
 
-def to_c_array(cls, seq):
-    seq = check_ctype_seq(seq)
-    return (cls * len(seq))(*map(cls,seq)), len(seq)
+def new_c_array(ctype):
+    class c_array(cl.Structure):
+        _fields_ = [('len',cl.c_int),('ptr',cl.POINTER(ctype))]
+    return c_array
 
-def from_c_array(cp_array, length):
-    return [cp_array[i] for i in range(length)]
+def to_c_array(cls, seq):
+    arr = cls()
+    arr.len = cl.c_int(len(seq))
+    ctype = cls._fields_[1][1]._type_
+    a = (ctype * len(seq))(*map(ctype,seq))
+    arr.ptr = cl.cast(a,cl.POINTER(ctype))
+    return arr
+
+def from_c_array(cp_array):
+    length = cp_array.contents.len
+    array = cp_array.contents.ptr
+    return [array[i] for i in range(length)]
