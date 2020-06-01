@@ -29,7 +29,6 @@ def _create_ffi_file(parse_info):
     LANGUAGE_FFI = "{-# LANGUAGE ForeignFunctionInterface #-}"
     MODULE_DEF = "module {} where".format(parse_info.name + FFI_INDICATOR)
     IMPORT_FOREIGN = (
-        "import Foreign",
         "import Foreign.Ptr",
         "import Foreign.Storable",
         "import Foreign.C.Types",
