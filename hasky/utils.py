@@ -61,3 +61,12 @@ def custom_attr_getter(obj, name):
             return HaskyFunc(name, func_infos, f, destrPtr)
     else:
         raise not_found
+
+def check_ctype_seq(seq):
+    def _check(seq):
+        return any(not isinstance(e, _SimpleCData) if not isinstance(e,abc.Iterable) else _check(e) for e in seq)
+
+    if not _check(seq):
+        raise TypeError('Only sequences of <ctypes._SimpleCData allowed.')
+    else:
+        return seq
