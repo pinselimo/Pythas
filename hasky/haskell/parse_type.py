@@ -35,12 +35,14 @@ HS2PY = {
 
         ### String ###
         'CString':cl.c_char_p,
+        'CWString':cl.c_wchar_p
     }
 
 HS2HS = {
     'Int':('CInt','fromIntegral','fromIntegral'),
     'Integer':('CLLong','fromIntegral','fromIntegral'),
     'Bool':('CBool','fromBool','toBool'),
+    'String':('CWString','newCWString','fromCWString')
 }
 
 def hs_2_hsc(hs_type):
@@ -139,7 +141,11 @@ def restype(hs_type):
     if ll < 0:
         arr = hs_type.find('CArray ')
         if arr < 0:
-            return restype, lambda x:x, None, None
+            s = hs_type.find('CWString ')
+            if s < 0:
+                return restype, lambda x:x, None, None
+            else:
+                return restype, lambda x:x, 'freeCWString', hs_type
         else:
             return restype, from_c_array, 'freeArray', hs_type
     else:
@@ -165,7 +171,7 @@ def reconstruct_hs_type(constraints, inp, io, out):
         t +=  ' -> '.join(inp) + ' -> '
     if out == '()' and io:
         t += 'IO ()'
-    elif io or 'CList' in out or 'CArray' in out:
+    elif io or 'CList' in out or 'CArray' in out or 'CWString' in out:
         t += 'IO ({})'.format(out)
     else:
         t += '{}'.format(out)

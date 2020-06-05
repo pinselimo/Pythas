@@ -1,6 +1,7 @@
 module Example where
 
 import Foreign.C.Types (CInt)
+import Foreign.C.String
 
 --(HASKY-EXCLUDE someComplicatedFunc
 
@@ -29,3 +30,6 @@ mapQuarter = map ((*0.25) . fromIntegral)
 
 haskellList :: [Int]
 haskellList = [63]
+
+strins :: String -> String
+strins = id

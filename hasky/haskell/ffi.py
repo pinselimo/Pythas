@@ -35,6 +35,7 @@ def _create_ffi_file(parse_info):
         "import Foreign.C.String",
         "import HaskyList",
         "import HaskyArray",
+        "import HaskyString",
     )
     
     IMPORT_HS = "import qualified {} ({})".format(parse_info.name, ', '.join(parse_info.exported_mod))
