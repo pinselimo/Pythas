@@ -17,7 +17,7 @@ def get_ghc_version_from_cmdln():
     stdout = subprocess.run(["ghc","--version"],capture_output=True).stdout
     version = re.search(REGEX_HS_VERSION, stdout )
     return version.group(0).decode("utf-8")
-        
+
 def get_ghc_version_from_header():
     consts = {}
     with open(GHC_VERSION_H,'r') as header:

@@ -37,13 +37,12 @@ def _parse_haskell(hs_lines, parse_info):
             in_comment = '{-' in hs_line
             if in_comment:
                 in_comment = not '-}' in hs_line
-            hs_line 
-            if (in_comment or hs_line.startswith('\n') 
+            hs_line
+            if (in_comment or hs_line.startswith('\n')
             or (hs_line.startswith('--') and not hs_line.startswith(TAG_EXCLUDE))):
                 continue
 
             parse_line(hs_line, parse_info)
-            
     else:
         return parse_info
 
@@ -75,7 +74,7 @@ def parse_head(hs_lines, name):
         return set()
     else:
         return {n.strip() for n in head.split(',')}
-    
+
 def parse_line(hs_line, parse_info):
     if TAG_EXCLUDE in hs_line:
         exclude_name = hs_line[hs_line.find(TAG_EXCLUDE)+len(TAG_EXCLUDE):].strip()

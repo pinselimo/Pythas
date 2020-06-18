@@ -79,7 +79,6 @@ def hs_2_hsc(hs_type):
 
             hsc_type = '(CArray {})'.format(inner_type)
 
-        
         return hsc_type, from_c, to_c
 
     elif hs_type.islower():
@@ -94,7 +93,7 @@ def simple_hs_2_py(hs_type):
         raise TypeError('Non-simple type "{}" cannot be used with Hasky'.format(hs_type))
 
 def hs2py(hs_type):
-    '''  
+    '''
     HS2PY maps which Haskell type will end up as which
     ctypes type at Python's side
 
@@ -170,7 +169,7 @@ def reconstruct_hs_type(constraints, inp, io, out):
     else:
         t += '{}'.format(out)
     return t
-        
+
 def parse_type(name, hs_type):
     *constraints,hs_type = hs_type.split('=>')
     types = [t.strip() for t in hs_type.split('->')]
@@ -181,7 +180,7 @@ def parse_type(name, hs_type):
     io, out = strip_io(out)
 
     rev_inp = list()
-    
+
     native_from_c = []
     native_to_c = ''
     for i in inp:
@@ -191,7 +190,7 @@ def parse_type(name, hs_type):
     else:
         rev_out, to_c, from_c = hs_2_hsc(out)
         native_to_c = to_c
-   
+
     argtypes = list()
     constructors = list()
     for i in rev_inp:

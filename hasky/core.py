@@ -22,7 +22,7 @@ class HaskyMetaFinder(MetaPathFinder):
             *_,name = fullname.split(DOT)
         else:
             name = fullname
-            
+
         for p in path:
             # let's assume it's a python module
             subname = os.path.join(p, name)

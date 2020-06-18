@@ -22,7 +22,7 @@ def ffi_filename(parse_info):
 
 def _create_ffi_file(parse_info):
     '''
-    Creates a .hs module <module_name> as <ffi_filename> holding the foreign exports 
+    Creates a .hs module <module_name> as <ffi_filename> holding the foreign exports
     for the exported functions of module <import_name>.
     '''
     LINE_SEP = ''
@@ -36,7 +36,7 @@ def _create_ffi_file(parse_info):
         "import HaskyList",
         "import HaskyArray",
     )
-    
+
     IMPORT_HS = "import qualified {} ({})".format(parse_info.name, ', '.join(parse_info.exported_mod))
     FOREIGN_EXPORT = "foreign export ccall {} :: {}"
     INTERNAL_DEF = "{} = {}.{}"
@@ -58,7 +58,7 @@ def _create_ffi_file(parse_info):
         file.append(
             FOREIGN_EXPORT.format(n, func_info.exporttype)
         )
-        if func_info.exporttype == func_info.functype:    
+        if func_info.exporttype == func_info.functype:
             file.append(
                 INTERNAL_DEF.format(n,parse_info.name,n)
             )
