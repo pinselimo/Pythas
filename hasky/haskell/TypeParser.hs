@@ -23,18 +23,21 @@ parseTypes = skip *> sepBy1 (parseType <* skip) (arrow <* skip)
 
 parseType :: Parser HType
 parseType = func <|> tuple <|> list <|> io <|> unit <|> htype
--- Parser
+
 typeConstr = funcName *> barrow
 
+strip x = skip *> x <* skip
 skip = skipMany space
+
 io = try iomonad *> parseType >>= return . HIO
 unit = parens skip >> return HUnit
-func = try $ lookAhead isFunc *> parens (sepBy1 (parseType <* skip) (arrow <* skip))  >>= return . HFunc
-tuple = try $ lookAhead isTuple *> parens (commaSep (parseType <* skip)) >>= return . HTuple
-list = brackets (skip *> parseType <* skip) >>= return . HList
+func = try $ lookAhead isFunc *> parens (sepBy1 (strip parseType) (strip arrow))  >>= return . HFunc
+tuple = try $ lookAhead isTuple *> parens (commaSep $ strip parseType) >>= return . HTuple
+list = brackets (strip parseType) >>= return . HList
 
-isFunc = lookAhead $ parens (identifier *> arrow *> identifier *> many (arrow *> identifier))
-isTuple = lookAhead $ parens (identifier *> comma *> identifier *> many (comma *> identifier))
+-- Checkers:
+isFunc = lookAhead $ parens (identifier *> many1 (strip $ arrow *> parseType))
+isTuple = lookAhead $ parens (parseType *> many1 (strip $ comma *> parseType))
 isTypeDef = lookAhead $ identifier *> typeDef
 
 -- Lexer:
