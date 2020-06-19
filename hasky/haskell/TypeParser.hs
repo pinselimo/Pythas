@@ -5,7 +5,7 @@ import qualified Text.Parsec.Token as P
 import Text.Parsec.Language (haskell, haskellDef)
 import Text.Parsec.String
 
-import HTypes (HType(..), typeparsers, htype)
+import HTypes (HType(..), htype)
 
 data TypeDef = TypeDef {
     funcN :: String,
@@ -22,16 +22,16 @@ parseTypes :: Parser [HType]
 parseTypes = skip *> sepBy1 (parseType <* skip) (arrow <* skip)
 
 parseType :: Parser HType
-parseType = func <|> tuple <|> list <|> unit <|> htype
+parseType = func <|> tuple <|> list <|> io <|> unit <|> htype
 -- Parser
 typeConstr = funcName *> barrow
 
 skip = skipMany space
-
+io = try iomonad *> parseType >>= return . HIO
 unit = parens skip >> return HUnit
-func = try $ lookAhead isFunc *> parens (skip *> sepBy1 (htype <* skip) (arrow <* skip))  >>= return . HFunc
-tuple = try $ lookAhead isTuple *> parens (commaSep (htype <* skip)) >>= return . HTuple
-list = brackets (skip *> htype <* skip) >>= return . HList
+func = try $ lookAhead isFunc *> parens (skip *> sepBy1 (parseType <* skip) (arrow <* skip))  >>= return . HFunc
+tuple = try $ lookAhead isTuple *> parens (commaSep (parseType <* skip)) >>= return . HTuple
+list = brackets (skip *> parseType <* skip) >>= return . HList
 
 isFunc = lookAhead $ parens (identifier *> arrow *> identifier *> many (arrow *> identifier))
 isTuple = lookAhead $ parens (identifier *> comma *> identifier *> many (comma *> identifier))

@@ -1,7 +1,7 @@
-module HTypes (HType(HFunc, HTuple, HList, HIO, HUnit), typeparsers, htype) where
+module HTypes (HType(HFunc, HTuple, HList, HIO, HUnit), htype) where
 
 import Text.Parsec ((<|>), unexpected, try, skipMany)
-import Text.Parsec.Char (string, space)
+import qualified Text.Parsec.Char as PC (string)
 import Text.Parsec.String (Parser)
 
 data HType
@@ -12,35 +12,47 @@ data HType
    | HUChar
    | HShort
    | HUShort
-   | HInt
-   | HUInt
+   | HCInt
+   | HCUInt
    | HLong
    | HULong
    | HFloat
    | HDouble
+   | HInt
    | HInteger
+   | HString
+   | HCString
    | HIO HType
    | HList HType
    | HTuple [HType]
    | HFunc [HType]
+   | HPtr HType -- TODO constrain HTypes available (only Storable ones)
    deriving (Show, Eq)
 
-typeparsers = [char, schar, uchar, short, ushort, int32, uint32, long, ulong, float, double, bool]
-htype = foldr (<|>) (unexpected "invalid type") typeparsers
+htype = foldr (<|>) (unexpected "invalid type") types
+ where types = [char, schar, uchar, short, ushort, 
+                int32, uint32, long, ulong, float, 
+                double, bool
+                ]
 
 makeParser :: HType -> [String] -> Parser HType
-makeParser t ss = foldr (<|>) (unexpected "invalid type") (map (try . string) ss) >> return t
+makeParser t ss = foldr (<|>) (unexpected "invalid type") (map (try . PC.string) ss) 
+               >> return t
 
-bool = makeParser HBool ["Bool"]
-char = makeParser HChar ["CChar","Int8"]
-schar = makeParser HSChar ["CSChar","Int8"]
-uchar = makeParser HUChar ["CUChar", "Word8"]
-short = makeParser HShort ["CShort", "Int16"]
-ushort = makeParser HUShort ["CUShort", "Word16"]
-int32 = makeParser HInt ["CInt","Int32"]
-uint32 = makeParser HInt ["CUInt", "Word32"]
-long = makeParser HLong ["CLong", "Int64"]
-ulong = makeParser HULong ["CULong", "Word64"]
-float = makeParser HFloat ["Float","CFloat"]
-double = makeParser HDouble ["Double","CDouble"]
-
+mp = makeParser
+bool = mp HBool ["Bool"]
+char = mp HChar ["CChar","Int8"]
+schar = mp HSChar ["CSChar","Int8"]
+uchar = mp HUChar ["CUChar", "Word8"]
+short = mp HShort ["CShort", "Int16"]
+ushort = mp HUShort ["CUShort", "Word16"]
+int32 = mp HCInt ["CInt","Int32"]
+uint32 = mp HCUInt ["CUInt", "Word32"]
+long = mp HLong ["CLong", "Int64"]
+ulong = mp HULong ["CULong", "Word64"]
+float = mp HFloat ["CFloat", "Float"]
+double = mp HDouble ["CDouble","Double"]
+string = mp HString ["[Char]","String"]
+int = mp HInt ["Int"]
+integer = mp HInteger ["Integer"]
+cstring = mp HCString ["CString", "Ptr CChar"]
