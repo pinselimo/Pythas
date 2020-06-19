@@ -1,11 +1,10 @@
-module TypeParser where
+module TypeParser (parseTypeDefs, TypeDef(funcN, funcT)) where
 
 import Text.Parsec
-import qualified Text.Parsec.Token as P
-import Text.Parsec.Language (haskell, haskellDef)
-import Text.Parsec.String
+import Text.Parsec.String (Parser)
 
 import HTypes (HType(..), htype)
+import ParseUtils
 
 data TypeDef = TypeDef {
     funcN :: String,
@@ -17,7 +16,7 @@ parseTypeDefs = many parseIfTypeDef
 
 parseIfTypeDef :: Parser TypeDef
 parseIfTypeDef = let getIfTypeDef = try $ lookAhead isTypeDef *> parseTypeDef
-                in getIfTypeDef <|> skipLine *> parseIfTypeDef
+                  in getIfTypeDef <|> skipLine *> parseIfTypeDef
 
 parseTypeDef :: Parser TypeDef
 parseTypeDef = do
@@ -33,8 +32,6 @@ parseType = func <|> tuple <|> list <|> io <|> unit <|> htype
 
 typeConstr = funcName *> barrow
 
-skip = whiteSpace
-strip x = skip *> x <* skip
 skipLine = manyTill anyToken (newline <|> semi)
 
 io = try iomonad *> parseType >>= return . HIO
@@ -47,19 +44,3 @@ list = brackets (strip parseType) >>= return . HList
 isFunc = lookAhead $ parens (identifier *> many1 (strip $ arrow *> parseType))
 isTuple = lookAhead $ parens (parseType *> many1 (strip $ comma *> parseType))
 isTypeDef = lookAhead $ identifier *> typeDef
-
--- Lexer:
-lexer = P.makeTokenParser haskellDef
-
-commaSep = P.commaSep lexer
-parens = P.parens lexer
-brackets = P.brackets lexer
-barrow = (P.reservedOp lexer) "=>"
-arrow = (P.reservedOp lexer) "->"
-iomonad = (P.reservedOp lexer) "IO"
-typeDef = (P.reservedOp lexer) "::"
-semi = P.semi lexer *> return ';'
-comma = P.comma lexer
-funcName = P.identifier lexer
-identifier = P.identifier lexer
-whiteSpace = P.whiteSpace lexer
