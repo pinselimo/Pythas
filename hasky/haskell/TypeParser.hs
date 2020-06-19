@@ -29,7 +29,7 @@ typeConstr = funcName *> barrow
 skip = skipMany space
 io = try iomonad *> parseType >>= return . HIO
 unit = parens skip >> return HUnit
-func = try $ lookAhead isFunc *> parens (skip *> sepBy1 (parseType <* skip) (arrow <* skip))  >>= return . HFunc
+func = try $ lookAhead isFunc *> parens (sepBy1 (parseType <* skip) (arrow <* skip))  >>= return . HFunc
 tuple = try $ lookAhead isTuple *> parens (commaSep (parseType <* skip)) >>= return . HTuple
 list = brackets (skip *> parseType <* skip) >>= return . HList
 
