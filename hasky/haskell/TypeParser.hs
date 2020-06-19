@@ -12,6 +12,13 @@ data TypeDef = TypeDef {
     funcT :: [HType]
     } deriving (Show, Eq)
 
+parseTypeDefs :: Parser [TypeDef]
+parseTypeDefs = many parseIfTypeDef
+
+parseIfTypeDef :: Parser TypeDef
+parseIfTypeDef = let getIfTypeDef = try $ lookAhead isTypeDef *> parseTypeDef
+                in getIfTypeDef <|> skipLine *> parseIfTypeDef
+
 parseTypeDef :: Parser TypeDef
 parseTypeDef = do
   fname <- funcName
@@ -19,15 +26,16 @@ parseTypeDef = do
   return $ TypeDef fname types
 
 parseTypes :: Parser [HType]
-parseTypes = skip *> sepBy1 (parseType <* skip) (arrow <* skip)
+parseTypes = skip *> sepBy1 (strip parseType) (strip arrow)
 
 parseType :: Parser HType
 parseType = func <|> tuple <|> list <|> io <|> unit <|> htype
 
 typeConstr = funcName *> barrow
 
+skip = whiteSpace
 strip x = skip *> x <* skip
-skip = skipMany space
+skipLine = manyTill anyToken newline
 
 io = try iomonad *> parseType >>= return . HIO
 unit = parens skip >> return HUnit
@@ -53,3 +61,4 @@ typeDef = (P.reservedOp lexer) "::"
 comma = P.comma lexer
 funcName = P.identifier lexer
 identifier = P.identifier lexer
+whiteSpace = P.whiteSpace lexer
