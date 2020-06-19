@@ -35,7 +35,7 @@ typeConstr = funcName *> barrow
 
 skip = whiteSpace
 strip x = skip *> x <* skip
-skipLine = manyTill anyToken newline
+skipLine = manyTill anyToken (newline <|> semi)
 
 io = try iomonad *> parseType >>= return . HIO
 unit = parens skip >> return HUnit
@@ -58,6 +58,7 @@ barrow = (P.reservedOp lexer) "=>"
 arrow = (P.reservedOp lexer) "->"
 iomonad = (P.reservedOp lexer) "IO"
 typeDef = (P.reservedOp lexer) "::"
+semi = P.semi lexer *> return ';'
 comma = P.comma lexer
 funcName = P.identifier lexer
 identifier = P.identifier lexer
