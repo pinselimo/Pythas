@@ -12,7 +12,7 @@ data TypeDef = TypeDef {
     } deriving (Show, Eq)
 
 parseTypeDefs :: Parser [TypeDef]
-parseTypeDefs = many parseIfTypeDef
+parseTypeDefs = manyTill parseIfTypeDef eof
 
 parseIfTypeDef :: Parser TypeDef
 parseIfTypeDef = (manyTill skipLine isTypeDef) *> parseTypeDef
@@ -31,7 +31,7 @@ parseType = func <|> tuple <|> list <|> io <|> unit <|> htype
 
 typeConstr = funcName *> barrow
 
-skipLine = manyTill anyToken (newline <|> semi)
+skipLine = manyTill anyToken (endOfLine <|> semi <|> (eof *> return '\n'))
 
 io = try iomonad *> parseType >>= return . HIO
 unit = parens skip >> return HUnit
