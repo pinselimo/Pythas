@@ -72,7 +72,7 @@ htype = foldr (<|>) (unexpected "invalid type") types
  where types = [char, schar, uchar, short, ushort
                , int32, uint32, long, ulong, float
                , double, bool, integer, int, cwstring
-               , cfloat, cdouble]
+               , cfloat, cdouble, string]
 
 makeParser :: HType -> [String] -> Parser HType
 makeParser t ss = foldr ((<|>) . try . PC.string) (unexpected "invalid type") ss
