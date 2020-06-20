@@ -32,7 +32,12 @@ HS2PY = {
 
         ### String ###
         'CString':cl.c_char_p,
-        'CWString':cl.c_wchar_p
+        # Strings cannot be freed of cl.c_wchar_p is the return type
+        # however, ctypes does also not take over marshalling so
+        # this weird behaviour results in memory leakage
+        # Our way around this problem is to 'hide' the string behind
+        # a pointer:
+        'CWString':cl.POINTER(cl.c_wchar_p)
     }
 
 def simple_hs_2_py(hs_type):
@@ -54,6 +59,7 @@ def hs2py(hs_type):
         hs_type = '()'
     ll = hs_type.find('CList ')
     arr = hs_type.find('CArray ')
+    st = hs_type.find('CWString')
     if ll+1 and (ll < arr or arr < 0): ## Linked List first
         cls = cl.POINTER(new_linked_list(hs2py(hs_type[ll+len('CList '):])))
     elif arr+1 and (arr < ll or ll < 0): ## array first
@@ -72,7 +78,11 @@ def argtype(hs_type):
     if ll < 0:
         arr = hs_type.find('CArray ')
         if arr < 0:
-            return argt, argt
+            s = hs_type.find('CWString')
+            if s < 0:
+                return argt, argt
+            else:
+                return argt, lambda x: cl.pointer(cl.c_wchar_p(x))
         else:
             return argt, partial(to_c_array, argt._type_)
     else:
@@ -87,11 +97,11 @@ def restype(hs_type):
     if ll < 0:
         arr = hs_type.find('CArray ')
         if arr < 0:
-            s = hs_type.find('CWString ')
+            s = hs_type.find('CWString')
             if s < 0:
                 return restype, lambda x:x, False
             else:
-                return restype, lambda x:x, True
+                return restype, lambda x:x.contents.value, True
         else:
             return restype, from_c_array, True
     else:
