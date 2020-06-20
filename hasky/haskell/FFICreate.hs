@@ -26,7 +26,7 @@ createFFI fn modname exports typeDefs =
      ffiModname = modname ++ "_hasky_ffi"
      exportedFuncTypes = filter ((`elem` exports) . funcN) typeDefs
      ffiFunctions = map (makeFFIExport modname) exportedFuncTypes
-     ffiContent = "{-# LANGUAGE Foreign Function Interface #-}\n"
+     ffiContent = "{-# LANGUAGE ForeignFunctionInterface #-}\n"
              ++ "module " ++ ffiModname
              ++ " where\n\n"
              ++ "import qualified " ++ modname ++ "\n\n"
@@ -77,7 +77,7 @@ finalizerFunc' freer = case freer of
  _ -> ""
 
 finalizerExport :: String -> HType -> String
-finalizerExport n t = fec ++ n ++ " :: " ++ ffiType t ++ " -> IO ()"
+finalizerExport n (HIO t) = fec ++ n ++ " :: " ++ ffiType t ++ " -> IO ()"
 
 createFFIType :: [HType] -> ([HType], [Convert], Convert)
 createFFIType ts =
@@ -92,12 +92,21 @@ argnames cs = take (length cs) ['a'..'z']
 
 convertsToFunc :: String -> String -> [Convert] -> Convert -> String
 convertsToFunc modname funcname fromConvs toConv =
- let start = funcname ++ args ++ " = "
+ let start = funcname ++ foldr (\a b -> ' ':a:b) "" (argnames fromConvs) ++ " = "
      qname = modname ++ "." ++ funcname
-     args  = foldr (\a b -> ' ':a:b) " " $ argnames fromConvs
- in start ++ lambdas ++ ret ++ " $ " ++ qname ++ args
+     args  = createArgString fromConvs $ argnames fromConvs
+ in start ++ lambdas ++ ret ++ " $ " ++ qname ++ ' ':args
  where ret = retfunc (any isIO fromConvs) toConv
        lambdas = concat $ zipWith createLambda fromConvs $ argnames fromConvs
+
+createArgString :: [Convert] -> [Char] -> String
+createArgString cvs chs = concat $ map (uncurry createArgString') $ zip cvs chs
+
+createArgString' :: Convert -> Char -> String
+createArgString' (Pure (FromC cv)) c = '(':cv ++ ' ':c:") "
+createArgString' (FromC cv) c = '(':cv ++ ' ':c:") "
+createArgString' (Nested _ cv) c = "(map " ++ createArgString' cv ' ' ++ c:") "
+createArgString' _ c = ' ':c:[]
 
 createLambda :: Convert -> Char -> String
 createLambda c varname
@@ -133,6 +142,8 @@ toFFIType' ht = case ht of
  HInteger -> HLLong
  HInt -> HCInt
  HBool -> HCBool
+ HDouble -> HCDouble
+ HFloat -> HCFloat
  _ -> ht
  where toFFIType'' ht = let ht' = toFFIType' ht
                         in case ht' of
@@ -154,18 +165,20 @@ fromFFIType ht = case ht of
 toFFIConvert :: HType -> Convert
 toFFIConvert ht = case ht of
  HString -> IOOut (Free "freeCWString") $ ToC "newCWString"
- HList x -> Nested (IOOut (Free "freeCArray") $ ToC "newArray") $ toFFIConvert x
+ HList x -> Nested (IOOut (Free "freeArray") $ ToC "newArray") $ toFFIConvert x
  HTuple [x] -> undefined -- TODO Tuples
  HFunc  [x] -> undefined -- TODO Functions
  HInteger -> Pure $ ToC "fromIntegral"
  HInt -> Pure $ ToC "fromIntegral"
  HBool -> Pure $ ToC "fromBool"
+ HDouble -> Pure $ ToC "CDouble"
+ HFloat -> Pure $ ToC "CFloat"
  _ -> Pure $ ToC "id"
 
 fromFFIConvert :: HType -> Convert
 fromFFIConvert ht = case ht of
  HString -> IOIn $ FromC "peekCWString"
- HList x -> Nested (IOIn $ FromC "peekCArray") $ fromFFIConvert x
+ HList x -> Nested (IOIn $ FromC "peekArray") $ fromFFIConvert x
  HTuple [x] -> undefined -- TODO Tuples
  HFunc  [x] -> undefined -- TODO Functions
  HInteger -> Pure $ FromC "fromIntegral"

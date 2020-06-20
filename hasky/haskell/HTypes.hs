@@ -57,6 +57,8 @@ ffiType ht = case ht of
     HULLong -> "CULLong"
     HCFloat  -> "CFloat"
     HCDouble -> "CDouble"
+    HFloat   -> "Float"
+    HDouble  -> "Double"
     HInt    -> "CInt"
     HInteger -> "CLLong"
     HCWString -> "CWString"
