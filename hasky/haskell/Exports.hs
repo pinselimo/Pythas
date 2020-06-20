@@ -1,5 +1,5 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
-module Exposed where
+module Exports where
 
 import Foreign.Marshal.Alloc (free)
 import Text.Parsec.String (parseFromFile)
