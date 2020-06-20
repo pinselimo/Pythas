@@ -70,7 +70,7 @@ htype = foldr (<|>) (unexpected "invalid type") types
                 ]
 
 makeParser :: HType -> [String] -> Parser HType
-makeParser t ss = foldr (<|>) (unexpected "invalid type") (map (try . PC.string) ss) 
+makeParser t ss = foldr ((<|>) . try . PC.string) (unexpected "invalid type") ss
                >> return t
 
 mp = makeParser
