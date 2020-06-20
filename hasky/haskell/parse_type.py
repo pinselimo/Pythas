@@ -31,7 +31,8 @@ HS2PY = {
         'Float':cl.c_float, # CFloat builds a newtype over Float
 
         ### String ###
-        'CWString':cl.c_wchar_p,
+        'CString':cl.c_char_p,
+        'CWString':cl.c_wchar_p
     }
 
 def simple_hs_2_py(hs_type):
@@ -86,7 +87,11 @@ def restype(hs_type):
     if ll < 0:
         arr = hs_type.find('CArray ')
         if arr < 0:
-            return restype, lambda x:x, False
+            s = hs_type.find('CWString ')
+            if s < 0:
+                return restype, lambda x:x, False
+            else:
+                return restype, lambda x:x, True
         else:
             return restype, from_c_array, True
     else:
