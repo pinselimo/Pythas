@@ -1,4 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
+-- {#- LANGUAGE ForeignFunctionInterface -#}
 module Exposed where
 
 import Foreign.Marshal.Alloc (free)
@@ -11,8 +11,8 @@ import TypeParser (parseTypeDefs, TypeDef(funcN))
 import ExportsParser (parseExports, parseModname)
 import FFICreate (createFFI)
 
-foreign export ccall createFileBindings :: CWString -> IO CWString
-foreign export ccall freeReturnedString :: CWString -> IO ()
+-- foreign export ccall createFileBindings :: CWString -> IO CWString
+-- foreign export ccall freeReturnedString :: CWString -> IO ()
 
 data HaskyExepction = ParseException ParseError
  deriving (Show)
@@ -39,3 +39,10 @@ createFileBindings cfn = do
 
 freeReturnedString :: CWString -> IO ()
 freeReturnedString = free
+
+main :: FilePath -> IO ()
+main fp = do
+ cs <- newCWString fp
+ fn <- createFileBindings cs
+ free cs
+ free fn
