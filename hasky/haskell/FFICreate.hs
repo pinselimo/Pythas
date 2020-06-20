@@ -14,7 +14,6 @@ data Convert = Pure Convert
 
 imports = map ("import "++)
           ["Foreign.C.Types"
-          ,"Foreign.C.String"
           ,"Foreign.Marshal.Utils (fromBool, toBool)"
           ,"HaskyList"
           ,"HaskyArray"
