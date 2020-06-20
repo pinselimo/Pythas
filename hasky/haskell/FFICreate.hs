@@ -48,18 +48,35 @@ makeFFIFunc modname td = let
      in (ffitype, ffifunc, finalizer)
 
 makeFFIType :: String -> [HType] -> String
-makeFFIType funcname ccompattypes = "foreign export ccall " ++ funcname ++ " :: " ++ functype
+makeFFIType funcname ccompattypes = fec ++ funcname ++ " :: " ++ functype
  where functype = argtypes ++ rettype
        argtypes = foldr (\a b -> ffiType a ++ " -> " ++ b) "" $ init ccompattypes
        rettype  = ffiType $ last ccompattypes
 
+fec = "foreign export ccall "
+
 -- TODO: Cover more cases
 makeFinalizer :: String -> Convert -> HType -> String
-makeFinalizer funcname (IO_Out (Free f) _) (HIO ht') = freeT ++ "\n" ++ freeF
- where freeT = "foreign export ccall " ++ freeN ++ " :: "  ++ ffiType ht' ++ " -> IO ()"
-       freeF = freeN ++ " = " ++ f
-       freeN = funcname ++ "Finalizer"
-makeFinalizer _ _ _ = ""
+makeFinalizer funcname conv ht = case needsFinalizer conv of
+ True  -> finalizerExport n ht ++ "\n" ++ finalizerFunc n conv
+ False -> ""
+ where n = funcname ++ "Finalizer"
+
+
+finalizerFunc :: String -> Convert -> String
+finalizerFunc n freer = n ++ " = " ++ finalizerFunc' freer ++ "\n"
+
+finalizerFunc' :: Convert -> String
+finalizerFunc' freer = case freer of
+ Free f -> f
+ IO_Out f _ -> finalizerFunc' f
+ Nested a b -> finalizerFunc' a ++ case isIO b of
+    True -> " mapM " ++ finalizerFunc' b
+    False -> ""
+ _ -> ""
+
+finalizerExport :: String -> HType -> String
+finalizerExport n t = fec ++ n ++ " :: " ++ ffiType t ++ " -> IO ()"
 
 createFFIType :: [HType] -> ([HType], [Convert], Convert)
 createFFIType ts =
@@ -159,3 +176,8 @@ isIO :: Convert -> Bool
 isIO (Pure _) = False
 isIO (Nested a b) = isIO a || isIO b
 isIO _ = True
+
+needsFinalizer :: Convert -> Bool
+needsFinalizer (IO_Out _ _) = True
+needsFinalizer (Nested a b) = True
+needsFinalizer _ = False
