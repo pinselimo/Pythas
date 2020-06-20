@@ -14,9 +14,9 @@ import FFICreate (createFFI)
 foreign export ccall createFileBindings :: CWString -> IO CWString
 foreign export ccall freeReturnedString :: CWString -> IO ()
 
-data HaskyExepction = ParseException ParseError
+newtype HaskyExepction = ParseException ParseError
  deriving (Show)
-instance Exception HaskyExepction 
+instance Exception HaskyExepction
 
 createFileBindings :: CWString -> IO CWString
 createFileBindings cfn = do
@@ -26,9 +26,9 @@ createFileBindings cfn = do
                 Left e -> throw $ ParseException e
                 Right modname -> return modname
     tpds <- parseFromFile parseTypeDefs fn
-    typeDefs <- case tpds of 
+    typeDefs <- case tpds of
                 Left e -> throw $ ParseException e
-                Right ts -> return ts 
+                Right ts -> return ts
     expts <- parseFromFile parseExports fn
     let exports = case expts of
                      Left e  -> map funcN typeDefs
