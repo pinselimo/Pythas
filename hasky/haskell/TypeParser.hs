@@ -21,6 +21,7 @@ parseTypeDef :: Parser TypeDef
 parseTypeDef = do
   fname <- funcName
   types <- typeDef *> parseTypes
+  manyTill (skipLine <|> [] <$ whiteSpace) (() <$ isTypeDef <|> eof)
   return $ TypeDef fname types
 
 parseTypes :: Parser [HType]
