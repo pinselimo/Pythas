@@ -1,5 +1,4 @@
--- {#- LANGUAGE ForeignFunctionInterface -#}
-module Exposed where
+module TestParser where
 
 import Foreign.Marshal.Alloc (free)
 import Text.Parsec.String (parseFromFile)
@@ -10,9 +9,6 @@ import Control.Exception (Exception, throw)
 import TypeParser (parseTypeDefs, TypeDef(funcN))
 import ExportsParser (parseExports, parseModname)
 import FFICreate (createFFI)
-
--- foreign export ccall createFileBindings :: CWString -> IO CWString
--- foreign export ccall freeReturnedString :: CWString -> IO ()
 
 data HaskyExepction = ParseException ParseError
  deriving (Show)
