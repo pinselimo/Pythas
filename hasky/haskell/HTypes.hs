@@ -1,4 +1,4 @@
-module HTypes (HType(..), htype) where
+module HTypes (HType(..), htype, ffiType) where
 
 import Text.Parsec ((<|>), unexpected, try, skipMany)
 import qualified Text.Parsec.Char as PC (string)
@@ -18,6 +18,7 @@ data HType
    | HLong
    | HULong
    | HLLong
+   | HULLong
    | HFloat
    | HDouble
    | HInt
@@ -34,6 +35,31 @@ data HType
    | HCList HType
    | HCPtr HType -- TODO constrain HTypes available (only Storable ones)
    deriving (Show, Eq)
+
+ffiType :: HType -> String
+ffiType ht = case ht of
+    HUnit   -> "()"
+    HCBool  -> "CBool"
+    HChar   -> "CChar"
+    HSChar  -> "CSChar"
+    HUChar  -> "CUChar"
+    HShort  -> "CShort"
+    HUShort -> "CUShort"
+    HCInt   -> "CInt"
+    HCUInt  -> "CUInt"
+    HLong   -> "CLong"
+    HULong  -> "CULong"
+    HLLong  -> "CLLong"
+    HULLong -> "CULLong"
+    HFloat  -> "CFloat"
+    HDouble -> "CDouble"
+    HInt    -> "CInt"
+    HInteger -> "CLLong"
+    HCString -> "CWString"
+    HIO ht'  -> "IO " ++ further ht'
+    HCArray ht' -> "CArray " ++ further ht'
+    HCList ht'  -> "CList " ++ further ht'
+    where further = (\s -> "( " ++ s ++ " )") . ffiType
 
 htype = foldr (<|>) (unexpected "invalid type") types
  where types = [char, schar, uchar, short, ushort, 
@@ -62,3 +88,4 @@ string = mp HString ["[Char]","String"]
 int = mp HInt ["Int"]
 integer = mp HInteger ["Integer"]
 cstring = mp HCString ["CString", "Ptr CChar"]
+
