@@ -9,6 +9,7 @@ data HType
    | HBool
    | HCBool
    | HChar
+   | HWChar
    | HSChar
    | HUChar
    | HShort
@@ -24,7 +25,7 @@ data HType
    | HInt
    | HInteger
    | HString
-   | HCString
+   | HCWString
    | HIO HType
    | HList HType
    | HTuple [HType]
@@ -41,6 +42,7 @@ ffiType ht = case ht of
     HUnit   -> "()"
     HCBool  -> "CBool"
     HChar   -> "CChar"
+    HWChar  -> "HWchar"
     HSChar  -> "CSChar"
     HUChar  -> "CUChar"
     HShort  -> "CShort"
@@ -55,16 +57,16 @@ ffiType ht = case ht of
     HDouble -> "CDouble"
     HInt    -> "CInt"
     HInteger -> "CLLong"
-    HCString -> "CWString"
+    HCWString -> "CWString"
     HIO ht'  -> "IO " ++ further ht'
     HCArray ht' -> "CArray " ++ further ht'
     HCList ht'  -> "CList " ++ further ht'
     where further = (\s -> "( " ++ s ++ " )") . ffiType
 
 htype = foldr (<|>) (unexpected "invalid type") types
- where types = [char, schar, uchar, short, ushort, 
-                int32, uint32, long, ulong, float, 
-                double, bool
+ where types = [char, schar, uchar, short, ushort,
+                int32, uint32, long, ulong, float,
+                double, bool, integer, int, cwstring
                 ]
 
 makeParser :: HType -> [String] -> Parser HType
@@ -87,5 +89,5 @@ double = mp HDouble ["CDouble","Double"]
 string = mp HString ["[Char]","String"]
 int = mp HInt ["Int"]
 integer = mp HInteger ["Integer"]
-cstring = mp HCString ["CString", "Ptr CChar"]
+cwstring = mp HCWString ["CWString", "Ptr CWchar"]
 
