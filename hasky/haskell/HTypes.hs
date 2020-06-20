@@ -22,6 +22,8 @@ data HType
    | HULLong
    | HFloat
    | HDouble
+   | HCFloat
+   | HCDouble
    | HInt
    | HInteger
    | HString
@@ -53,21 +55,22 @@ ffiType ht = case ht of
     HULong  -> "CULong"
     HLLong  -> "CLLong"
     HULLong -> "CULLong"
-    HFloat  -> "CFloat"
-    HDouble -> "CDouble"
+    HCFloat  -> "CFloat"
+    HCDouble -> "CDouble"
     HInt    -> "CInt"
     HInteger -> "CLLong"
     HCWString -> "CWString"
     HIO ht'  -> "IO " ++ further ht'
     HCArray ht' -> "CArray " ++ further ht'
     HCList ht'  -> "CList " ++ further ht'
+    _ -> fail ("Non C-compatible type \"" ++ show ht ++ "\" in export")
     where further = (\s -> "( " ++ s ++ " )") . ffiType
 
 htype = foldr (<|>) (unexpected "invalid type") types
- where types = [char, schar, uchar, short, ushort,
-                int32, uint32, long, ulong, float,
-                double, bool, integer, int, cwstring
-                ]
+ where types = [char, schar, uchar, short, ushort
+               , int32, uint32, long, ulong, float
+               , double, bool, integer, int, cwstring
+               , cfloat, cdouble]
 
 makeParser :: HType -> [String] -> Parser HType
 makeParser t ss = foldr ((<|>) . try . PC.string) (unexpected "invalid type") ss
@@ -84,8 +87,10 @@ int32 = mp HCInt ["CInt","Int32"]
 uint32 = mp HCUInt ["CUInt", "Word32"]
 long = mp HLong ["CLong", "Int64"]
 ulong = mp HULong ["CULong", "Word64"]
-float = mp HFloat ["CFloat", "Float"]
-double = mp HDouble ["CDouble","Double"]
+float = mp HFloat ["Float"]
+double = mp HDouble ["Double"]
+cfloat = mp HCFloat ["CFloat"]
+cdouble = mp HCDouble ["CDouble"]
 string = mp HString ["[Char]","String"]
 int = mp HInt ["Int"]
 integer = mp HInteger ["Integer"]
