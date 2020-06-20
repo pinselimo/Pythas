@@ -12,7 +12,8 @@ data Convert = Pure Convert
              | FromC String
              deriving (Show, Eq)
 
-imports = ["Foreign.C.Types"
+imports = map ("import "++)
+          ["Foreign.C.Types"
           ,"Foreign.C.String"
           ,"Foreign.Marshal.Utils (fromBool, toBool)"
           ,"HaskyList"
@@ -26,8 +27,9 @@ createFFI fn modname exports typeDefs =
      exportedFuncTypes = filter ((`elem` exports) . funcN) typeDefs
      ffiFunctions = map (makeFFIExport modname) exportedFuncTypes
      ffiContent = "module " ++ ffiModname
-             ++ " where \n"
-             ++ foldr (\a b -> a ++ "\n" ++ b) "" (imports ++ ffiFunctions)
+             ++ " where\n\n"
+             ++ "import qualified " ++ modname ++ "\n\n"
+             ++ foldr (\a b -> a ++ "\n" ++ b) "" (imports ++ [""] ++ ffiFunctions)
 
  in (ffiFilename, ffiContent)
 
@@ -74,7 +76,7 @@ convertsToFunc modname funcname fromConvs toConv =
  let start = funcname ++ args ++ " = "
      qname = modname ++ "." ++ funcname
      args  = foldr (\a b -> ' ' : [a] ++ b) " " $ argnames fromConvs
- in lambdas ++ ret ++ " $ " ++ qname ++ args
+ in start ++ lambdas ++ ret ++ " $ " ++ qname ++ args
  where ret = retfunc (any isIO fromConvs) toConv
        lambdas = foldr (++) "" $ map (uncurry createLambda) $ zip fromConvs $ argnames fromConvs
 
@@ -82,7 +84,7 @@ createLambda :: Convert -> Char -> String
 createLambda c varname
  | not $ isIO c = ""
  | otherwise    = case c of
-     Nested a b -> undefined
+     Nested a b -> createLambda a varname ++ createLambda b varname
      IO_In (FromC c) -> c ++ ' ':varname:" >>= \\" ++ varname:" ->\n    "
 
 retfunc :: Bool -> Convert -> String
@@ -105,7 +107,7 @@ toFFIType anyIO ht = let ht' = toFFIType' ht
 
 toFFIType' :: HType -> HType
 toFFIType' ht = case ht of
- HString -> HIO HCString
+ HString -> HIO HCWString
  HList x -> HIO $ HCArray $ toFFIType'' x
  HTuple [x] -> undefined
  HFunc [x] -> undefined
@@ -120,7 +122,7 @@ toFFIType' ht = case ht of
 
 fromFFIType :: HType -> HType
 fromFFIType ht = case ht of
- HString -> HCString
+ HString -> HCWString
  HList x -> HCArray $ fromFFIType x
  HTuple [x] -> undefined
  HFunc [x]  -> undefined
