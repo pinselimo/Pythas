@@ -99,13 +99,13 @@ convertsToFunc modname funcname fromConvs toConv =
        lambdas = concat $ zipWith createLambda fromConvs $ argnames fromConvs
 
 createArgString :: [Convert] -> [Char] -> String
-createArgString cvs chs = concat $ map (uncurry createArgString') $ zip cvs chs
+createArgString cvs chs = concat $ zipWith createArgString' cvs chs
 
 createArgString' :: Convert -> Char -> String
 createArgString' (Pure (FromC cv)) c = '(':cv ++ ' ':c:") "
 createArgString' (FromC cv) c = '(':cv ++ ' ':c:") "
 createArgString' (Nested _ cv) c = "(map " ++ createArgString' cv ' ' ++ c:") "
-createArgString' _ c = ' ':c:[]
+createArgString' _ c = [' ',c]
 
 createLambda :: Convert -> Char -> String
 createLambda c varname

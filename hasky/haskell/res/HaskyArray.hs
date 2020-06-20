@@ -27,7 +27,7 @@ carrAlignment a =  lenConstraint + ptrConstraint
 gotoArray :: (Storable a) => CArray a -> Ptr (Ptr a)
 gotoArray a = let align p = alignPtr p $ sizeOf p
                   jump = plusPtr  a $ sizeOf (0 :: CInt)
-            in align $ jump
+            in align jump
 
 instance (Storable a) => Storable (CArrayStruct a) where
     sizeOf    = carrSize
