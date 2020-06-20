@@ -26,7 +26,8 @@ createFFI fn modname exports typeDefs =
      ffiModname = modname ++ "_hasky_ffi"
      exportedFuncTypes = filter ((`elem` exports) . funcN) typeDefs
      ffiFunctions = map (makeFFIExport modname) exportedFuncTypes
-     ffiContent = "module " ++ ffiModname
+     ffiContent = "{#- LANGUAGE Foreign Function Interface -#}\n"
+             ++ "module " ++ ffiModname
              ++ " where\n\n"
              ++ "import qualified " ++ modname ++ "\n\n"
              ++ foldr (\a b -> a ++ "\n" ++ b) "" (imports ++ [""] ++ ffiFunctions)
