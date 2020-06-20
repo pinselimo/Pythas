@@ -86,11 +86,11 @@ def restype(hs_type):
     if ll < 0:
         arr = hs_type.find('CArray ')
         if arr < 0:
-            return restype, lambda x:x
+            return restype, lambda x:x, False
         else:
-            return restype, from_c_array
+            return restype, from_c_array, True
     else:
-        return restype, from_linked_list
+        return restype, from_linked_list, True
 
 def strip_io(tp):
     '''
@@ -119,6 +119,9 @@ def parse_type(name, hs_type):
         argtypes.append(argt)
         constructors.append(constructor)
 
-    restp, reconstructor = restype(out)
+    restp, reconstructor, destroy = restype(out)
 
-    return FuncInfo(name, argtypes, restp, constructors, reconstructor)
+    return FuncInfo(
+              name, argtypes, restp, constructors
+            , reconstructor, destroy, hs_type
+            )
