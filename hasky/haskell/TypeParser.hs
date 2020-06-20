@@ -15,7 +15,7 @@ parseTypeDefs :: Parser [TypeDef]
 parseTypeDefs = manyTill parseIfTypeDef eof
 
 parseIfTypeDef :: Parser TypeDef
-parseIfTypeDef = (manyTill skipLine isTypeDef) *> parseTypeDef
+parseIfTypeDef = manyTill skipLine isTypeDef *> parseTypeDef
 
 parseTypeDef :: Parser TypeDef
 parseTypeDef = do
@@ -31,15 +31,15 @@ parseType = func <|> tuple <|> list <|> io <|> unit <|> htype
 
 typeConstr = funcName *> barrow
 
-skipLine = manyTill anyToken (endOfLine <|> semi <|> (eof *> return '\n'))
+skipLine = manyTill anyToken (endOfLine <|> semi <|> ('\n' <$ eof))
 
-io = try iomonad *> parseType >>= return . HIO
-unit = parens skip >> return HUnit
-func = isFunc *> parens (sepBy1 (strip parseType) (strip arrow))  >>= return . HFunc
-tuple = isTuple *> parens (commaSep $ strip parseType) >>= return . HTuple
-list = brackets (strip parseType) >>= return . HList
+io    = HIO    <$> (try iomonad *> parseType)
+unit  = HUnit  <$  (parens skip)
+func  = HFunc  <$> (isFunc *> parens (sepBy1 (strip parseType) (strip arrow)))
+tuple = HTuple <$> (isTuple *> parens (commaSep $ strip parseType))
+list  = HList  <$> (brackets (strip parseType))
 
 -- Checkers:
 isFunc = try $ lookAhead $ parens (identifier *> many1 (strip $ arrow *> parseType))
 isTuple = try $ lookAhead $ parens (parseType *> many1 (strip $ comma *> parseType))
-isTypeDef = try $ lookAhead $ parseTypeDef
+isTypeDef = try $ lookAhead parseTypeDef

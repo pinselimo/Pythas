@@ -4,8 +4,8 @@ import HTypes (HType(..), ffiType)
 import TypeParser (TypeDef(funcN, funcT))
 
 data Convert = Pure Convert
-             | IO_In Convert
-             | IO_Out Convert Convert
+             | IOIn Convert
+             | IOOut Convert Convert
              | Nested Convert Convert
              | Free String
              | ToC String
@@ -57,9 +57,9 @@ fec = "foreign export ccall "
 
 -- TODO: Cover more cases
 makeFinalizer :: String -> Convert -> HType -> String
-makeFinalizer funcname conv ht = case needsFinalizer conv of
- True  -> finalizerExport n ht ++ "\n" ++ finalizerFunc n conv
- False -> ""
+makeFinalizer funcname conv ht = if needsFinalizer conv
+ then finalizerExport n ht ++ "\n" ++ finalizerFunc n conv
+ else ""
  where n = funcname ++ "Finalizer"
 
 
@@ -69,10 +69,11 @@ finalizerFunc n freer = n ++ " = " ++ finalizerFunc' freer ++ "\n"
 finalizerFunc' :: Convert -> String
 finalizerFunc' freer = case freer of
  Free f -> f
- IO_Out f _ -> finalizerFunc' f
- Nested a b -> finalizerFunc' a ++ case isIO b of
-    True -> " mapM " ++ finalizerFunc' b
-    False -> ""
+ IOOut f _ -> finalizerFunc' f
+ Nested a b -> finalizerFunc' a ++ 
+    if isIO b
+    then " mapM " ++ finalizerFunc' b
+    else ""
  _ -> ""
 
 finalizerExport :: String -> HType -> String
@@ -93,27 +94,27 @@ convertsToFunc :: String -> String -> [Convert] -> Convert -> String
 convertsToFunc modname funcname fromConvs toConv =
  let start = funcname ++ args ++ " = "
      qname = modname ++ "." ++ funcname
-     args  = foldr (\a b -> ' ' : [a] ++ b) " " $ argnames fromConvs
+     args  = foldr (\a b -> ' ':a:b) " " $ argnames fromConvs
  in start ++ lambdas ++ ret ++ " $ " ++ qname ++ args
  where ret = retfunc (any isIO fromConvs) toConv
-       lambdas = foldr (++) "" $ map (uncurry createLambda) $ zip fromConvs $ argnames fromConvs
+       lambdas = concat $ zipWith createLambda fromConvs $ argnames fromConvs
 
 createLambda :: Convert -> Char -> String
 createLambda c varname
  | not $ isIO c = ""
  | otherwise    = case c of
      Nested a b -> createLambda a varname ++ createLambda b varname
-     IO_In (FromC c) -> c ++ ' ':varname:" >>= \\" ++ varname:" ->\n    "
+     IOIn (FromC c) -> c ++ ' ':varname:" >>= \\" ++ varname:" ->\n    "
 
 retfunc :: Bool -> Convert -> String
 retfunc ioIn conv
- | ioIn && (not $ isIO conv) = "return $ " ++ retfunc' conv
+ | ioIn && not (isIO conv) = "return $ " ++ retfunc' conv
  | otherwise = retfunc' conv
  where retfunc' conv' = case conv' of
-        Nested a b         -> case isIO b of
-           True  -> retfunc' a ++ " $ mapM " ++ retfunc False b
-           False -> retfunc' a ++ " $ map " ++ retfunc False b
-        IO_Out _ (ToC c) -> c
+        Nested a b         -> if isIO b
+           then retfunc' a ++ " $ mapM " ++ retfunc False b
+           else retfunc' a ++ " $ map " ++ retfunc False b
+        IOOut _ (ToC c) -> c
         Pure (ToC c)     -> c
 
 -- FFI Export Type Construction
@@ -152,8 +153,8 @@ fromFFIType ht = case ht of
 -- FFI Export Type Converter Construction
 toFFIConvert :: HType -> Convert
 toFFIConvert ht = case ht of
- HString -> IO_Out (Free "freeCWString") $ ToC "newCWString"
- HList x -> Nested (IO_Out (Free "freeCArray") $ ToC "newArray") $ toFFIConvert x
+ HString -> IOOut (Free "freeCWString") $ ToC "newCWString"
+ HList x -> Nested (IOOut (Free "freeCArray") $ ToC "newArray") $ toFFIConvert x
  HTuple [x] -> undefined -- TODO Tuples
  HFunc  [x] -> undefined -- TODO Functions
  HInteger -> Pure $ ToC "fromIntegral"
@@ -163,8 +164,8 @@ toFFIConvert ht = case ht of
 
 fromFFIConvert :: HType -> Convert
 fromFFIConvert ht = case ht of
- HString -> IO_In $ FromC "peekCWString"
- HList x -> Nested (IO_In $ FromC "peekCArray") $ fromFFIConvert x
+ HString -> IOIn $ FromC "peekCWString"
+ HList x -> Nested (IOIn $ FromC "peekCArray") $ fromFFIConvert x
  HTuple [x] -> undefined -- TODO Tuples
  HFunc  [x] -> undefined -- TODO Functions
  HInteger -> Pure $ FromC "fromIntegral"
@@ -178,6 +179,6 @@ isIO (Nested a b) = isIO a || isIO b
 isIO _ = True
 
 needsFinalizer :: Convert -> Bool
-needsFinalizer (IO_Out _ _) = True
+needsFinalizer (IOOut _ _) = True
 needsFinalizer (Nested a b) = True
 needsFinalizer _ = False
