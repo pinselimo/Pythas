@@ -1,4 +1,4 @@
-module HTypes (HType(HFunc, HTuple, HList, HIO, HUnit), htype) where
+module HTypes (HType(..), htype) where
 
 import Text.Parsec ((<|>), unexpected, try, skipMany)
 import qualified Text.Parsec.Char as PC (string)
@@ -7,6 +7,7 @@ import Text.Parsec.String (Parser)
 data HType
    = HUnit
    | HBool
+   | HCBool
    | HChar
    | HSChar
    | HUChar
@@ -16,6 +17,7 @@ data HType
    | HCUInt
    | HLong
    | HULong
+   | HLLong
    | HFloat
    | HDouble
    | HInt
@@ -26,7 +28,11 @@ data HType
    | HList HType
    | HTuple [HType]
    | HFunc [HType]
-   | HPtr HType -- TODO constrain HTypes available (only Storable ones)
+   | HCTuple [HType]
+   | HCFunc [HType]
+   | HCArray HType
+   | HCList HType
+   | HCPtr HType -- TODO constrain HTypes available (only Storable ones)
    deriving (Show, Eq)
 
 htype = foldr (<|>) (unexpected "invalid type") types
