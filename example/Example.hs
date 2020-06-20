@@ -13,8 +13,6 @@ hello = putStrLn "Hello from Haskell!"
 square :: CInt -> CInt
 square i = i * i
 
-foreign export ccall multisin :: Int -> Double -> Double
-
 multisin :: Int -> Double -> Double
 multisin x y = (fromIntegral x) * (sin y)
 
