@@ -7,6 +7,7 @@ from sys import meta_path, platform
 import os.path
 
 from .haskell.ghc import GHC_VERSION, ghc_compile_cmd
+from .haskell import hsparser
 from .haskell.parse_file import parse_haskell
 from .haskell.ffi import create_ffi_file
 from .utils import custom_attr_getter, find_source, DOT
@@ -48,15 +49,18 @@ class HaskyLoader(Loader):
         return None
 
     def exec_module(self, module):
-        parse_info = parse_haskell(self.filename)
-        ffi_files = create_ffi_file(self.filename, parse_info)
+        ffi_filename = hsparser.createFileBindings(self.filename)
+        ffi_files = [ffi_filename]
+        for f in ffi_files:
+            print("Got File: " +f)
+        ffi_pinfos = map(parse_haskell,ffi_files)
         libs = [(cdll.LoadLibrary(libname),info)
-            for libname,info in create_shared_libs(ffi_files)]
+            for libname,info in create_shared_libs(ffi_files, ffi_pinfos)]
         setattr(module, 'ffi_libs', libs)
         module.__getattr__ = partial(custom_attr_getter, module)
 
-def create_shared_libs(ffi_files):
-    yield from (ghc_compile(fn, info) for fn,info in ffi_files)
+def create_shared_libs(ffi_files, ffi_pinfos):
+    yield from (ghc_compile(fn, info) for fn,info in zip(ffi_files, ffi_pinfos))
 
 def ghc_compile(filename, parse_info):
     filedir = parse_info.dir
