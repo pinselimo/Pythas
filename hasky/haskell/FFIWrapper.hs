@@ -76,13 +76,10 @@ wrapRes' (Pure (ToC cv)) maps res = "(return . " ++ putMaps Map maps ++ ' ':cv++
 wrapRes' (Nested a b) maps res = wrapRes' a maps "" ++ " =<< " ++ wrapRes' b (maps+1) res
 
 finalizerFunc :: String -> Convert -> String
-finalizerFunc n freer = needsFinalizer freer $ finalizerName n ++ " = " ++ finalizerFunc' freer 0 ++ "\n"
+finalizerFunc n freer = needsFinalizer freer $ finalizerName n ++ " x = " ++ finalizerFunc' freer 0 " x" ++ "\n"
 
-finalizerFunc' :: Convert -> Int -> String
-finalizerFunc' freer maps = case freer of
- IOOut (Free f) _ -> '(':(putMaps MapM maps)++' ':f++")"
- Nested a b -> '(':finalizerFunc' a maps ++ 
-    if isIO b
-    then ") =<< " ++ finalizerFunc' b (maps-1)
-    else ")"
- _ -> ""
+finalizerFunc' :: Convert -> Int -> String -> String
+finalizerFunc' cv maps var = case cv of
+    (Nested a (Pure _)) -> finalizerFunc' a maps var
+    (Nested a b) -> finalizerFunc' b (maps+1) var ++ " >> " ++ finalizerFunc' a maps var
+    (IOOut (Free f) _) -> '(':putMaps MapM maps ++ ' ':f++var++")"

@@ -32,3 +32,6 @@ haskellList = [63]
 
 strings :: String -> String
 strings = filter (/= 'a')
+
+nested :: [[Int]]
+nested = [[1]]
