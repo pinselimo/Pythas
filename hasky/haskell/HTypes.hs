@@ -1,4 +1,4 @@
-module HTypes (HType(..), htype, ffiType) where
+module HTypes (HType(..), htype) where
 
 import Text.Parsec ((<|>), unexpected, try, skipMany)
 import qualified Text.Parsec.Char as PC (string)
@@ -38,35 +38,6 @@ data HType
    | HCList HType
    | HCPtr HType -- TODO constrain HTypes available (only Storable ones)
    deriving (Show, Eq)
-
-ffiType :: HType -> String
-ffiType ht = case ht of
-    HUnit   -> "()"
-    HCBool  -> "CBool"
-    HChar   -> "CChar"
-    HWChar  -> "HWchar"
-    HSChar  -> "CSChar"
-    HUChar  -> "CUChar"
-    HShort  -> "CShort"
-    HUShort -> "CUShort"
-    HCInt   -> "CInt"
-    HCUInt  -> "CUInt"
-    HLong   -> "CLong"
-    HULong  -> "CULong"
-    HLLong  -> "CLLong"
-    HULLong -> "CULLong"
-    HCFloat  -> "CFloat"
-    HCDouble -> "CDouble"
-    HFloat   -> "Float"
-    HDouble  -> "Double"
-    HInt    -> "CInt"
-    HInteger -> "CLLong"
-    HCWString -> "CWString"
-    HIO ht'  -> "IO " ++ further ht'
-    HCArray ht' -> "CArray " ++ further ht'
-    HCList ht'  -> "CList " ++ further ht'
-    _ -> fail ("Non C-compatible type \"" ++ show ht ++ "\" in export")
-    where further = (\s -> "( " ++ s ++ " )") . ffiType
 
 htype = foldr (<|>) (unexpected "invalid type") types
  where types = [char, schar, uchar, short, ushort
