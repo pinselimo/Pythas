@@ -7,8 +7,8 @@ import Text.Parsec.Error (ParseError)
 import Foreign.C.String (CWString, peekCWString, newCWString)
 import Control.Exception (Exception, throw)
 
-import TypeParser (parseTypeDefs, TypeDef(funcN))
-import ExportsParser (parseExports, parseModname)
+import ParseTypes (parseTypeDefs, TypeDef(funcN))
+import ParseExports (parseExports, parseModname)
 import FFICreate (createFFI)
 
 foreign export ccall createFileBindings :: CWString -> IO CWString

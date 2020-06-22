@@ -1,6 +1,6 @@
 module FFICreate (createFFI) where
 
-import TypeParser (TypeDef(funcN, funcT))
+import ParseTypes (TypeDef(funcN, funcT))
 import FFIType
 import FFIWrapper
 

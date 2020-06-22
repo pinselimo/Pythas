@@ -1,7 +1,7 @@
 module FFIUtils where
 
 import HTypes (HType(..))
-import TypeParser (TypeDef(funcN, funcT))
+import ParseTypes (TypeDef(funcN, funcT))
 
 data FromTo = ToC String
             | FromC String

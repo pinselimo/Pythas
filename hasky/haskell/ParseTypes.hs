@@ -1,4 +1,4 @@
-module TypeParser (parseTypeDefs, TypeDef(funcN, funcT)) where
+module ParseTypes (parseTypeDefs, TypeDef(funcN, funcT)) where
 
 import Text.Parsec
 import Text.Parsec.String (Parser)

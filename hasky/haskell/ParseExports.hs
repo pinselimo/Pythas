@@ -1,4 +1,4 @@
-module ExportsParser (parseExports, parseModname) where
+module ParseExports (parseExports, parseModname) where
 
 import Prelude hiding (mod)
 import Text.Parsec.String (Parser)
