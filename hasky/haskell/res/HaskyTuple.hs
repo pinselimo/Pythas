@@ -15,6 +15,9 @@ t2Alignment ct = aConstraint + bConstraint
     where aConstraint = alignment $ c2fst ct
           bConstraint = alignment $ c2snd ct
 
+toTuple2 :: (Storable a, Storable b) => (a,b) -> Tuple2 a b
+toTuple2 = uncurry Tuple2
+
 instance (Storable a, Storable b) => Storable (Tuple2 a b) where
     sizeOf    = t2Size
     alignment = t2Alignment
@@ -35,6 +38,9 @@ t3Alignment ct = aConstraint + bConstraint + cConstraint
     where aConstraint = alignment $ c3fst ct
           bConstraint = alignment $ c3snd ct
           cConstraint = alignment $ c3trd ct
+
+toTuple3 :: (Storable a, Storable b, Storable c) => (a, b, c) -> Tuple3 a b c
+toTuple3 (a,b,c) = Tuple3 a b c
 
 instance (Storable a, Storable b, Storable c) => Storable (Tuple3 a b c) where
     sizeOf    = t3Size
