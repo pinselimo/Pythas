@@ -33,5 +33,5 @@ haskellList = [63]
 strings :: String -> String
 strings = filter (/= 'a')
 
-nested :: [[Int]]
-nested = take 999 $ repeat [1..99999]
+nested :: [[String]] -> [[String]]
+nested = id
