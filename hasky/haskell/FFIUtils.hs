@@ -27,14 +27,15 @@ instance Show Map where
 finalizerName = (++"Finalizer")
 
 putMaps :: Map -> Int -> String
-putMaps m 0 = ""
-putMaps m i = '(':putMaps' m i ++ ")"
+putMaps m i 
+ | i > 0 = '(':putMaps' m i ++ ")"
+ | otherwise = ""
 
 putMaps' :: Map -> Int -> String
 putMaps' mapExp maps
          | maps > 1  = (putMaps mapExp (maps-1)) ++ ' ':'.':' ':show mapExp
          | otherwise = show mapExp
-
+          
 -- FFI Export Type Construction
 toFFIType :: Bool -> HType -> HType
 toFFIType anyIO ht = let ht' = toFFIType' ht
