@@ -46,7 +46,7 @@ def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2):
     HS_BRACKET_C = os.path.join(RESOURCES,"hswrap.c")
     GHC_OPT_OPTIMISATION = ["","-O","-O2","-optc-O3"]
     GHC_OUT = "-o"
-    HASKY_TYPES = [os.path.join(RESOURCES,t) for t in ['HaskyArray.hs','HaskyList.hs','HaskyString.hs',]]
+    HASKY_TYPES = [os.path.join(RESOURCES,t) for t in ['HaskyArray.hs','HaskyList.hs','HaskyString.hs','HaskyTuple.hs',]]
     cmd = []
 
     if platform.startswith('linux'):

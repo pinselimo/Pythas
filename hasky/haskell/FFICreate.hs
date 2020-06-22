@@ -11,6 +11,7 @@ imports = map ("import "++)
           ,"Foreign.Marshal.Alloc (free)"
           ,"HaskyList"
           ,"HaskyArray"
+          ,"HaskyTuple"
           ,"HaskyString"]
 
 createFFI :: FilePath -> String -> [String] -> [TypeDef] -> (FilePath, String)
