@@ -69,3 +69,25 @@ def from_c_array(cp_array):
     length = cp_array.contents.len
     array = cp_array.contents.ptr
     return [array[i] for i in range(length)]
+
+class Tuple2:
+    pass
+
+def new_tuple2(atype, btype):
+    class c_tuple2(Tuple2, cl.Structure):
+        _fields_ = [('a',atype),('b',btype)]
+    return c_tuple2
+
+def from_tuple2(tuple2):
+    return (tuple2.a, tuple2.b)
+
+class Tuple3:
+    pass
+
+def new_tuple3(atype, btype, ctype):
+    class c_tuple3(Tuple3, cl.Structure):
+        _fields_ = [('a',atype),('b',btype),('c',ctype)]
+    return c_tuple3
+
+def from_tuple3(tuple3):
+    return (tuple3.a, tuple3.b, tuple3.c)
