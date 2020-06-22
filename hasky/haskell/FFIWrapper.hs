@@ -82,4 +82,7 @@ finalizerFunc' :: Convert -> Int -> String -> String
 finalizerFunc' cv maps var = case cv of
     (Nested a (Pure _)) -> finalizerFunc' a maps var
     (Nested a b) -> finalizerFunc' b (maps+1) var ++ " >> " ++ finalizerFunc' a maps var
-    (IOOut (Free f) _) -> '(':putMaps MapM maps ++ ' ':f++var++")"
+    (IOOut (Free f) _) -> if maps > 0 
+                          then '(':'(':putMaps MapM maps ++ ' ':f++')':" =<< " ++ putMaps MapM (maps-1) ++ " peekArray" ++ var++")"
+                          else '(':putMaps MapM maps ++ ' ':f++var++")"
+
