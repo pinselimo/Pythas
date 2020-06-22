@@ -29,8 +29,10 @@ wrapString w = let
        lmbds = foldr (\a b -> a ++ '\n':tab ++ b) "" $ lambdas w args
        args  = argnames $ argconv w
        argv  = wrapArgs w args
-       resv  = wrapRes (reswrap w) (originalres w) (any isIO $ argconv w) $ qname ++ ' ':argv
-       in start ++ lmbds ++ tab ++ resv
+       resv  = wrapRes (reswrap w) (originalres w) (any isIO $ argconv w) $ qname ++ argv
+       in case lmbds of 
+            "" -> start ++ resv
+            _  -> start ++ lmbds ++ tab ++ resv
 
 lambdas :: Wrapper -> [Char] -> [String]
 lambdas w = lambdas' . zip (argconv w)
@@ -48,8 +50,8 @@ lambda c v = lambda' c v 0
 
 lambda' :: Convert -> Char -> Int -> String
 lambda' (Nested a b _) var maps = lambda' a var maps ++ '\n':tab ++ lambda' b var (maps+1)
-lambda' (IOIn (FromC cv)) var maps = '(':putMaps MapM maps++' ':cv++' ':var:") >>= \\"++var:" -> "
-lambda' (Pure (FromC cv)) var maps = '(':"return $ "++putMaps Map maps++' ':cv++' ':var:") >>= \\"++var:" -> "
+lambda' (IOIn (FromC cv)) var maps = '(':putMaps MapM maps++' ':cv++' ':var:") >>= \\"++var:" ->"
+lambda' (Pure (FromC cv)) var maps = '(':"return $ "++putMaps Map maps++' ':cv++' ':var:") >>= \\"++var:" ->"
 
 wrapArgs :: Wrapper -> [Char] -> String
 wrapArgs w args = concat $ zipWith wrapArg (argconv w) args
