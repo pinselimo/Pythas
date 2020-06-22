@@ -49,7 +49,11 @@ toFFIType' :: HType -> HType
 toFFIType' ht = case ht of
  HString -> HIO HCWString
  HList x -> HIO $ HCArray $ toFFIType'' x
- HTuple xs -> HTuple $ map toFFIType'' xs
+ HTuple xs -> if any htIO subs
+              then HIO (HTuple fsbs)
+              else HTuple subs
+              where subs = map toFFIType' xs
+                    fsbs = map toFFIType'' xs
  HFunc xs -> undefined
  HInteger -> HLLong
  HInt -> HCInt
@@ -107,6 +111,10 @@ isIO cv = case cv of
     (Tuple2 a b)   -> isIO a || isIO b
     (Tuple3 a b c) -> isIO a || isIO b || isIO c
     _              -> True
+
+htIO :: HType -> Bool
+htIO (HIO _) = True
+htIO _ = False
 
 needsFinalizer :: Convert -> String -> String
 needsFinalizer cv s = if needsFinalizer' cv then s else ""
