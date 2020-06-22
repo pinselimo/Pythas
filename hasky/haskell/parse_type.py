@@ -73,39 +73,43 @@ def argtype(hs_type):
     returns: tuple : (type of argument, constructor)
     '''
     argt = hs2py(hs_type)
-
     ll = hs_type.find('CList ')
-    if ll < 0:
-        arr = hs_type.find('CArray ')
-        if arr < 0:
-            s = hs_type.find('CWString')
-            if s < 0:
-                return argt, argt
-            else:
-                return argt, lambda x: cl.pointer(cl.c_wchar_p(x))
-        else:
-            return argt, partial(to_c_array, argt._type_)
-    else:
-        return argt, partial(to_linked_list, argt._type_)
+    arr = hs_type.find('CArray ')
+    st = hs_type.find('CWString')
+    if ll+1 and (ll < arr or arr < 0): ## Linked List first
+        # subconstr = argtype(hs_type[ll+len('CList '):])[1]
+        constr = lambda x: partial(to_linked_list, argt._type_)(list(map(subconstr,x)))
+    elif arr+1 and (arr < ll or ll < 0): ## array first
+        subconstr = argtype(hs_type[arr+len('CArray '):])[1]
+        #constr = lambda x: partial(to_c_array, argt._type_)(list(map(subconstr,x)))
+        constr = partial(to_c_array, argt._type_)
+    elif st+1:
+        constr = lambda x: cl.pointer(cl.c_wchar_p(x))
+    else: # neither linked list nor array
+        constr = argt
+    return argt, constr
 
 def restype(hs_type):
     '''
     returns: tuple : (type of result, reconstructor, bool: needsFinalizer)
     '''
+    rtype = hs2py(hs_type)
+    final = True
     ll = hs_type.find('CList ')
-    restype = hs2py(hs_type)
-    if ll < 0:
-        arr = hs_type.find('CArray ')
-        if arr < 0:
-            s = hs_type.find('CWString')
-            if s < 0:
-                return restype, lambda x:x, False
-            else:
-                return restype, lambda x:x.contents.value, True
-        else:
-            return restype, from_c_array, True
-    else:
-        return restype, from_linked_list, True
+    arr = hs_type.find('CArray ')
+    st = hs_type.find('CWString')
+    if ll+1 and (ll < arr or arr < 0): ## Linked List first
+        inner = restype(hs_type[ll+len('CList '):])[1]
+        recon = lambda x: list(map(inner,from_linked_list(x)))
+    elif arr+1 and (arr < ll or ll < 0): ## array first
+        inner = restype(hs_type[arr+len('CArray '):])[1]
+        recon = lambda x: list(map(inner,from_c_array(x)))
+    elif st+1:
+        recon = lambda x:x.contents.value
+    else: # neither linked list nor array
+        recon = lambda x:x
+        final = False
+    return rtype, recon, final
 
 def strip_io(tp):
     '''

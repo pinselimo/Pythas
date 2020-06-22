@@ -75,14 +75,18 @@ wrapRes' (IOOut _ (ToC cv)) maps res = '(':putMaps MapM maps ++ ' ':cv++res++")"
 wrapRes' (Pure (ToC cv)) maps res = "(return . " ++ putMaps Map maps ++ ' ':cv++res++")"
 wrapRes' (Nested a b) maps res = wrapRes' a maps "" ++ " =<< " ++ wrapRes' b (maps+1) res
 
-finalizerFunc :: String -> Convert -> String
-finalizerFunc n freer = needsFinalizer freer $ finalizerName n ++ " x = " ++ finalizerFunc' freer 0 " x" ++ "\n"
+finalizerFunc :: String -> Convert -> HType -> String
+finalizerFunc n freer ft = needsFinalizer freer $ finalizerName n ++ " x = " ++ finalizerFunc' freer 0 ft " x" ++ "\n"
 
-finalizerFunc' :: Convert -> Int -> String -> String
-finalizerFunc' cv maps var = case cv of
-    (Nested a (Pure _)) -> finalizerFunc' a maps var
-    (Nested a b) -> finalizerFunc' b (maps+1) var ++ " >> " ++ finalizerFunc' a maps var
-    (IOOut (Free f) _) -> if maps > 0 
-                          then '(':'(':putMaps MapM maps ++ ' ':f++')':" =<< " ++ putMaps MapM (maps-1) ++ " peekArray" ++ var++")"
-                          else '(':putMaps MapM maps ++ ' ':f++var++")"
+finalizerFunc' :: Convert -> Int -> HType -> String -> String
+finalizerFunc' cv maps ft var = case cv of
+    (Nested a (Pure _)) -> finalizerFunc' a maps ft var
+    (Nested a b) -> finalizerFunc' b (maps+1) ft var ++ " >> " ++ finalizerFunc' a maps ft var
+    (IOOut (Free f) _) -> if maps > 0
+                     then '(':'(':putMaps MapM maps ++ ' ':f++')':get maps "peekArray" var
+                     else '(':putMaps MapM maps ++ ' ':f++var++")"
+
+get :: Int -> String -> String -> String
+get 0 _  var   = var ++ " )"
+get maps gf var = " =<< " ++ putMaps MapM (maps-1) ++ ' ':gf ++ get (maps-1) gf var
 
