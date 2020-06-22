@@ -79,7 +79,7 @@ wrapRes' cv maps res = case cv of
     (IOOut _ (ToC cv)) -> '(':putMaps MapM maps ++ ' ':cv++res++")"
     (Pure (ToC cv))    -> "(return . " ++ putMaps Map maps ++ ' ':cv++res++")"
     (Nested a b _)     -> wrapRes' a maps "" ++ " =<< " ++ wrapRes' b (maps+1) res
-    (Tuple2 a b)       -> undefined
+    (Tuple2 a b)       -> putMaps Map maps ++ "(\\(a,b) -> liftM2 toTuple2 " ++ wrapRes' a 0 " a" ++ ' ':wrapRes' b 0 " b"  ++ ")" ++ res
     (Tuple3 a b c)     -> undefined
 
 finalizerFunc :: String -> Convert -> HType -> String
