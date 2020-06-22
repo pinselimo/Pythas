@@ -14,6 +14,8 @@ data Convert = Pure FromTo
              | IOIn FromTo
              | IOOut Free FromTo   -- ↓peek↓
              | Nested Convert Convert String
+             | Tuple2 Convert Convert
+             | Tuple3 Convert Convert Convert
              deriving (Show, Eq)
 
 data Map = Map
@@ -27,7 +29,7 @@ instance Show Map where
 finalizerName = (++"Finalizer")
 
 putMaps :: Map -> Int -> String
-putMaps m i 
+putMaps m i
  | i > 0 = '(':putMaps' m i ++ ")"
  | otherwise = ""
 
@@ -47,8 +49,8 @@ toFFIType' :: HType -> HType
 toFFIType' ht = case ht of
  HString -> HIO HCWString
  HList x -> HIO $ HCArray $ toFFIType'' x
- HTuple [x] -> undefined
- HFunc [x] -> undefined
+ HTuple xs -> HTuple $ map toFFIType'' xs
+ HFunc xs -> undefined
  HInteger -> HLLong
  HInt -> HCInt
  HBool -> HCBool
@@ -76,7 +78,9 @@ toFFIConvert :: HType -> Convert
 toFFIConvert ht = case ht of
  HString -> IOOut (Free "freeCWString") $ ToC "newCWString"
  HList x -> Nested (IOOut (Free "freeArray") $ ToC "newArray") (toFFIConvert x) "peekArray"
- HTuple [x] -> undefined -- TODO Tuples
+ HTuple xs -> case map toFFIConvert xs of
+    (a:b:[])   -> Tuple2 a b
+    (a:b:c:[]) -> Tuple3 a b c
  HFunc  [x] -> undefined -- TODO Functions
  HInteger -> Pure $ ToC "fromIntegral"
  HInt -> Pure $ ToC "fromIntegral"
@@ -97,11 +101,18 @@ fromFFIConvert ht = case ht of
  _ -> Pure $ FromC "id"
 
 isIO :: Convert -> Bool
-isIO (Pure _) = False
-isIO (Nested a b _) = isIO a || isIO b
-isIO _ = True
+isIO cv = case cv of 
+    (Pure _)       -> False
+    (Nested a b _) -> isIO a || isIO b
+    (Tuple2 a b)   -> isIO a || isIO b
+    (Tuple3 a b c) -> isIO a || isIO b || isIO c
+    _              -> True
 
 needsFinalizer :: Convert -> String -> String
-needsFinalizer (IOOut _ _) s  = s
-needsFinalizer (Nested a b _) s = s
-needsFinalizer _ _ = ""
+needsFinalizer cv s = if needsFinalizer' cv then s else ""
+needsFinalizer' cv = case cv of
+    (IOOut _ _)    -> True
+    (Nested a b _) -> True
+    (Tuple2 a b)   -> needsFinalizer' a || needsFinalizer' b
+    (Tuple3 a b c) -> needsFinalizer' a || needsFinalizer' b || needsFinalizer' c
+    _              -> False

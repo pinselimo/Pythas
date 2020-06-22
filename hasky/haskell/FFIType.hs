@@ -49,5 +49,9 @@ ffiType ht = case ht of
     HIO ht'  -> "IO " ++ further ht'
     HCArray ht' -> "CArray " ++ further ht'
     HCList ht'  -> "CList " ++ further ht'
+    HTuple hts -> case length hts of
+                    2 -> "Tuple2 " ++ furthers hts
+                    3 -> "Tuple3 " ++ furthers hts
     _ -> fail ("Non C-compatible type \"" ++ show ht ++ "\" in export")
-    where further = (\s -> "( " ++ s ++ " )") . ffiType
+    where further  = (\s -> "( " ++ s ++ " )") . ffiType
+          furthers = concat . map ((' ':) . further)
