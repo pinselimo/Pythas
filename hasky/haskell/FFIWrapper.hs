@@ -26,12 +26,12 @@ wrapString :: Wrapper -> String
 wrapString w = let
        start = fname w ++ foldr (\a b->' ':a:b) " " args ++ " = "
        qname = ' ':mname w ++ '.':fname w
-       lmbds = foldr (\a b -> a ++ '\n':tab ++ b) "\n" $ lambdas w args
+       lmbds = foldr (\a b -> a ++ '\n':tab ++ b) "" $ lambdas w args
        args  = argnames $ argconv w
        argv  = wrapArgs w args
        resv  = wrapRes (reswrap w) (originalres w) (any isIO $ argconv w) $ qname ++ ' ':argv
+       in start ++ lmbds ++ tab ++ resv
 
-       in start ++ lmbds ++ tab ++ resv 
 lambdas :: Wrapper -> [Char] -> [String]
 lambdas w = lambdas' . zip (argconv w)
 
@@ -39,7 +39,7 @@ lambdas' :: [(Convert,Char)] -> [String]
 lambdas' = map (uncurry lambda) . filter (\(a,_) -> needsLambda a)
 
 needsLambda :: Convert -> Bool
-needsLambda (Nested a b) = needsLambda a || needsLambda b
+needsLambda (Nested a b _) = needsLambda a || needsLambda b
 needsLambda (IOIn _) = True
 needsLambda _ = False
 
@@ -47,7 +47,7 @@ lambda :: Convert -> Char -> String
 lambda c v = lambda' c v 0
 
 lambda' :: Convert -> Char -> Int -> String
-lambda' (Nested a b) var maps = lambda' a var maps ++ '\n':tab ++ lambda' b var (maps+1)
+lambda' (Nested a b _) var maps = lambda' a var maps ++ '\n':tab ++ lambda' b var (maps+1)
 lambda' (IOIn (FromC cv)) var maps = '(':putMaps MapM maps++' ':cv++' ':var:") >>= \\"++var:" -> "
 lambda' (Pure (FromC cv)) var maps = '(':"return $ "++putMaps Map maps++' ':cv++' ':var:") >>= \\"++var:" -> "
 
@@ -73,20 +73,23 @@ wrapRes cv ht _ res = case ht of
 wrapRes' :: Convert -> Int -> String -> String
 wrapRes' (IOOut _ (ToC cv)) maps res = '(':putMaps MapM maps ++ ' ':cv++res++")"
 wrapRes' (Pure (ToC cv)) maps res = "(return . " ++ putMaps Map maps ++ ' ':cv++res++")"
-wrapRes' (Nested a b) maps res = wrapRes' a maps "" ++ " =<< " ++ wrapRes' b (maps+1) res
+wrapRes' (Nested a b _) maps res = wrapRes' a maps "" ++ " =<< " ++ wrapRes' b (maps+1) res
 
 finalizerFunc :: String -> Convert -> HType -> String
 finalizerFunc n freer ft = needsFinalizer freer $ finalizerName n ++ " x = " ++ finalizerFunc' freer 0 ft " x" ++ "\n"
 
 finalizerFunc' :: Convert -> Int -> HType -> String -> String
-finalizerFunc' cv maps ft var = case cv of
-    (Nested a (Pure _)) -> finalizerFunc' a maps ft var
-    (Nested a b) -> finalizerFunc' b (maps+1) ft var ++ " >> " ++ finalizerFunc' a maps ft var
+finalizerFunc' = finalizerFunc'' [""]
+
+finalizerFunc'' :: [String] -> Convert -> Int -> HType -> String -> String
+finalizerFunc'' peek cv maps ft var = case cv of
+    (Nested a (Pure _) p) -> finalizerFunc'' peek a maps ft var
+    (Nested a b p) -> finalizerFunc'' (p:peek) b (maps+1) ft var ++ " >> " ++ finalizerFunc'' peek a maps ft var
     (IOOut (Free f) _) -> if maps > 0
-                     then '(':'(':putMaps MapM maps ++ ' ':f++')':get maps "peekArray" var
+                     then '(':'(':putMaps MapM maps ++ ' ':f++')':get maps peek var
                      else '(':putMaps MapM maps ++ ' ':f++var++")"
 
-get :: Int -> String -> String -> String
+get :: Int -> [String] -> String -> String
 get 0 _  var   = var ++ " )"
-get maps gf var = " =<< " ++ putMaps MapM (maps-1) ++ ' ':gf ++ get (maps-1) gf var
+get maps (peek:ps) var = " =<< " ++ putMaps MapM (maps-1) ++ ' ':peek ++ get (maps-1) ps var
 

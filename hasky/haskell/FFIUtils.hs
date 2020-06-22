@@ -12,8 +12,8 @@ data Free = Free String
 
 data Convert = Pure FromTo
              | IOIn FromTo
-             | IOOut Free FromTo
-             | Nested Convert Convert
+             | IOOut Free FromTo   -- ↓peek↓
+             | Nested Convert Convert String
              deriving (Show, Eq)
 
 data Map = Map
@@ -35,7 +35,7 @@ putMaps' :: Map -> Int -> String
 putMaps' mapExp maps
          | maps > 1  = (putMaps mapExp (maps-1)) ++ ' ':'.':' ':show mapExp
          | otherwise = show mapExp
-          
+
 -- FFI Export Type Construction
 toFFIType :: Bool -> HType -> HType
 toFFIType anyIO ht = let ht' = toFFIType' ht
@@ -75,7 +75,7 @@ fromFFIType ht = case ht of
 toFFIConvert :: HType -> Convert
 toFFIConvert ht = case ht of
  HString -> IOOut (Free "freeCWString") $ ToC "newCWString"
- HList x -> Nested (IOOut (Free "freeArray") $ ToC "newArray") $ toFFIConvert x
+ HList x -> Nested (IOOut (Free "freeArray") $ ToC "newArray") (toFFIConvert x) "peekArray"
  HTuple [x] -> undefined -- TODO Tuples
  HFunc  [x] -> undefined -- TODO Functions
  HInteger -> Pure $ ToC "fromIntegral"
@@ -88,7 +88,7 @@ toFFIConvert ht = case ht of
 fromFFIConvert :: HType -> Convert
 fromFFIConvert ht = case ht of
  HString -> IOIn $ FromC "peekCWString"
- HList x -> Nested (IOIn $ FromC "peekArray") $ fromFFIConvert x
+ HList x -> Nested (IOIn $ FromC "peekArray") (fromFFIConvert x) "peekArray"
  HTuple [x] -> undefined -- TODO Tuples
  HFunc  [x] -> undefined -- TODO Functions
  HInteger -> Pure $ FromC "fromIntegral"
@@ -98,10 +98,10 @@ fromFFIConvert ht = case ht of
 
 isIO :: Convert -> Bool
 isIO (Pure _) = False
-isIO (Nested a b) = isIO a || isIO b
+isIO (Nested a b _) = isIO a || isIO b
 isIO _ = True
 
 needsFinalizer :: Convert -> String -> String
 needsFinalizer (IOOut _ _) s  = s
-needsFinalizer (Nested a b) s = s
+needsFinalizer (Nested a b _) s = s
 needsFinalizer _ _ = ""
