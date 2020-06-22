@@ -50,4 +50,4 @@ ffiType ht = case ht of
     HCArray ht' -> "CArray " ++ further ht'
     HCList ht'  -> "CList " ++ further ht'
     _ -> fail ("Non C-compatible type \"" ++ show ht ++ "\" in export")
-    where further = (\s -> "( " ++ s ++ " )") . ffiType
+    where further = (\s -> "(" ++ s ++ ")") . ffiType
