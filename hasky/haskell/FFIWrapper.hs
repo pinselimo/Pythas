@@ -30,9 +30,9 @@ wrapString w = let
        args  = argnames $ argconv w
        argv  = wrapArgs w args
        resv  = wrapRes (reswrap w) (originalres w) (any isIO $ argconv w) $ qname ++ argv
-       in case lmbds of 
+       in case lmbds of
             "" -> start ++ resv
-            _  -> start ++ lmbds ++ tab ++ resv
+            _  -> start ++ lmbds ++ resv
 
 lambdas :: Wrapper -> [Char] -> [String]
 lambdas w = lambdas' . zip (argconv w)
@@ -86,12 +86,12 @@ finalizerFunc' = finalizerFunc'' [""]
 finalizerFunc'' :: [String] -> Convert -> Int -> HType -> String -> String
 finalizerFunc'' peek cv maps ft var = case cv of
     (Nested a (Pure _) p) -> finalizerFunc'' peek a maps ft var
-    (Nested a b p) -> finalizerFunc'' (p:peek) b (maps+1) ft var ++ " >> " ++ finalizerFunc'' peek a maps ft var
+    (Nested a b p) -> finalizerFunc'' (p:peek) b (maps+1) ft var ++ '\n':tab++" >> " ++ finalizerFunc'' peek a maps ft var
     (IOOut (Free f) _) -> if maps > 0
                      then '(':'(':putMaps MapM maps ++ ' ':f++')':get maps peek var
                      else '(':putMaps MapM maps ++ ' ':f++var++")"
 
 get :: Int -> [String] -> String -> String
-get 0 _  var   = var ++ " )"
+get 0 _  var   = var ++ ")"
 get maps (peek:ps) var = " =<< " ++ putMaps MapM (maps-1) ++ ' ':peek ++ get (maps-1) ps var
 
