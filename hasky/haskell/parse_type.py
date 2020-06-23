@@ -59,11 +59,20 @@ def hs2py(hs_type):
         hs_type = '()'
     ll = hs_type.find('CList ')
     arr = hs_type.find('CArray ')
-    st = hs_type.find('CWString')
-    if ll+1 and (ll < arr or arr < 0): ## Linked List first
+    t2 = hs_type.find('Tuple2 ')
+    t3 = hs_type.find('Tuple3 ')
+    if ll+1 and (ll < arr or arr < 0) and (ll < t2 or t2 < 0) and (ll < t3 or t3 < 0): ## Linked List first
         cls = cl.POINTER(new_linked_list(hs2py(hs_type[ll+len('CList '):])))
-    elif arr+1 and (arr < ll or ll < 0): ## array first
+    elif arr+1 and (arr < t2 or t2 < 0) and (arr < t3 or t3 < 0): ## array first
         cls = cl.POINTER(new_c_array(hs2py(hs_type[arr+len('CArray '):])))
+    elif t2+1 and (t2 < t3 or t3 < 0): ## tuple of 2 first
+        hs_type = hs_type[t2+len('Tuple2 '):]
+        hs_type_a, hs_type_b = hs_type.split(') (')
+        cls = cl.POINTER(new_tuple2(hs2py(hs_type_a), hs2py(hs_type_b)))
+    elif t3+1: ## tuple of 3 first
+        hs_type = hs_type[t3+len('Tuple3 '):]
+        hs_type_a, hs_type_b, hs_type_c = hs_type.split(') (')
+        cls = cl.POINTER(new_tuple3(hs2py(hs_type_a), hs2py(hs_type_b), hs2py(hs_type_c)))
     else: # neither linked list nor array
         cls = simple_hs_2_py(hs_type)
     return cls
@@ -97,19 +106,45 @@ def restype(hs_type):
     final = True
     ll = hs_type.find('CList ')
     arr = hs_type.find('CArray ')
+    t2 = hs_type.find('Tuple2 ')
+    t3 = hs_type.find('Tuple3 ')
     st = hs_type.find('CWString')
-    if ll+1 and (ll < arr or arr < 0): ## Linked List first
+    ## Linked List first
+    if ll+1 and (ll < arr or arr < 0) and (ll < t2 or t2 < 0) and (ll < t3 or t3 < 0):
         inner = restype(hs_type[ll+len('CList '):])[1]
         recon = lambda x: list(map(inner,from_linked_list(x)))
-    elif arr+1 and (arr < ll or ll < 0): ## array first
+    ## Array first
+    elif arr+1 and (arr < t2 or t2 < 0) and (arr < t3 or t3 < 0):
         inner = restype(hs_type[arr+len('CArray '):])[1]
         recon = lambda x: list(map(inner,from_c_array(x)))
+    ## Tuple of 2 first
+    elif t2+1 and (t2 < t3 or t3 < 0):
+        hs_type = hs_type[t2+len('Tuple2 '):]
+        hs_inner = hs_type.split(') (')
+        inner = map(restype,hs_inner)
+        recon = lambda x: applyT2(inner, from_tuple2(x))
+    ## Tuple of 3 first
+    elif t3+1:
+        hs_type = hs_type[t3+len('Tuple3 '):]
+        hs_inner = hs_type.split(') (')
+        inner = map(restype,hs_inner)
+        recon = lambda x: applyT3(inner, from_tuple3(x))
     elif st+1:
         recon = lambda x:x.contents.value
-    else: # neither linked list nor array
+    else:
         recon = lambda x:x
         final = False
     return rtype, recon, final
+
+def applyT2(fs,t):
+    fa,fb = fs
+    x,y = t
+    return (fa[1](x), fb[1](y))
+
+def applyT3(fs,t):
+    fa,fb,fc = fs
+    x,y,z = t
+    return (fa[1](x), fb[1](y), fc[1](z))
 
 def strip_io(tp):
     '''

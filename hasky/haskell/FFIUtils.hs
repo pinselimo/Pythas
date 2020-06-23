@@ -49,11 +49,7 @@ toFFIType' :: HType -> HType
 toFFIType' ht = case ht of
  HString -> HIO HCWString
  HList x -> HIO $ HCArray $ toFFIType'' x
- HTuple xs -> if any htIO subs
-              then HIO (HTuple fsbs)
-              else HTuple subs
-              where subs = map toFFIType' xs
-                    fsbs = map toFFIType'' xs
+ HTuple xs -> HIO $ HTuple $ map toFFIType'' xs
  HFunc xs -> undefined
  HInteger -> HLLong
  HInt -> HCInt

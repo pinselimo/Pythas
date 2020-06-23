@@ -66,9 +66,8 @@ def to_c_array(cls, seq):
     return arr
 
 def from_c_array(cp_array):
-    length = cp_array.contents.len
-    array = cp_array.contents.ptr
-    return [array[i] for i in range(length)]
+    c_arr = cp_array.contents
+    return [c_arr.ptr[i] for i in range(c_arr.len)]
 
 class Tuple2:
     pass
@@ -78,8 +77,9 @@ def new_tuple2(atype, btype):
         _fields_ = [('a',atype),('b',btype)]
     return c_tuple2
 
-def from_tuple2(tuple2):
-    return (tuple2.a, tuple2.b)
+def from_tuple2(cpt):
+    ct = cpt.contents
+    return (ct.a, ct.b)
 
 class Tuple3:
     pass
@@ -89,5 +89,6 @@ def new_tuple3(atype, btype, ctype):
         _fields_ = [('a',atype),('b',btype),('c',ctype)]
     return c_tuple3
 
-def from_tuple3(tuple3):
-    return (tuple3.a, tuple3.b, tuple3.c)
+def from_tuple3(cpt):
+    ct = cpt.contents
+    return (ct.a, ct.b, ct.c)

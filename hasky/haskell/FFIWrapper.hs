@@ -77,10 +77,15 @@ wrapRes cv ht _ res = case ht of
 wrapRes' :: Convert -> Int -> String -> String
 wrapRes' cv maps res = case cv of
     (IOOut _ (ToC cv)) -> '(':putMaps MapM maps ++ ' ':cv++res++")"
-    (Pure (ToC cv))    -> "(return . " ++ putMaps Map maps ++ ' ':cv++res++")"
+    (Pure (ToC cv))    -> let m = putMaps Map maps
+                              r = "(return"
+                              e = ' ':cv++res++")"
+                          in case m of
+                                "" -> r ++ " $ " ++ e
+                                _  -> r ++ " . " ++ m ++ e
     (Nested a b _)     -> wrapRes' a maps "" ++ " =<< " ++ wrapRes' b (maps+1) res
-    (Tuple2 a b)       -> putMaps Map maps ++ "(\\(a,b) -> liftM2 toTuple2 " ++ wrapRes' a 0 " a" ++ ' ':wrapRes' b 0 " b"  ++ ")" ++ res
-    (Tuple3 a b c)     -> putMaps Map maps ++ "(\\(a,b,c) -> liftM3 toTuple3 " ++ wrapRes' a 0 " a" ++ ' ':wrapRes' b 0 " b" ++ ' ':wrapRes' c 0 " c" ++ ")" ++ res
+    (Tuple2 a b)       -> putMaps Map maps ++ "(\\(a,b) -> (liftM2 (,)) " ++ wrapRes' a 0 " a" ++ ' ':wrapRes' b 0 " b"  ++ " >>= (\\(a,b) -> newTuple2 a b)) " ++ res
+    (Tuple3 a b c)     -> putMaps Map maps ++ "(\\(a,b,c) -> (liftM3 (,,)) " ++ wrapRes' a 0 " a" ++ ' ':wrapRes' b 0 " b" ++ ' ':wrapRes' c 0 " c" ++ " >>= (\\(a,b,c) -> newTuple3 a b c)) " ++ res
 
 
 finalizerFunc :: String -> Convert -> String
@@ -95,8 +100,8 @@ finalizerFunc'' peek cv maps var =
         tuple3access = ["c3fst","c3snd","c3trd"]
         nestedff x = finalizerFunc'' peek x maps var
     in case cv of
-    Tuple2 a b          -> finalizeTuple tuple2access peek [a,b] maps var
-    Tuple3 a b c        -> finalizeTuple tuple3access peek [a,b,c] maps var
+    Tuple2 a b          -> '(':putMaps MapM maps ++ "peek x) >>= \\x -> " ++ finalizeTuple tuple2access peek [a,b] maps var
+    Tuple3 a b c        -> '(':putMaps MapM maps ++ "peek x) >>= \\x -> " ++ finalizeTuple tuple3access peek [a,b,c] maps var
     Nested a (Pure _) p -> nestedff a
     Nested a b p        -> finalizerFunc'' (p:peek) b (maps+1) var ++ plus ++ nestedff a
     IOOut (Free f) _    -> if maps > 0
