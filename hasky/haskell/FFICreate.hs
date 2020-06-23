@@ -9,6 +9,7 @@ imports = map ("import "++)
           ["Foreign.C.Types"
           ,"Foreign.Marshal.Utils (fromBool, toBool)"
           ,"Foreign.Marshal.Alloc (free)"
+          ,"Control.Monad (liftM2, liftM3)"
           ,"HaskyList"
           ,"HaskyArray"
           ,"HaskyTuple"
@@ -33,7 +34,7 @@ makeFFIExport modname typedef = let
      (functype, fromC, toC) = createFFIType $ funcT typedef
      ffitypedef = makeFFIType (funcN typedef) functype
      ffifunc    = show $ Wrapper modname (funcN typedef) fromC toC (last $ funcT typedef)
-     finalizerF = finalizerFunc (funcN typedef) toC (last functype)
+     finalizerF = finalizerFunc (funcN typedef) toC
      finalizerT = finalizerExport (funcN typedef) toC (last functype)
   in case needsFinalizer toC "?" of
         "" -> pack [ffitypedef, ffifunc]
