@@ -9,6 +9,7 @@ imports = map ("import "++)
           ["Foreign.C.Types"
           ,"Foreign.Marshal.Utils (fromBool, toBool)"
           ,"Foreign.Marshal.Alloc (free)"
+          ,"Foreign.Storable (peek)"
           ,"Control.Monad (liftM2, liftM3)"
           ,"HaskyList"
           ,"HaskyArray"
