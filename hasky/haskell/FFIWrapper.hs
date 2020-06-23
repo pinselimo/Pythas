@@ -80,12 +80,12 @@ wrapRes' cv maps res = case cv of
     (Pure (ToC cv))    -> let m = putMaps Map maps
                               r = "(return"
                               e = ' ':cv++res++")"
-                          in case m of
-                                "" -> r ++ " $ " ++ e
-                                _  -> r ++ " . " ++ m ++ e
+                          in case res of
+                                "" -> r ++ " . " ++ e
+                                _  -> r ++ " $ " ++ m ++ e
     (Nested a b _)     -> wrapRes' a maps "" ++ " =<< " ++ wrapRes' b (maps+1) res
-    (Tuple2 a b)       -> putMaps Map maps ++ "(\\(a,b) -> (liftM2 (,)) " ++ wrapRes' a 0 " a" ++ ' ':wrapRes' b 0 " b"  ++ " >>= (\\(a,b) -> newTuple2 a b)) " ++ res
-    (Tuple3 a b c)     -> putMaps Map maps ++ "(\\(a,b,c) -> (liftM3 (,,)) " ++ wrapRes' a 0 " a" ++ ' ':wrapRes' b 0 " b" ++ ' ':wrapRes' c 0 " c" ++ " >>= (\\(a,b,c) -> newTuple3 a b c)) " ++ res
+    (Tuple2 a b)       -> putMaps Map maps ++ "(\\(a,b) -> ((liftM2 (,)) (" ++ wrapRes' a 0 " a)" ++ ' ':'(':wrapRes' b 0 " b))"  ++ " >>= (\\(a,b) -> newTuple2 a b)) " ++ res
+    (Tuple3 a b c)     -> putMaps Map maps ++ "(\\(a,b,c) -> ((liftM3 (,,)) (" ++ wrapRes' a 0 " a)" ++ ' ':'(':wrapRes' b 0 " b)" ++ ' ':'(':wrapRes' c 0 " c))" ++ " >>= (\\(a,b,c) -> newTuple3 a b c)) " ++ res
 
 
 finalizerFunc :: String -> Convert -> String
