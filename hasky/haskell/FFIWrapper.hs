@@ -41,17 +41,19 @@ lambdas' :: [(Convert,Char)] -> [String]
 lambdas' = map (uncurry lambda) . filter (\(a,_) -> needsLambda a)
 
 needsLambda :: Convert -> Bool
-needsLambda (Nested a b _) = needsLambda a || needsLambda b
-needsLambda (IOIn _) = True
-needsLambda _ = False
+needsLambda cv = case cv of
+    (Nested a b _) -> needsLambda a || needsLambda b
+    (IOIn _)       -> True
+    _              -> False
 
 lambda :: Convert -> Char -> String
 lambda c v = lambda' c v 0
 
 lambda' :: Convert -> Char -> Int -> String
-lambda' (Nested a b _) var maps = lambda' a var maps ++ '\n':tab ++ lambda' b var (maps+1)
-lambda' (IOIn (FromC cv)) var maps = '(':putMaps MapM maps++' ':cv++' ':var:") >>= \\"++var:" ->"
-lambda' (Pure (FromC cv)) var maps = '(':"return $ "++putMaps Map maps++' ':cv++' ':var:") >>= \\"++var:" ->"
+lambda' cv var maps = case cv of
+    (Nested a b _)    -> lambda' a var maps ++ '\n':tab ++ lambda' b var (maps+1)
+    (IOIn (FromC cv)) -> '(':putMaps MapM maps++' ':cv++' ':var:") >>= \\"++var:" ->"
+    (Pure (FromC cv)) -> '(':"return $ "++putMaps Map maps++' ':cv++' ':var:") >>= \\"++var:" ->"
 
 wrapArgs :: Wrapper -> [Char] -> String
 wrapArgs w args = concat $ zipWith wrapArg (argconv w) args
@@ -73,9 +75,10 @@ wrapRes cv ht _ res = case ht of
     where w = wrapRes' cv 0
 
 wrapRes' :: Convert -> Int -> String -> String
-wrapRes' (IOOut _ (ToC cv)) maps res = '(':putMaps MapM maps ++ ' ':cv++res++")"
-wrapRes' (Pure (ToC cv)) maps res = "(return . " ++ putMaps Map maps ++ ' ':cv++res++")"
-wrapRes' (Nested a b _) maps res = wrapRes' a maps "" ++ " =<< " ++ wrapRes' b (maps+1) res
+wrapRes' cv maps res = case cv of
+    (IOOut _ (ToC cv)) -> '(':putMaps MapM maps ++ ' ':cv++res++")"
+    (Pure (ToC cv))    -> "(return . " ++ putMaps Map maps ++ ' ':cv++res++")"
+    (Nested a b _)     -> wrapRes' a maps "" ++ " =<< " ++ wrapRes' b (maps+1) res
 
 finalizerFunc :: String -> Convert -> HType -> String
 finalizerFunc n freer ft = needsFinalizer freer $ finalizerName n ++ " x = " ++ finalizerFunc' freer 0 ft " x" ++ "\n"
@@ -92,6 +95,6 @@ finalizerFunc'' peek cv maps ft var = case cv of
                      else '(':putMaps MapM maps ++ ' ':f++var++")"
 
 get :: Int -> [String] -> String -> String
-get 0 _  var   = var ++ ")"
+get 0    _         var = var ++ ")"
 get maps (peek:ps) var = " =<< " ++ putMaps MapM (maps-1) ++ ' ':peek ++ get (maps-1) ps var
 
