@@ -3,11 +3,14 @@ module FFIType where
 import FFIUtils
 import HTypes (HType(..))
 
+typeDef = " :: "
+fec = ("foreign export ccall "++)
+
 makeFFIType :: String -> [HType] -> String
-makeFFIType funcname ccompattypes = fec funcname ++ " :: " ++ functype
- where functype = argtypes ++ rettype
-       argtypes = foldr (\a b -> ffiType a ++ " -> " ++ b) "" $ init ccompattypes
+makeFFIType funcname ccompattypes = fec funcname ++ typeDef ++ functype
+ where argtypes = typeConcat $ init ccompattypes
        rettype  = ffiType $ last ccompattypes
+       typeconcat = foldr (\a b -> ffiType a ++ " -> " ++ b) rettype
 
 createFFIType :: [HType] -> ([HType], [Convert], Convert)
 createFFIType ts =
@@ -18,10 +21,12 @@ createFFIType ts =
     in (fromT ++ [toT], fromC, toC)
 
 finalizerExport :: String -> Convert -> HType -> String
-finalizerExport n c (HIO t) = needsFinalizer c $ fec $ finalizerName n ++ " :: " ++ ffiType t ++ " -> IO ()"
+finalizerExport n c (HIO t) = needsFinalizer c $ fec 
+                            $ finalizerName n 
+                            ++ typeDef 
+                            ++ ffiType t 
+                            ++ " -> IO ()"
 finalizerExport _ _ _ = ""
-
-fec = ("foreign export ccall "++)
 
 ffiType :: HType -> String
 ffiType ht = case ht of
