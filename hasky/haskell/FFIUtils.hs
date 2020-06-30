@@ -105,3 +105,16 @@ needsFinalizer :: Convert -> String -> String
 needsFinalizer (IOOut _ _) s  = s
 needsFinalizer (Nested a b _) s = s
 needsFinalizer _ _ = ""
+
+-- Writer functions
+sp s = ' ':s
+tab = "\n    "
+bindr = " =<< "
+bind = " >>= "
+cash = " $ "
+ring = " . "
+equals = " = "
+concat' = foldr (\a b->' ':a:b) ""
+concatNL = foldr (\a b -> a ++ tab ++ b) ""
+parens s = '(':s++")"
+return' = "return"

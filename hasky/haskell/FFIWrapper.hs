@@ -3,18 +3,6 @@ module FFIWrapper where
 import HTypes (HType(HIO))
 import FFIUtils
 
-sp s = ' ':s
-tab = "\n    "
-bindr = " =<< "
-bind = " >>= "
-cash = " $ "
-ring = " . "
-equals = " = "
-concat' = foldr (\a b->' ':a:b) ""
-concatNL = foldr (\a b -> a ++ tab ++ b) ""
-parens s = '(':s++")"
-return' = "return"
-
 type Modname = String
 type Funcname = String
 
