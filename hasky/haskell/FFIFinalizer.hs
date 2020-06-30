@@ -4,9 +4,9 @@ import HTypes (HType(HIO))
 import FFIUtils
 
 finalizerFunc :: String -> Convert -> HType -> String
-finalizerFunc n freer ft = if needsFinalizer freer
+finalizerFunc n freer finaltype = if needsFinalizer freer
                          then finalizerName n ++ arg ++ equals ++
-                              finalizerFunc' [""] freer 0 ft arg ++ "\n"
+                              finalizerFunc' [""] freer 0 finaltype arg ++ "\n"
                          else ""
                          where arg = sp "x"
 
