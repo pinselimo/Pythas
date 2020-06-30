@@ -60,9 +60,9 @@ lambda c v = lambda' c v 0
 lambda' :: Convert -> Char -> Int -> String
 lambda' cv var maps = case cv of
     (Nested a b _)    -> lambda' a var maps ++ tab ++ lambda' b var (maps+1)
-    (IOIn (FromC cv')) -> parens (end cv') ++ next
-    (Pure (FromC cv')) -> parens (return' ++ cash ++ end cv') ++ next
-    where end cv' = putMaps MapM maps++' ':cv'++[' ',var]
+    (IOIn (FromC cv')) -> parens (end MapM cv') ++ next
+    (Pure (FromC cv')) -> parens (return' ++ cash ++ end Map cv') ++ next
+    where end m cv' = putMaps m maps++' ':cv'++[' ',var]
           next    = bind ++ '\\':var:" ->"
 
 wrapArgs :: Wrapper -> [Char] -> String
@@ -89,9 +89,9 @@ wrapRes cv ht _ res = case ht of
 wrapRes' :: Convert -> Int -> String -> String
 wrapRes' cv maps res = case cv of
     (Nested a b _)     -> wrapRes' a maps "" ++ bindr ++ wrapRes' b (maps+1) res
-    (IOOut _ (ToC cv')) -> parens $ end cv'
-    (Pure (ToC cv'))    -> parens $ return' ++ ring ++ end cv'
-    where end cv' = putMaps MapM maps ++ sp cv' ++res
+    (IOOut _ (ToC cv')) -> parens $ end MapM cv'
+    (Pure (ToC cv'))    -> parens $ return' ++ ring ++ end Map cv'
+    where end m cv' = putMaps m maps ++ sp cv' ++res
 
 finalizerFunc :: String -> Convert -> HType -> String
 finalizerFunc n freer ft = needsFinalizer freer
