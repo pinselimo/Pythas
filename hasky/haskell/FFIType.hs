@@ -8,9 +8,9 @@ fec = ("foreign export ccall "++)
 
 makeFFIType :: String -> [HType] -> String
 makeFFIType funcname ccompattypes = fec funcname ++ typeDef ++ functype
- where argtypes = typeConcat $ init ccompattypes
+ where functype = typeConcat $ init ccompattypes
        rettype  = ffiType $ last ccompattypes
-       typeconcat = foldr (\a b -> ffiType a ++ " -> " ++ b) rettype
+       typeConcat = foldr (\a b -> ffiType a ++ " -> " ++ b) rettype
 
 createFFIType :: [HType] -> ([HType], [Convert], Convert)
 createFFIType ts =

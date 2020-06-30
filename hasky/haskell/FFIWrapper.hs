@@ -53,9 +53,9 @@ lambda c v = lambda' c v 0
 lambda' :: Convert -> Char -> Int -> String
 lambda' cv var maps = case cv of
     (Nested a b _)    -> lambda' a var maps ++ '\n':tab ++ lambda' b var (maps+1)
-    (IOIn (FromC cv)) -> '(' : end
-    (Pure (FromC cv)) -> "(return $ " ++ end
-    where end = putMaps MapM maps++' ':cv++' ':var:") >>= \\"++var:" ->"
+    (IOIn (FromC cv')) -> '(' : end cv'
+    (Pure (FromC cv')) -> "(return $ " ++ end cv'
+    where end cv' = putMaps MapM maps++' ':cv'++' ':var:") >>= \\"++var:" ->"
 
 wrapArgs :: Wrapper -> [Char] -> String
 wrapArgs w args = concat $ zipWith wrapArg (argconv w) args
@@ -79,9 +79,9 @@ wrapRes cv ht _ res = case ht of
 wrapRes' :: Convert -> Int -> String -> String
 wrapRes' cv maps res = case cv of
     (Nested a b _)     -> wrapRes' a maps "" ++ bindr ++ wrapRes' b (maps+1) res
-    (IOOut _ (ToC cv)) -> '(' : end
-    (Pure (ToC cv))    -> "(return . " ++ end
-    where end = putMaps MapM maps ++ ' ':cv++res++")"
+    (IOOut _ (ToC cv')) -> '(' : end cv'
+    (Pure (ToC cv'))    -> "(return . " ++ end cv'
+    where end cv' = putMaps MapM maps ++ ' ':cv'++res++")"
 
 
 finalizerFunc :: String -> Convert -> HType -> String
