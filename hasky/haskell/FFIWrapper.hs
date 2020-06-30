@@ -3,8 +3,17 @@ module FFIWrapper where
 import HTypes (HType(HIO))
 import FFIUtils
 
-tab = "    "
+sp s = ' ':s
+tab = "\n    "
 bindr = " =<< "
+bind = " >>= "
+cash = " $ "
+ring = " . "
+equals = " = "
+concat' = foldr (\a b->' ':a:b) ""
+concatNL = foldr (\a b -> a ++ tab ++ b) ""
+parens s = '(':s++")"
+return' = "return"
 
 type Modname = String
 type Funcname = String
@@ -25,9 +34,9 @@ argnames cs = take (length cs) ['a'..'z']
 
 wrapString :: Wrapper -> String
 wrapString w = let
-       start = fname w ++ foldr (\a b->' ':a:b) " " args ++ " = "
-       qname = ' ':mname w ++ '.':fname w
-       lmbds = foldr (\a b -> a ++ '\n':tab ++ b) "" $ lambdas w args
+       start = fname w ++ concat' args ++ equals
+       qname = sp $ mname w ++ '.':fname w
+       lmbds = concatNL $ lambdas w args
        args  = argnames $ argconv w
        argv  = wrapArgs w args
        resv  = wrapRes (reswrap w) (originalres w) (any isIO $ argconv w) $ qname ++ argv
@@ -50,56 +59,60 @@ lambda c v = lambda' c v 0
 
 lambda' :: Convert -> Char -> Int -> String
 lambda' cv var maps = case cv of
-    (Nested a b _)    -> lambda' a var maps ++ '\n':tab ++ lambda' b var (maps+1)
-    (IOIn (FromC cv')) -> '(' : end cv'
-    (Pure (FromC cv')) -> "(return $ " ++ end cv'
-    where end cv' = putMaps MapM maps++' ':cv'++' ':var:") >>= \\"++var:" ->"
+    (Nested a b _)    -> lambda' a var maps ++ tab ++ lambda' b var (maps+1)
+    (IOIn (FromC cv')) -> parens (end cv') ++ next
+    (Pure (FromC cv')) -> parens (return' ++ cash ++ end cv') ++ next
+    where end cv' = putMaps MapM maps++' ':cv'++[' ',var]
+          next    = bind ++ '\\':var:" ->"
 
 wrapArgs :: Wrapper -> [Char] -> String
 wrapArgs w args = concat $ zipWith wrapArg (argconv w) args
 
 wrapArg :: Convert -> Char -> String
-wrapArg (Pure (FromC cv)) c = ' ':'(':cv ++ ' ':c:")"
-wrapArg _ c = [' ',c]
+wrapArg cv c = case cv of
+    (Pure (FromC cv)) -> sp $ parens $ cv ++ v
+    _                 -> v
+    where v = [' ',c]
 
 wrapRes :: Convert -> HType -> Bool -> String -> String
 wrapRes (Pure (ToC cv)) ht io res = case ht of
-    HIO _ -> "(return . "++cv++')':bindr ++ res
+    HIO _ -> parens (return'++ring++cv) ++ bindr ++ res
     _     -> if io
-    then "return $ " ++ func
+    then return' ++ cash ++ func
     else "" ++ func
-    where func = cv ++ " $ " ++ res
+    where func = cv ++ cash ++ res
 wrapRes cv ht _ res = case ht of
     HIO _ -> w $ bindr ++ res
-    _     -> w $ " $ " ++ res
+    _     -> w $ cash ++ res
     where w = wrapRes' cv 0
 
 wrapRes' :: Convert -> Int -> String -> String
 wrapRes' cv maps res = case cv of
     (Nested a b _)     -> wrapRes' a maps "" ++ bindr ++ wrapRes' b (maps+1) res
-    (IOOut _ (ToC cv')) -> '(' : end cv'
-    (Pure (ToC cv'))    -> "(return . " ++ end cv'
-    where end cv' = putMaps MapM maps ++ ' ':cv'++res++")"
+    (IOOut _ (ToC cv')) -> parens $ end cv'
+    (Pure (ToC cv'))    -> parens $ return' ++ ring ++ end cv'
+    where end cv' = putMaps MapM maps ++ sp cv' ++res
 
 finalizerFunc :: String -> Convert -> HType -> String
 finalizerFunc n freer ft = needsFinalizer freer
-                         $ finalizerName n ++ " x = "
-                         ++ finalizerFunc' [""] freer 0 ft " x" ++ "\n"
+                         $ finalizerName n ++ arg ++ equals
+                         ++ finalizerFunc' [""] freer 0 ft arg ++ "\n"
+                         where arg = sp "x"
 
 finalizerFunc' :: [String] -> Convert -> Int -> HType -> String -> String
 finalizerFunc' peek cv maps ft var = case cv of
     (Nested a (Pure _) p) -> finalizerFunc' peek a maps ft var
     (Nested a b p) -> finalizerFunc' (p:peek) b (maps+1) ft var
-                      ++ '\n':tab++" >> "
+                      ++ tab ++ " >> "
                       ++ finalizerFunc' peek a maps ft var
     (IOOut (Free f) _) -> if maps > 0
-                     then '(':'(':putMaps MapM maps ++ ' ':f++')':getAt maps peek var ++ ")"
-                     else '(':putMaps MapM maps ++ ' ':f++var++")"
+                     then parens $ parens (putMaps MapM maps ++ sp f) ++ getAt maps peek var
+                     else parens $ putMaps MapM maps ++ sp f ++var
 
 getAt :: Int -> [String] -> String -> String
 getAt 0    _         var = var
 getAt _    []        var = var
 getAt maps (peek:ps) var = bindr
                       ++ putMaps MapM (maps-1)
-                      ++ ' ':peek
+                      ++ sp peek
                       ++ getAt (maps-1) ps var
