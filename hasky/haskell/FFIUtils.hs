@@ -101,10 +101,10 @@ isIO (Pure _) = False
 isIO (Nested a b _) = isIO a || isIO b
 isIO _ = True
 
-needsFinalizer :: Convert -> String -> String
-needsFinalizer (IOOut _ _) s  = s
-needsFinalizer (Nested a b _) s = s
-needsFinalizer _ _ = ""
+needsFinalizer :: Convert -> Bool
+needsFinalizer (IOOut _ _) = True
+needsFinalizer (Nested a b _) = True
+needsFinalizer _ = False
 
 -- Writer functions
 sp s = ' ':s
@@ -114,7 +114,9 @@ bind = " >>= "
 cash = " $ "
 ring = " . "
 equals = " = "
+concat' :: [Char] -> String
 concat' = foldr (\a b->' ':a:b) ""
+concatNL :: [String] -> String
 concatNL = foldr (\a b -> a ++ tab ++ b) ""
 parens s = '(':s++")"
 return' = "return"

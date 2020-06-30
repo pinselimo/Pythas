@@ -34,7 +34,7 @@ makeFFIExport modname typedef = let
      ffifunc    = show $ Wrapper modname (funcN typedef) fromC toC (last $ funcT typedef)
      finalizerF = finalizerFunc (funcN typedef) toC (last functype)
      finalizerT = finalizerExport (funcN typedef) toC (last functype)
-  in case needsFinalizer toC "?" of
-        "" -> pack [ffitypedef, ffifunc]
-        _  -> pack [ffitypedef, ffifunc, '\n':finalizerT, finalizerF]
+  in if needsFinalizer toC
+     then pack [ffitypedef, ffifunc, '\n':finalizerT, finalizerF]
+     else pack [ffitypedef, ffifunc]
   where pack = foldr (\a b -> a++'\n':b) ""

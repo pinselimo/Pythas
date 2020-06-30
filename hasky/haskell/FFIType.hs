@@ -21,11 +21,12 @@ createFFIType ts =
     in (fromT ++ [toT], fromC, toC)
 
 finalizerExport :: String -> Convert -> HType -> String
-finalizerExport n c (HIO t) = needsFinalizer c $ fec 
-                            $ finalizerName n 
-                            ++ typeDef 
-                            ++ ffiType t 
-                            ++ " -> IO ()"
+finalizerExport n c (HIO t) = if needsFinalizer c
+                            then fec $ finalizerName n 
+                                 ++ typeDef
+                                 ++ ffiType t
+                                 ++ " -> IO ()"
+                            else ""
 finalizerExport _ _ _ = ""
 
 ffiType :: HType -> String

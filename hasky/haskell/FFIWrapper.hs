@@ -82,9 +82,10 @@ wrapRes' cv maps res = case cv of
     where end m cv' = putMaps m maps ++ sp cv' ++res
 
 finalizerFunc :: String -> Convert -> HType -> String
-finalizerFunc n freer ft = needsFinalizer freer
-                         $ finalizerName n ++ arg ++ equals
-                         ++ finalizerFunc' [""] freer 0 ft arg ++ "\n"
+finalizerFunc n freer ft = if needsFinalizer freer
+                         then finalizerName n ++ arg ++ equals ++
+                              finalizerFunc' [""] freer 0 ft arg ++ "\n"
+                         else ""
                          where arg = sp "x"
 
 finalizerFunc' :: [String] -> Convert -> Int -> HType -> String -> String
