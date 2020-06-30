@@ -87,23 +87,20 @@ wrapRes' cv maps res = case cv of
 finalizerFunc :: String -> Convert -> HType -> String
 finalizerFunc n freer ft = needsFinalizer freer
                          $ finalizerName n ++ " x = "
-                         ++ finalizerFunc' freer 0 ft " x" ++ "\n"
+                         ++ finalizerFunc' [""] freer 0 ft " x" ++ "\n"
 
-finalizerFunc' :: Convert -> Int -> HType -> String -> String
-finalizerFunc' = finalizerFunc'' [""]
-
-finalizerFunc'' :: [String] -> Convert -> Int -> HType -> String -> String
-finalizerFunc'' peek cv maps ft var = case cv of
-    (Nested a (Pure _) p) -> finalizerFunc'' peek a maps ft var
-    (Nested a b p) -> finalizerFunc'' (p:peek) b (maps+1) ft var
+finalizerFunc' :: [String] -> Convert -> Int -> HType -> String -> String
+finalizerFunc' peek cv maps ft var = case cv of
+    (Nested a (Pure _) p) -> finalizerFunc' peek a maps ft var
+    (Nested a b p) -> finalizerFunc' (p:peek) b (maps+1) ft var
                       ++ '\n':tab++" >> "
-                      ++ finalizerFunc'' peek a maps ft var
+                      ++ finalizerFunc' peek a maps ft var
     (IOOut (Free f) _) -> if maps > 0
-                     then '(':'(':putMaps MapM maps ++ ' ':f++')':get maps peek var
+                     then '(':'(':putMaps MapM maps ++ ' ':f++')':get maps peek var ++ ")"
                      else '(':putMaps MapM maps ++ ' ':f++var++")"
 
 get :: Int -> [String] -> String -> String
-get 0    _         var = var ++ ")"
+get 0    _         var = var
 get maps (peek:ps) var = bindr
                       ++ putMaps MapM (maps-1)
                       ++ ' ':peek
