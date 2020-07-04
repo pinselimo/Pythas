@@ -3,6 +3,7 @@ module FFICreate (createFFI) where
 import ParseTypes (TypeDef(funcN, funcT))
 import FFIType
 import FFIWrapper
+import FFIFinalizer
 import FFIUtils (needsFinalizer)
 
 imports = map ("import "++)
