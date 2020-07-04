@@ -32,14 +32,31 @@ return' :: HAST -> HAST
 return' h = Function "return" [] [h] $ HIO $ getHASTType h
 
 showHAST :: HAST -> String
-showHAST = undefined
+showHAST h = case h of
+    (Variable n _) -> ' ':n
+    _ -> case getHASTType h of
+            (HIO _)  -> showFunc h
+            _        -> showFunc h
+
+showIOFunc :: HAST -> String
+showIOFunc (Function n args body ht) = ' ':parens (before ++ n ++ end)
+    where end = concat (map showHAST args')
+          before = concatNL $ zipWith (\f a -> f ++ bind ++ '\\':a++" -> ") iofncs ioargs
+          iofncs = map showIOFunc $ getIOs body
+          ioargs = map showIOFunc $ getIOs args
+          getIOs = filter (\h -> isIO $ getHASTType h)
+          args'  = zipWith (\a b -> if isIO $ getHASTType b then a else b) args body
+
+showFunc :: HAST -> String
+showFunc (Function n args body ht) = ' ':parens (n ++ body')
+    where body' = concat $ map showHAST body
 
 wrap :: TypeDef -> HAST
 wrap td = toC $ wrapArgs (funcN td) (last ts) args fromC
     where ts = funcT td
           toC = convertToC (last ts)
           fromC = zipWith convertFromC (init ts) args
-          args  = zipWith (\c t -> Variable [c] t) ['a'..'z'] (init ts)
+          args  = zipWith (\c t -> Variable [c] t) ['a'..'z'] (map fromFFIType $ init ts)
 
 wrapArgs :: String -> HType -> [HAST] -> [HAST] -> HAST
 wrapArgs fn ht args convs
@@ -62,7 +79,7 @@ instance Show Map where
 finalizerName = (++"Finalizer")
 
 putMaps :: Map -> Int -> String
-putMaps m i 
+putMaps m i
  | i > 0 = '(':putMaps' m i ++ ")"
  | otherwise = ""
 
@@ -112,15 +129,15 @@ convertFromC :: HType -> HAST -> HAST
 convertFromC ht arg =
     let args = [arg]
     in case ht of
-    HString -> Function "peekCWString"  args [] (HIO HString)
-    HList a -> map' (convertFromC a arg) $ Function "peekArray" args [] (HIO (HList a))
+    HString -> Function "peekCWString"  [] args (HIO HString)
+    HList a -> map' $ convertFromC a (Function "peekArray" args args (HIO (HList a)))
     HTuple [a] -> undefined
     HFunc  [a] -> undefined
-    HInteger -> Function "fromIntegral" args [] ht
-    HInt     -> Function "fromIntegral" args [] ht
-    HBool    -> Function "fromBool"     args [] ht
-    HDouble  -> Function "realToFrac"   args [] ht
-    HFloat   -> Function "realToFrac"   args [] ht
+    HInteger -> Function "fromIntegral" [] args ht
+    HInt     -> Function "fromIntegral" [] args ht
+    HBool    -> Function "fromBool"     [] args ht
+    HDouble  -> Function "realToFrac"   [] args ht
+    HFloat   -> Function "realToFrac"   [] args ht
     _        -> arg
 
 convertToC :: HType -> HAST -> HAST
@@ -128,21 +145,21 @@ convertToC ht arg = let
         ht'  = toFFIType' ht
         args = [arg]
     in case ht of
-    HString  -> Function "newCWString"  args [] ht'
-    HList a  -> Function "newArray"     args [map' (convertToC a arg) arg] ht'
+    HString  -> Function "newCWString"  [] args ht'
+    HList a  -> Function "newArray"     [] [map' (convertToC a arg)] ht'
     HTuple [a] -> undefined
     HFunc  [a] -> undefined
-    HInteger -> Function "fromIntegral" args [] ht'
-    HInt     -> Function "fromIntegral" args [] ht'
-    HBool    -> Function "fromBool"     args [] ht'
-    HDouble  -> Function "CDouble"      args [] ht'
-    HFloat   -> Function "CFloat"       args [] ht'
+    HInteger -> Function "fromIntegral" [] args ht'
+    HInt     -> Function "fromIntegral" [] args ht'
+    HBool    -> Function "fromBool"     [] args ht'
+    HDouble  -> Function "CDouble"      [] args ht'
+    HFloat   -> Function "CFloat"       [] args ht'
     _        -> arg
 
-map' :: HAST -> HAST -> HAST
-map' a b = case getHASTType a of
-    (HIO ht) -> Function "mapM" [b] [a] (HIO (HList ht))
-    ht       -> Function "map" [b] [a] (HList ht)
+map' :: HAST -> HAST
+map' a = case getHASTType a of
+    (HIO ht) -> Function "mapM" [a] [a] (HIO (HList ht))
+    ht       -> Function "map" [a] [a] (HList ht)
 
 isIO :: HType -> Bool
 isIO (HIO _) = True
