@@ -7,7 +7,7 @@ data FromTo = ToC String
             | FromC String
             deriving (Show, Eq)
 
-data Free = Free String
+newtype Free = Free String
           deriving (Show, Eq)
 
 data Convert = Pure FromTo
