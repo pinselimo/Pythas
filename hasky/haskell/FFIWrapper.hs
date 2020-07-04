@@ -71,12 +71,12 @@ wrapRes (Pure (ToC cv)) ht io res = case ht of
     where func = cv ++ cash ++ res
 wrapRes cv ht _ res = case ht of
     HIO _ -> w $ bindr ++ res
-    _     -> w $ cash ++ res
+    _     -> w $ cash  ++ res
     where w = wrapRes' cv 0
 
 wrapRes' :: Convert -> Int -> String -> String
 wrapRes' cv maps res = case cv of
-    (Nested a b _)     -> wrapRes' a maps "" ++ bindr ++ wrapRes' b (maps+1) res
+    (Nested a b _)      -> wrapRes' a maps "" ++ bindr ++ wrapRes' b (maps+1) res
     (IOOut _ (ToC cv')) -> parens $ end MapM cv'
     (Pure (ToC cv'))    -> parens $ return' ++ ring ++ end Map cv'
     where end m cv' = putMaps m maps ++ sp cv' ++res
