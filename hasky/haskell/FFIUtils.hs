@@ -1,7 +1,7 @@
 module FFIUtils where
 
 import HTypes (HType(..))
-import ParseTypes (TypeDef(funcN, funcT))
+import ParseTypes (TypeDef(funcN, funcT, TypeDef))
 
 data FromTo = ToC String
             | FromC String
@@ -15,6 +15,41 @@ data Convert = Pure FromTo
              | IOOut Free FromTo   -- ↓peek↓
              | Nested Convert Convert String
              deriving (Show, Eq)
+
+type Body = [HAST]
+type Args = [HAST]
+
+data HAST = Function String Args Body HType
+          | Variable String HType
+          deriving (Show, Eq)
+
+getHASTType :: HAST -> HType
+getHASTType h = case h of
+    Function _ _ _ t -> t
+    Variable _ t     -> t
+
+return' :: HAST -> HAST
+return' h = Function "return" [] [h] $ HIO $ getHASTType h
+
+showHAST :: HAST -> String
+showHAST = undefined
+
+wrap :: TypeDef -> HAST
+wrap td = toC $ wrapArgs (funcN td) (last ts) args fromC
+    where ts = funcT td
+          toC = convertToC (last ts)
+          fromC = zipWith convertFromC (init ts) args
+          args  = zipWith (\c t -> Variable [c] t) ['a'..'z'] (init ts)
+
+wrapArgs :: String -> HType -> [HAST] -> [HAST] -> HAST
+wrapArgs fn ht args convs
+    | any isIO htin && not (isIO ht) = return' norm
+    | otherwise                      = norm
+    where norm = Function fn args convs ht
+          htin = map getHASTType convs
+
+finalize :: TypeDef -> HAST
+finalize = undefined
 
 data Map = Map
          | MapM
@@ -69,37 +104,49 @@ fromFFIType ht = case ht of
  HInteger -> HLLong
  HInt -> HCInt
  HBool -> HCBool
+ HDouble -> HCDouble
+ HFloat -> HCFloat
  _ -> ht
 
--- FFI Export Type Converter Construction
-toFFIConvert :: HType -> Convert
-toFFIConvert ht = case ht of
- HString -> IOOut (Free "freeCWString") $ ToC "newCWString"
- HList x -> Nested (IOOut (Free "freeArray") $ ToC "newArray") (toFFIConvert x) "peekArray"
- HTuple [x] -> undefined -- TODO Tuples
- HFunc  [x] -> undefined -- TODO Functions
- HInteger -> Pure $ ToC "fromIntegral"
- HInt -> Pure $ ToC "fromIntegral"
- HBool -> Pure $ ToC "fromBool"
- HDouble -> Pure $ ToC "CDouble"
- HFloat -> Pure $ ToC "CFloat"
- _ -> Pure $ ToC "id"
+convertFromC :: HType -> HAST -> HAST
+convertFromC ht arg =
+    let args = [arg]
+    in case ht of
+    HString -> Function "peekCWString"  args [] (HIO HString)
+    HList a -> map' (convertFromC a arg) $ Function "peekArray" args [] (HIO (HList a))
+    HTuple [a] -> undefined
+    HFunc  [a] -> undefined
+    HInteger -> Function "fromIntegral" args [] ht
+    HInt     -> Function "fromIntegral" args [] ht
+    HBool    -> Function "fromBool"     args [] ht
+    HDouble  -> Function "realToFrac"   args [] ht
+    HFloat   -> Function "realToFrac"   args [] ht
+    _        -> arg
 
-fromFFIConvert :: HType -> Convert
-fromFFIConvert ht = case ht of
- HString -> IOIn $ FromC "peekCWString"
- HList x -> Nested (IOIn $ FromC "peekArray") (fromFFIConvert x) "peekArray"
- HTuple [x] -> undefined -- TODO Tuples
- HFunc  [x] -> undefined -- TODO Functions
- HInteger -> Pure $ FromC "fromIntegral"
- HInt -> Pure $ FromC "fromIntegral"
- HBool -> Pure $ FromC "fromBool"
- _ -> Pure $ FromC "id"
+convertToC :: HType -> HAST -> HAST
+convertToC ht arg = let
+        ht'  = toFFIType' ht
+        args = [arg]
+    in case ht of
+    HString  -> Function "newCWString"  args [] ht'
+    HList a  -> Function "newArray"     args [map' (convertToC a arg) arg] ht'
+    HTuple [a] -> undefined
+    HFunc  [a] -> undefined
+    HInteger -> Function "fromIntegral" args [] ht'
+    HInt     -> Function "fromIntegral" args [] ht'
+    HBool    -> Function "fromBool"     args [] ht'
+    HDouble  -> Function "CDouble"      args [] ht'
+    HFloat   -> Function "CFloat"       args [] ht'
+    _        -> arg
 
-isIO :: Convert -> Bool
-isIO (Pure _) = False
-isIO (Nested a b _) = isIO a || isIO b
-isIO _ = True
+map' :: HAST -> HAST -> HAST
+map' a b = case getHASTType a of
+    (HIO ht) -> Function "mapM" [b] [a] (HIO (HList ht))
+    ht       -> Function "map" [b] [a] (HList ht)
+
+isIO :: HType -> Bool
+isIO (HIO _) = True
+isIO _ = False
 
 needsFinalizer :: Convert -> Bool
 needsFinalizer (IOOut _ _) = True
@@ -119,4 +166,3 @@ concat' = foldr (\a b->' ':a:b) ""
 concatNL :: [String] -> String
 concatNL = foldr (\a b -> a ++ tab ++ b) ""
 parens s = '(':s++")"
-return' = "return"
