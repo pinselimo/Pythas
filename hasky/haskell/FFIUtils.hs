@@ -16,54 +16,45 @@ data Convert = Pure FromTo
              | Nested Convert Convert String
              deriving (Show, Eq)
 
-type Body = [HAST]
-type Args = [HAST]
-
-data HAST = Function String Args Body HType
+data HAST = Function String [HAST] HType
           | Variable String HType
+          | Bind     HAST HAST
+          | Lambda   [HAST] HAST
           deriving (Show, Eq)
 
 getHASTType :: HAST -> HType
 getHASTType h = case h of
-    Function _ _ _ t -> t
-    Variable _ t     -> t
+    Function _ _ t -> t
+    Variable _ t   -> t
+    Bind a b       -> getHASTType b
+    Lambda as b    -> getHASTType b
 
 return' :: HAST -> HAST
-return' h = Function "return" [] [h] $ HIO $ getHASTType h
+return' (Function n args ht) = Function ("return $ " ++ n) args $ HIO ht
 
 showHAST :: HAST -> String
 showHAST h = case h of
     (Variable n _) -> ' ':n
-    _ -> case getHASTType h of
-            (HIO _)  -> showFunc h
-            _        -> showFunc h
-
-showIOFunc :: HAST -> String
-showIOFunc (Function n args body ht) = ' ':parens (before ++ n ++ end)
-    where end = concat (map showHAST args')
-          before = concatNL $ zipWith (\f a -> f ++ bind ++ '\\':a++" -> ") iofncs ioargs
-          iofncs = map showIOFunc $ getIOs body
-          ioargs = map showIOFunc $ getIOs args
-          getIOs = filter (\h -> isIO $ getHASTType h)
-          args'  = zipWith (\a b -> if isIO $ getHASTType b then a else b) args body
-
-showFunc :: HAST -> String
-showFunc (Function n args body ht) = ' ':parens (n ++ body')
-    where body' = concat $ map showHAST body
+    (Lambda as bd) -> ' ':parens ("\\" ++ (concat $ map showHAST as) ++ " ->\n   " ++ showHAST bd)
+    (Bind a b)     -> showHAST a ++ " >>=" ++ showHAST b
+    (Function n as _) -> ' ':parens (n ++ (concat $ map showHAST as))
 
 wrap :: TypeDef -> HAST
-wrap td = toC $ wrapArgs (funcN td) (last ts) args fromC
+wrap td = wrapArgs (funcN td) ts args
     where ts = funcT td
           toC = convertToC (last ts)
-          fromC = zipWith convertFromC (init ts) args
-          args  = zipWith (\c t -> Variable [c] t) ['a'..'z'] (map fromFFIType $ init ts)
+          args  = zipWith (\c t -> Variable [c] t) ['a'..'z'] (init ts)
 
-wrapArgs :: String -> HType -> [HAST] -> [HAST] -> HAST
-wrapArgs fn ht args convs
-    | any isIO htin && not (isIO ht) = return' norm
+wrapArgs :: String -> [HType] -> [HAST] -> HAST
+wrapArgs fn hts args = foldr ($) (mkFunc fn hts) convfuncs
+    where convfuncs = zipWith convertFromC hts args
+
+mkFunc :: String -> [HType] -> HAST
+mkFunc fn hts
+    | any isIO htin && not (isIO $ last hts) = return' norm
     | otherwise                      = norm
-    where norm = Function fn args convs ht
-          htin = map getHASTType convs
+    where norm = Function fn [] $ last hts
+          htin = map fromFFIType hts
 
 finalize :: TypeDef -> HAST
 finalize = undefined
@@ -125,41 +116,53 @@ fromFFIType ht = case ht of
  HFloat -> HCFloat
  _ -> ht
 
-convertFromC :: HType -> HAST -> HAST
-convertFromC ht arg =
-    let args = [arg]
-    in case ht of
-    HString -> Function "peekCWString"  [] args (HIO HString)
-    HList a -> map' $ convertFromC a (Function "peekArray" args args (HIO (HList a)))
+convertFromC :: HType -> HAST -> HAST -> HAST
+convertFromC ht arg f =
+    case ht of
+    HString -> Bind (Function "peekCWString"  [arg] (HIO HString))
+                    (Lambda [arg] $ adf arg)
+    HList a -> Bind (Function "peekArray" [arg] (HIO (HList a)))
+                    (Lambda [arg] (map' (convertFromC a arg f) f))
     HTuple [a] -> undefined
     HFunc  [a] -> undefined
-    HInteger -> Function "fromIntegral" [] args ht
-    HInt     -> Function "fromIntegral" [] args ht
-    HBool    -> Function "fromBool"     [] args ht
-    HDouble  -> Function "realToFrac"   [] args ht
-    HFloat   -> Function "realToFrac"   [] args ht
-    _        -> arg
+    HInteger -> adf $ Function "fromIntegral" [arg] ht
+    HInt     -> adf $ Function "fromIntegral" [arg] ht
+    HBool    -> adf $ Function "fromBool"     [arg] ht
+    HDouble  -> adf $ Function "realToFrac"   [arg] ht
+    HFloat   -> adf $ Function "realToFrac"   [arg] ht
+    _        -> adf arg
+    where adf = add f
 
 convertToC :: HType -> HAST -> HAST
 convertToC ht arg = let
         ht'  = toFFIType' ht
-        args = [arg]
+        f n  = Function n [arg] ht'
     in case ht of
-    HString  -> Function "newCWString"  [] args ht'
-    HList a  -> Function "newArray"     [] [map' (convertToC a arg)] ht'
+    HString  -> f "newCWString"
+    HList a  -> let m = map' (convertToC a arg) arg in
+                case getHASTType m of
+                (HIO _) -> Bind m (Lambda [arg] $ f "newArray")
+                _       -> Function "newArray" [m] ht'
     HTuple [a] -> undefined
     HFunc  [a] -> undefined
-    HInteger -> Function "fromIntegral" [] args ht'
-    HInt     -> Function "fromIntegral" [] args ht'
-    HBool    -> Function "fromBool"     [] args ht'
-    HDouble  -> Function "CDouble"      [] args ht'
-    HFloat   -> Function "CFloat"       [] args ht'
+    HInteger -> f "fromIntegral"
+    HInt     -> f "fromIntegral"
+    HBool    -> f "fromBool"
+    HDouble  -> f "CDouble"
+    HFloat   -> f "CFloat"
     _        -> arg
 
-map' :: HAST -> HAST
-map' a = case getHASTType a of
-    (HIO ht) -> Function "mapM" [a] [a] (HIO (HList ht))
-    ht       -> Function "map" [a] [a] (HList ht)
+add :: HAST -> HAST -> HAST
+add hast hast' = case hast of
+    (Function fn args ft) -> Function fn (hast':args) ft
+    (Bind a b)            -> Bind a $ add b hast'
+    (Lambda as b)         -> Lambda as $ add b hast'
+
+map' :: HAST -> HAST -> HAST
+map' a f = case getHASTType a of
+    (HIO ht) -> Bind (Function "mapM" [a] (HIO (HList ht)))
+                     (Lambda [a] $ add f a)
+    ht       -> add f $ Function "map" [a] (HList ht)
 
 isIO :: HType -> Bool
 isIO (HIO _) = True
