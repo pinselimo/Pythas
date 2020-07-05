@@ -1,25 +1,24 @@
 module FFIWrapper where
 
-import HTypes (HType(HIO))
+import HTypes (HType(..))
 import ParseTypes (TypeDef(funcN, funcT))
 import FFIUtils
 
-wrap :: TypeDef -> HAST
-wrap td
+wrap :: String -> [HType] -> HAST
+wrap fn fts
     | (isIO $ getHASTType func) && (isIO $ toFFIType' ft) = Bind func (Lambda [res] $ toC res)
     | isIO $ getHASTType func = Bind func (Lambda [res] $ return' $ toC res)
     | otherwise               = toC  func
-    where func = wrapArgs td args
-          ft   = last $ funcT td
-          ts   = init $ funcT td
+    where func = wrapArgs fn fts args
+          ft   = last fts
+          ats  = init fts
           res = Variable "res" ft
           toC = convertToC ft
-          args  = zipWith (\c t -> Variable [c] t) ['a'..'z'] ts
+          args  = zipWith (\c t -> Variable [c] t) ['a'..'z'] ats
 
-wrapArgs :: TypeDef -> [HAST] -> HAST
-wrapArgs td args = foldr ($) (mkFunc (funcN td) hts) convfuncs
-    where convfuncs = zipWith convertFromC hts args
-          hts = funcT td
+wrapArgs :: String -> [HType] -> [HAST] -> HAST
+wrapArgs fn fts args = foldr ($) (mkFunc fn fts) convfuncs
+    where convfuncs = zipWith convertFromC fts args
 
 mkFunc :: String -> [HType] -> HAST
 mkFunc fn hts
