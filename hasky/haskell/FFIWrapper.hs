@@ -31,23 +31,28 @@ convertFromC :: HType -> HAST -> HAST -> HAST
 convertFromC ht arg f = let
         ht' = fromFFIType ht
     in case ht of
-    HString -> Bind (convertFromC' ht ht' arg f)
+    HString -> Bind (convertFromC' ht ht' arg)
                     (Lambda [arg] $ adf arg)
     HList a -> Bind (Function "peekArray" [arg] ht')
                     (Lambda [arg] body)
-                where m = map' (convertFromC' a (fromFFIType a) arg f) arg
+                where m = map' (convertFromC' a (fromFFIType a) arg) arg
                       body = if isIO $ getHASTType m
                            then Bind m (Lambda [arg] $ adf arg)
                            else adf m
     HTuple [a] -> undefined
     HFunc  [a] -> undefined
-    _          -> adf $ convertFromC' ht ht' arg f
+    _          -> adf $ convertFromC' ht ht' arg
     where adf = add f
 
-convertFromC' :: HType -> HType -> HAST -> HAST -> HAST
-convertFromC' ht ht' arg f = case ht of
+convertFromC' :: HType -> HType -> HAST -> HAST
+convertFromC' ht ht' arg = case ht of
     HString  -> Function "peekCWString" [arg] ht'
-    HList a  -> convertFromC ht arg f
+    HList a  -> Bind (Function "peekArray" [arg] ht')
+                     (Lambda [arg] body)
+                where m = map' (convertFromC' a (fromFFIType a) arg) arg
+                      body = if isIO $ getHASTType m
+                           then m
+                           else return' m
     HInteger -> Function "fromIntegral" [arg] ht'
     HInt     -> Function "fromIntegral" [arg] ht'
     HBool    -> Function "fromBool"     [arg] ht'
@@ -63,7 +68,7 @@ convertToC ht arg = let
     HString  -> f "newCWString"
     HList a  -> let m = map' (convertToC a arg) arg in
                 case getHASTType m of
-                (HIO _) -> Bind m (Lambda [arg] $ f "newArray")
+                (HIO _) -> Bind m (Lambda [Variable "res" a] $ convertToC a $ Variable "res" a)
                 _       -> Function "newArray" [m] ht'
     HTuple [a] -> undefined
     HFunc  [a] -> undefined
