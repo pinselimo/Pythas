@@ -38,19 +38,20 @@ id' = Function "id" []
 
 add :: HAST -> HAST -> HAST
 add hast hast' = case hast of
-    (Function fn args ft) -> Function fn (hast':args) ft
-    (Bind a b)            -> Bind a $ add b hast'
-    (Next a b)            -> Next a $ add b hast'
-    (Lambda as b)         -> Lambda as $ add b hast'
+    Function fn args ft -> Function fn (hast':args) ft
+    Bind a b            -> Bind a $ add b hast'
+    Next a b            -> Next a $ add b hast'
+    Lambda as b         -> Lambda as $ add b hast'
 
-map' :: HAST -> HAST
-map' a = case getHASTType a of
-    (HIO ht) -> Function "mapM" [a] (HIO (HList ht))
-    _        -> case a of
-        (Function n (a':as) ht) -> let -- remove last add and map over it
-            (Function conv (x:_) t) = a'
-            in add (Function n as ht) $ Function "map" [Function conv [] t,x] (HList ht)
-        _ -> a
+map' :: HAST -> HAST -> HAST
+map' f a = case getHASTType f of
+    (HIO ht) -> Function "mapM" [mapF f a,a] (HIO (HList ht))
+    ht       -> Function "map"  [mapF f a,a] (HList ht)
+
+mapF :: HAST -> HAST-> HAST
+mapF f a = case f of
+    Function fn args ft -> Function fn [] ft
+    _ -> Lambda [a] f
 
 finalizerName = (++"Finalizer")
 
@@ -80,8 +81,8 @@ toFFIType' ht = case ht of
 
 fromFFIType :: HType -> HType
 fromFFIType ht = case ht of
- HString -> HCWString
- HList x -> HCArray $ fromFFIType x
+ HString -> HIO $ HCWString
+ HList x -> HIO $ HCArray $ fromFFIType x
  HTuple [x] -> undefined
  HFunc [x]  -> undefined
  HInteger -> HLLong
