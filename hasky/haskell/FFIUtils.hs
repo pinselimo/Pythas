@@ -6,6 +6,7 @@ data HAST = Function String [HAST] HType
           | Variable String HType
           | Bind     HAST HAST
           | Lambda   [HAST] HAST
+          | Next     HAST HAST
           deriving (Eq)
 
 instance Show HAST where
@@ -13,16 +14,18 @@ instance Show HAST where
 
 showHAST :: HAST -> String
 showHAST h = case h of
-    (Variable n _) -> ' ':n
-    (Lambda as bd) -> ' ':parens ("\\" ++ (concat $ map showHAST as) ++ " ->\n   " ++ showHAST bd)
-    (Bind a b)     -> showHAST a ++ " >>=" ++ showHAST b
-    (Function n as _) -> ' ':parens (n ++ (concat $ map showHAST as))
+    Variable n _ -> ' ':n
+    Lambda as bd -> ' ':parens ("\\" ++ (concat $ map showHAST as) ++ " ->\n   " ++ showHAST bd)
+    Bind a b     -> showHAST a ++ " >>=" ++ showHAST b
+    Next a b     -> showHAST a ++ " >>" ++ showHAST b
+    Function n as _ -> ' ':parens (n ++ (concat $ map showHAST as))
 
 getHASTType :: HAST -> HType
 getHASTType h = case h of
     Function _ _ t -> t
     Variable _ t   -> t
     Bind a b       -> HIO $ getHASTType b
+    Next a b       -> HIO $ getHASTType b
     Lambda as b    -> getHASTType b
 
 -- TODO implement this proper
@@ -37,6 +40,7 @@ add :: HAST -> HAST -> HAST
 add hast hast' = case hast of
     (Function fn args ft) -> Function fn (hast':args) ft
     (Bind a b)            -> Bind a $ add b hast'
+    (Next a b)            -> Next a $ add b hast'
     (Lambda as b)         -> Lambda as $ add b hast'
 
 map' :: HAST -> HAST
@@ -47,9 +51,6 @@ map' a = case getHASTType a of
             (Function conv (x:_) t) = a'
             in add (Function n as ht) $ Function "map" [Function conv [] t,x] (HList ht)
         _ -> a
-
-finalize :: TypeDef -> HAST
-finalize = undefined
 
 finalizerName = (++"Finalizer")
 
