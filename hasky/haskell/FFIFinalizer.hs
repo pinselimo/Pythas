@@ -1,29 +1,27 @@
 module FFIFinalizer where
 
-import HTypes (HType(HIO))
+import HTypes (HType(..))
+import ParseTypes (TypeDef(funcN, funcT))
 import FFIUtils
 
-finalizerFunc :: String -> Convert -> HType -> String
-finalizerFunc n freer finaltype = if needsFinalizer freer
-                         then finalizerName n ++ arg ++ equals ++
-                              finalizerFunc' [""] freer 0 finaltype arg ++ "\n"
-                         else ""
-                         where arg = sp "x"
+maybeFinalizerFunc :: HType -> Maybe HAST
+maybeFinalizerFunc ht = let finType = toFFIType' ht in
+    if needsFinalizer finType
+    then Just $ mkFinalizer finType (Variable "x" finType)
+    else Nothing
 
-finalizerFunc' :: [String] -> Convert -> Int -> HType -> String -> String
-finalizerFunc' peek cv maps ft var = case cv of
-    (Nested a (Pure _) p) -> finalizerFunc' peek a maps ft var
-    (Nested a b p) -> finalizerFunc' (p:peek) b (maps+1) ft var
-                      ++ tab ++ " >> "
-                      ++ finalizerFunc' peek a maps ft var
-    (IOOut (Free f) _) -> if maps > 0
-                     then parens $ parens (putMaps MapM maps ++ sp f) ++ getAt maps peek var
-                     else parens $ putMaps MapM maps ++ sp f ++var
+mkFinalizer :: HType -> HAST -> HAST
+mkFinalizer ht hast = case ht of
+    HCWString   -> Function "freeCWString" [hast] (HIO HUnit)
+    HCArray ht' -> Next (map' $ mkFinalizer ht' hast) $ Function "freeArray" [hast] (HIO HUnit)
+    HCTuple _   -> undefined
+    HCPtr   _   -> Function "free" [hast] (HIO HUnit)
+    _           -> id' ht
 
-getAt :: Int -> [String] -> String -> String
-getAt 0    _         var = var
-getAt _    []        var = var
-getAt maps (peek:ps) var = bindr
-                      ++ putMaps MapM (maps-1)
-                      ++ sp peek
-                      ++ getAt (maps-1) ps var
+needsFinalizer :: HType -> Bool
+needsFinalizer ht = case ht of
+    HCArray _ -> True
+    HCWString -> True
+    HCTuple _ -> True
+    HCPtr _   -> True
+    _         -> False
