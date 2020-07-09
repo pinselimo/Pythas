@@ -29,31 +29,32 @@ mkFunc fn hts
 
 convertFromC :: HType -> HAST -> HAST -> HAST
 convertFromC ht arg f = let
-        ht' = fromFFIType ht
     in case ht of
-    HString -> Bind (convertFromC' ht ht' arg)
+    HString -> Bind (fromC ht arg)
                     (Lambda [arg] $ adf arg)
-    HList a -> let
-        inner = map' (convertFromC' a (fromFFIType a) arg) arg
-        in if isIO $ getHASTType inner
-           then bind (Lambda [arg] (Bind inner (Lambda [arg] $ adf arg)))
-           else bind (Lambda [arg] $ adf inner)
-           where bind = Bind (Function "peekArray" [arg] ht')
+    HList a -> Bind (fromArray a arg)
+                    (Lambda [arg] $ adf arg)
 
     HTuple [a] -> undefined
     HFunc  [a] -> undefined
-    _          -> adf $ convertFromC' ht ht' arg
+    _          -> adf $ fromC ht arg
     where adf = add f
 
-convertFromC' :: HType -> HType -> HAST -> HAST
-convertFromC' ht ht' arg = case ht of
+fromArray :: HType -> HAST -> HAST
+fromArray ht arg = let
+    inner = case ht of
+        HList a  -> map' (fromArray a arg) arg
+        HString  -> map' (fromC ht arg) arg
+        _        -> map' (return' $ fromC ht arg) arg
+    in Bind (fromC (HList ht) arg)
+            (Lambda [arg] inner)
+
+fromC :: HType -> HAST -> HAST
+fromC ht arg = let
+        ht' = fromFFIType ht
+    in case ht of
     HString  -> Function "peekCWString" [arg] ht'
-    HList a  -> let 
-        inner = map' (convertFromC' a (fromFFIType a) arg) arg
-        in if isIO $ getHASTType inner
-           then bind $ Lambda [arg] inner
-           else bind $ Lambda [arg] $ return' inner
-           where bind = Bind (Function "peekArray" [arg] ht')
+    HList _  -> Function "peekArray"    [arg] ht'
     HInteger -> Function "fromIntegral" [arg] ht'
     HInt     -> Function "fromIntegral" [arg] ht'
     HBool    -> Function "fromBool"     [arg] ht'
