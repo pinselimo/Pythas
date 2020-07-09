@@ -5,6 +5,7 @@ import HTypes (HType(..))
 data HAST = Function String [HAST] HType
           | Variable String HType
           | Bind     HAST HAST
+          | Bindl    HAST HAST
           | Lambda   [HAST] HAST
           | Next     HAST HAST
           deriving (Eq)
@@ -15,8 +16,9 @@ instance Show HAST where
 showHAST :: HAST -> String
 showHAST h = case h of
     Variable n _ -> ' ':n
-    Lambda as bd -> ' ':parens ("\\" ++ (concat $ map showHAST as) ++ " ->\n   " ++ showHAST bd)
-    Bind a b     -> showHAST a ++ " >>=" ++ showHAST b
+    Lambda as bd -> ' ':parens ("\\" ++ (concat $ map showHAST as) ++ " -> " ++ showHAST bd)
+    Bind a b     -> showHAST a ++ " >>=\n    " ++ showHAST b
+    Bindl a b    -> showHAST a ++ " =<< " ++ showHAST b
     Next a b     -> showHAST a ++ " >>" ++ showHAST b
     Function n as _ -> ' ':parens (n ++ (concat $ map showHAST as))
 
@@ -25,6 +27,7 @@ getHASTType h = case h of
     Function _ _ t -> t
     Variable _ t   -> t
     Bind a b       -> HIO $ getHASTType b
+    Bindl a b      -> HIO $ getHASTType a
     Next a b       -> HIO $ getHASTType b
     Lambda as b    -> getHASTType b
 
@@ -40,6 +43,7 @@ add :: HAST -> HAST -> HAST
 add hast hast' = case hast of
     Function fn args ft -> Function fn (hast':args) ft
     Bind a b            -> Bind a $ add b hast'
+    Bindl a b           -> Bindl a $ add b hast'
     Next a b            -> Next a $ add b hast'
     Lambda as b         -> Lambda as $ add b hast'
 

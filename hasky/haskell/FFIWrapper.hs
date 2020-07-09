@@ -7,7 +7,7 @@ import FFIUtils
 wrap :: String -> [HType] -> HAST
 wrap fn fts
     | (isIO $ getHASTType func) && (isIO $ toFFIType' ft) = Bind func (Lambda [res] $ toC res)
-    | isIO $ getHASTType func = Bind func (Lambda [res] $ return' $ toC res)
+    | isIO  $ getHASTType func = Bind func (Lambda [res] $ return' $ toC res)
     | otherwise               = toC  func
     where func = wrapArgs fn fts args
           ft   = last fts
@@ -33,12 +33,13 @@ convertFromC ht arg f = let
     in case ht of
     HString -> Bind (convertFromC' ht ht' arg)
                     (Lambda [arg] $ adf arg)
-    HList a -> Bind (Function "peekArray" [arg] ht')
-                    (Lambda [arg] body)
-                where m = map' (convertFromC' a (fromFFIType a) arg) arg
-                      body = if isIO $ getHASTType m
-                           then Bind m (Lambda [arg] $ adf arg)
-                           else adf m
+    HList a -> let
+        inner = map' (convertFromC' a (fromFFIType a) arg) arg
+        in if isIO $ getHASTType inner
+           then bind (Lambda [arg] (Bind inner (Lambda [arg] $ adf arg)))
+           else bind (Lambda [arg] $ adf inner)
+           where bind = Bind (Function "peekArray" [arg] ht')
+
     HTuple [a] -> undefined
     HFunc  [a] -> undefined
     _          -> adf $ convertFromC' ht ht' arg
@@ -47,12 +48,12 @@ convertFromC ht arg f = let
 convertFromC' :: HType -> HType -> HAST -> HAST
 convertFromC' ht ht' arg = case ht of
     HString  -> Function "peekCWString" [arg] ht'
-    HList a  -> Bind (Function "peekArray" [arg] ht')
-                     (Lambda [arg] body)
-                where m = map' (convertFromC' a (fromFFIType a) arg) arg
-                      body = if isIO $ getHASTType m
-                           then m
-                           else return' m
+    HList a  -> let 
+        inner = map' (convertFromC' a (fromFFIType a) arg) arg
+        in if isIO $ getHASTType inner
+           then bind $ Lambda [arg] inner
+           else bind $ Lambda [arg] $ return' inner
+           where bind = Bind (Function "peekArray" [arg] ht')
     HInteger -> Function "fromIntegral" [arg] ht'
     HInt     -> Function "fromIntegral" [arg] ht'
     HBool    -> Function "fromBool"     [arg] ht'
@@ -66,10 +67,11 @@ convertToC ht arg = let
         f n  = Function n [arg] ht'
     in case ht of
     HString  -> f "newCWString"
-    HList a  -> let m = map' (convertToC a arg) arg in
-                case getHASTType m of
-                (HIO _) -> Bind m (Lambda [Variable "res" a] $ convertToC a $ Variable "res" a)
-                _       -> Function "newArray" [m] ht'
+    HList a  -> let
+        inner = map' (convertToC a arg) arg
+        in if isIO $ getHASTType inner
+           then Bindl (Function "newArray" [] ht') inner
+           else Function "newArray" [inner] ht'
     HTuple [a] -> undefined
     HFunc  [a] -> undefined
     HInteger -> f "fromIntegral"
