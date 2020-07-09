@@ -43,42 +43,50 @@ convertFromC ht arg f = let
 fromArray :: HType -> HAST -> HAST
 fromArray ht arg = let
     inner = case ht of
-        HList a  -> map' (fromArray a arg) arg
-        HString  -> map' (fromC ht arg) arg
-        _        -> map' (return' $ fromC ht arg) arg
-    in Bind (fromC (HList ht) arg)
-            (Lambda [arg] inner)
+        HList a  -> Just $ map' (fromArray a arg) arg
+        HString  -> Just $ map' (fromC ht arg) arg
+        _        -> let 
+            f = fromC ht arg
+            in case f of
+                (Function _ _ _) -> Just $ map' (return' f) arg
+                _                -> Nothing
+    in case inner of
+        Just f  -> Bind (fromC (HList ht) arg)
+                        (Lambda [arg] f)
+        Nothing -> fromC (HList ht) arg
 
 fromC :: HType -> HAST -> HAST
-fromC ht arg = let
-        ht' = fromFFIType ht
-    in case ht of
-    HString  -> Function "peekCWString" [arg] ht'
-    HList _  -> Function "peekArray"    [arg] ht'
-    HInteger -> Function "fromIntegral" [arg] ht'
-    HInt     -> Function "fromIntegral" [arg] ht'
-    HBool    -> Function "fromBool"     [arg] ht'
-    HDouble  -> Function "realToFrac"   [arg] ht'
-    HFloat   -> Function "realToFrac"   [arg] ht'
+fromC ht arg = case ht of
+    HString  -> f "peekCWString"
+    HList _  -> f "peekArray"
+    HInteger -> f "fromIntegral"
+    HInt     -> f "fromIntegral"
+    HBool    -> f "fromBool"
+    HDouble  -> f "realToFrac"
+    HFloat   -> f "realToFrac"
     _        -> arg
+    where f n = Function n [arg] $ fromFFIType ht
 
 convertToC :: HType -> HAST -> HAST
-convertToC ht arg = let
-        ht'  = toFFIType' ht
-        f n  = Function n [arg] ht'
-    in case ht of
+convertToC ht arg = case ht of
+    HList a  -> toArray a arg
+    _        -> toC ht arg
+
+toArray :: HType -> HAST -> HAST
+toArray ht arg = case ht of
+    HList a -> undefined
+    _       -> undefined -- map' (
+
+toC :: HType -> HAST -> HAST
+toC ht arg = case ht of
     HString  -> f "newCWString"
-    HList a  -> let
-        inner = map' (convertToC a arg) arg
-        in if isIO $ getHASTType inner
-           then Bindl (Function "newArray" [] ht') inner
-           else Function "newArray" [inner] ht'
-    HTuple [a] -> undefined
-    HFunc  [a] -> undefined
+    HList _  -> f "newArray"
+    HTuple _ -> undefined
+    HFunc _  -> undefined
     HInteger -> f "fromIntegral"
     HInt     -> f "fromIntegral"
     HBool    -> f "fromBool"
     HDouble  -> f "CDouble"
     HFloat   -> f "CFloat"
     _        -> arg
-
+    where f n  = Function n [arg] $ toFFIType' ht
