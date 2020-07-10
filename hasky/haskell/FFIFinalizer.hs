@@ -5,7 +5,7 @@ import Control.Monad (liftM2, liftM)
 import HTypes (HType(..))
 import ParseTypes (TypeDef(funcN, funcT))
 import FFIUtils
-import FFIWrapper (wrapFunc)
+import FFIWrapper (fromC)
 
 maybeFinalizerFunc :: String -> HType -> Maybe String
 maybeFinalizerFunc n ht = case ht of
@@ -15,31 +15,29 @@ maybeFinalizerFunc n ht = case ht of
           f t = liftM mkFinalizer $ maybeFinalizerFunc' t
 
 maybeFinalizerFunc' :: HType -> Maybe HAST
-maybeFinalizerFunc' ht = let finType = stripIO $ toFFIType' ht in
-    finalize finType (Variable "x" finType)
+maybeFinalizerFunc' ht = finalize ht (finalizerVar ht)
 
 finalize :: HType -> HAST -> Maybe HAST
 finalize ht hast = case ht of
-      HCArray a -> freeArray a hast
-      _         -> free' ht hast
+      HList a -> freeArray a hast
+      _       -> free' ht hast
 
 freeArray :: HType -> HAST -> Maybe HAST
 freeArray ht hast = let
     inner = case ht of
-        HCArray a -> freeArray a hast
-        _         -> free' ht hast
-    in liftM2 Next (inner >>= (wrap' $ HList ht)) $ free' (HCArray ht) hast
+        HList a -> liftM2 map' (freeArray a hast) $ Just hast
+        _       -> liftM2 map' (free' ht hast) $ Just hast
+    in case inner of
+            Just f  -> liftM2 Next (Just $ Bind (fromC (HList ht) hast) $ Lambda [hast] f) $ free' (HList ht) hast
+            Nothing -> free' (HList ht) hast
 
 free' :: HType -> HAST -> Maybe HAST
 free' ht hast = case ht of
-    HCWString   -> Just $ f "freeCWString"
-    HCArray _   -> Just $ f "freeArray"
-    HCTuple _   -> undefined
-    HCPtr   _   -> Just $ f "free"
-    _           -> Nothing
+    HString   -> Just $ f "freeCWString"
+    HList  _  -> Just $ f "freeArray"
+    HTuple _  -> undefined
+    HCPtr  _  -> Just $ f "free"
+    _         -> Nothing
     where f n = Function n [hast] $ HIO HUnit
 
-wrap' :: HType -> HAST -> Maybe HAST
-wrap' ht hast = case hast of
-    Function n _ t -> Just $ wrapFunc n [ht,t] [hast]
-    _              -> Nothing
+finalizerVar ht = Variable "x" ht

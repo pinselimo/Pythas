@@ -32,7 +32,7 @@ makeFFIExport modname typedef = let
      functype = createFFIType $ funcT typedef
      ffitypedef = makeFFIType (funcN typedef) functype
      ffifunc    = wrap modname (funcN typedef) (funcT typedef)
-     finalizerF = maybeFinalizerFunc (funcN typedef) (last functype)
+     finalizerF = maybeFinalizerFunc (funcN typedef) (last $ funcT typedef)
      finalizerT = finalizerExport (funcN typedef) (last functype)
   in case finalizerF of
      Just finalizer -> ["",ffitypedef, ffifunc, "", finalizerT, finalizer]
