@@ -12,22 +12,19 @@ makeFFIType funcname ccompattypes = fec funcname ++ typeDef ++ functype
        rettype  = ffiType $ last ccompattypes
        typeConcat = foldr (\a b -> ffiType a ++ " -> " ++ b) rettype
 
-createFFIType :: [HType] -> ([HType], [Convert], Convert)
+createFFIType :: [HType] -> [HType]
 createFFIType ts =
     let fromT = map fromFFIType $ init ts
-        toT   = toFFIType (any isIO fromC) $ last ts
-        fromC = map fromFFIConvert $ init ts
-        toC   = toFFIConvert $ last ts
-    in (fromT ++ [toT], fromC, toC)
+        toT   = toFFIType (any isIO $ map toFFIType' $ init ts) $ last ts
+    in  map stripIO fromT ++ [toT]
 
-finalizerExport :: String -> Convert -> HType -> String
-finalizerExport n c (HIO t) = if needsFinalizer c
-                            then fec $ finalizerName n 
+finalizerExport :: String -> HType -> String
+finalizerExport n ht = case ht of
+        HIO t -> fec $ finalizerName n
                                  ++ typeDef
                                  ++ ffiType t
                                  ++ " -> IO ()"
-                            else ""
-finalizerExport _ _ _ = ""
+        _     -> ""
 
 ffiType :: HType -> String
 ffiType ht = case ht of
