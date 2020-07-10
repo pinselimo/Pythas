@@ -45,7 +45,7 @@ fromArray ht arg = let
     inner = case ht of
         HList a  -> Just $ map' (fromArray a arg) arg
         HString  -> Just $ map' (fromC ht arg) arg
-        _        -> let 
+        _        -> let
             f = fromC ht arg
             in case f of
                 (Function _ _ _) -> Just $ map' (return' f) arg
@@ -73,9 +73,15 @@ convertToC ht arg = case ht of
     _        -> toC ht arg
 
 toArray :: HType -> HAST -> HAST
-toArray ht arg = case ht of
-    HList a -> undefined
-    _       -> undefined -- map' (
+toArray ht arg = let
+    inner = case ht of
+        HList a -> Just $ map' (toArray a arg) arg -- (Lambda [arg] $ toC ht arg)) arg
+        _       -> case toC ht arg of
+            Function _ _ _ -> Just $ map' (toC ht arg) arg
+            _              -> Nothing
+    in case inner of
+        Just f  -> Bind f (Lambda [arg] $ toC (HList ht) arg)
+        Nothing -> toC (HList ht) arg
 
 toC :: HType -> HAST -> HAST
 toC ht arg = case ht of
