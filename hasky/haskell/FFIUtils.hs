@@ -22,25 +22,29 @@ showHAST h = case h of
     Next a b     -> showHAST a ++ " >>" ++ showHAST b
     Function n as _ -> ' ':parens (n ++ (concat $ map showHAST as))
 
-getHASTType :: HAST -> HType
-getHASTType h = case h of
+typeOf :: HAST -> HType
+typeOf h = case h of
     Function _ _ t -> t
     Variable _ t   -> t
-    Bind a b       -> HIO $ getHASTType b
-    Bindl a b      -> HIO $ getHASTType a
-    Next a b       -> HIO $ getHASTType b
-    Lambda as b    -> getHASTType b
+    Bind a b       -> HIO $ typeOf b
+    Bindl a b      -> HIO $ typeOf a
+    Next a b       -> HIO $ typeOf b
+    Lambda as b    -> typeOf b
 
--- TODO implement this proper
 return' :: HAST -> HAST
-return' (Function n args ht) = Function ("return $ " ++ n) args $ HIO ht
-return' (Variable n ht)      = Variable ("return $ " ++ n) $ HIO ht
+return' hast = case hast of
+    Function _ _ (HIO _) -> hast
+    Function _ _ ht -> Function "return" [hast] $ HIO ht
+    Variable _ ht   -> Function "return" [hast] $ HIO ht
+    Lambda args body -> Lambda args $ return' body
+    _                -> hast
 
 id' :: HType -> HAST
 id' = Function "id" []
 
 add :: HAST -> HAST -> HAST
 add hast hast' = case hast of
+    Function "return" (f:[]) ft -> Function "return" [add f hast'] ft
     Function fn args ft -> Function fn (hast':args) ft
     Bind a b            -> Bind a $ add b hast'
     Bindl a b           -> Bindl a $ add b hast'
@@ -48,13 +52,18 @@ add hast hast' = case hast of
     Lambda as b         -> Lambda as $ add b hast'
 
 map' :: HAST -> HAST -> HAST
-map' f a = case getHASTType f of
-    (HIO ht) -> Function "mapM" [mapF f a,a] (HIO (HList ht))
+map' f a = case typeOf f of
+    (HIO ht)  -> mapM' ht
+    HCWString -> mapM' HCWString
+    HCArray a -> mapM' a
     ht       -> Function "map"  [mapF f a,a] (HList ht)
+    where mapM' ht = Function "mapM" [mapF f a,a] (HIO (HList ht))
 
 mapF :: HAST -> HAST-> HAST
 mapF f a = case f of
-    Function fn args ft -> Function fn [] ft
+    Function fn args ft  -> case last args of
+            Variable _ _ -> Function fn (init args) ft
+            _            -> Lambda [a] f
     _ -> Lambda [a] f
 
 finalizerName = (++"Finalizer")
@@ -68,7 +77,7 @@ toFFIType anyIO ht = let ht' = toFFIType' ht
 
 toFFIType' :: HType -> HType
 toFFIType' ht = case ht of
- HString -> HIO HCWString
+ HString -> HIO $ HCWString
  HList x -> HIO $ HCArray $ toFFIType'' x
  HTuple [x] -> undefined
  HFunc [x] -> undefined
@@ -78,15 +87,12 @@ toFFIType' ht = case ht of
  HDouble -> HCDouble
  HFloat -> HCFloat
  _ -> ht
- where toFFIType'' ht = let ht' = toFFIType' ht
-                        in case ht' of
-                          HIO ht'' -> ht''
-                          _        -> ht'
+ where toFFIType'' ht = stripIO $ toFFIType' ht
 
 fromFFIType :: HType -> HType
 fromFFIType ht = case ht of
- HString -> HIO $ HCWString
- HList x -> HIO $ HCArray $ fromFFIType x
+ HString -> HCWString
+ HList x -> HCArray $ fromFFIType x
  HTuple [x] -> undefined
  HFunc [x]  -> undefined
  HInteger -> HLLong
@@ -99,6 +105,11 @@ fromFFIType ht = case ht of
 isIO :: HType -> Bool
 isIO (HIO _) = True
 isIO _ = False
+
+stripIO :: HType -> HType
+stripIO ht = case ht of
+    HIO ht -> ht
+    _      -> ht
 
 -- Writer functions
 sp s = ' ':s
