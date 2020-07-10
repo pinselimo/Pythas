@@ -1,31 +1,38 @@
 module FFIWrapper where
 
 import HTypes (HType(..))
-import ParseTypes (TypeDef(funcN, funcT))
 import FFIUtils
 
-wrap :: String -> [HType] -> HAST
-wrap fn fts
-    | (isIO $ getHASTType func) && (isIO $ toFFIType' ft) = Bind func (Lambda [res] $ toC res)
-    | isIO  $ getHASTType func = Bind func (Lambda [res] $ return' $ toC res)
-    | otherwise               = toC  func
+wrap :: String -> String -> [HType] -> String
+wrap modname funcname functype = funcname ++ (concat $ map show args) ++ " = " ++ show body
+    where body = wrapFunc (modname ++ '.':funcname) functype args
+          args = zipWith (\c t -> Variable [c] t) ['a'..'z'] $ init functype
+
+wrapFunc :: String -> [HType] -> [HAST] -> HAST
+wrapFunc fn fts args
+    | (isIO $ typeOf func) && (isIO $ toFFIType' ft) = case ft of
+                   HIO HUnit -> func
+                   _         -> Bind func (Lambda [res] $ toC res)
+    | isIO $ typeOf func = Bind func (Lambda [res] $ return' $ toC res)
+    | otherwise               = case ft of
+         (HList _) -> Bind (return' func) (Lambda [res] $ toC res)
+         _         -> toC func
     where func = wrapArgs fn fts args
           ft   = last fts
-          ats  = init fts
-          res = Variable "res" ft
-          toC = convertToC ft
-          args  = zipWith (\c t -> Variable [c] t) ['a'..'z'] ats
+          res  = Variable "res" ft
+          toC  = convertToC ft
 
 wrapArgs :: String -> [HType] -> [HAST] -> HAST
-wrapArgs fn fts args = foldr ($) (mkFunc fn fts) convfuncs
-    where convfuncs = zipWith convertFromC fts args
+wrapArgs fn ts args = foldr ($) (mkFunc fn ts) convfuncs
+    where convfuncs = zipWith convertFromC ts args
 
 mkFunc :: String -> [HType] -> HAST
-mkFunc fn hts
-    | any isIO htin && not (isIO $ last hts) = return' norm
-    | otherwise                      = norm
-    where norm = Function fn [] $ last hts
-          htin = map fromFFIType $ init hts
+mkFunc fn ts = let
+    htin = map toFFIType' $ init ts
+    in if any isIO htin && not (isIO $ last ts)
+    then return' norm
+    else norm
+    where norm = Function fn []  $ last ts
 
 convertFromC :: HType -> HAST -> HAST -> HAST
 convertFromC ht arg f = let
@@ -48,7 +55,8 @@ fromArray ht arg = let
         _        -> let
             f = fromC ht arg
             in case f of
-                (Function _ _ _) -> Just $ map' (return' f) arg
+                Function _ _ (HIO _) -> Just $ map' f arg
+                Function _ _ _       -> Just $ map' (return' f) arg
                 _                -> Nothing
     in case inner of
         Just f  -> Bind (fromC (HList ht) arg)
@@ -75,12 +83,12 @@ convertToC ht arg = case ht of
 toArray :: HType -> HAST -> HAST
 toArray ht arg = let
     inner = case ht of
-        HList a -> Just $ map' (toArray a arg) arg -- (Lambda [arg] $ toC ht arg)) arg
+        HList a -> Just $ map' (toArray a arg) arg
         _       -> case toC ht arg of
             Function _ _ _ -> Just $ map' (toC ht arg) arg
             _              -> Nothing
     in case inner of
-        Just f  -> Bind f (Lambda [arg] $ toC (HList ht) arg)
+        Just f  -> Bind (return' f) (Lambda [arg] $ toC (HList ht) arg)
         Nothing -> toC (HList ht) arg
 
 toC :: HType -> HAST -> HAST
