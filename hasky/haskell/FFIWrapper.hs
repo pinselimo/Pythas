@@ -9,7 +9,12 @@ wrap modname funcname functype = funcname ++ (concat $ map show args) ++ " = " +
           args = zipWith (\c t -> Variable [c] t) ['a'..'z'] $ init functype
 
 wrapFunc :: String -> [HType] -> [HAST] -> HAST
-wrapFunc fn fts args
+wrapFunc fn fts args = wrapHAST func ft
+    where func = wrapArgs fn fts args
+          ft   = last fts
+
+wrapHAST :: HAST -> HType -> HAST
+wrapHAST func ft
     | (isIO $ typeOf func) && (isIO $ toFFIType' ft) = case ft of
                    HIO HUnit -> func
                    _         -> Bind func (Lambda [res] $ toC res)
@@ -17,9 +22,7 @@ wrapFunc fn fts args
     | otherwise               = case ft of
          (HList _) -> Bind (return' func) (Lambda [res] $ toC res)
          _         -> toC func
-    where func = wrapArgs fn fts args
-          ft   = last fts
-          res  = Variable "res" ft
+    where res  = Variable "res" ft
           toC  = convertToC ft
 
 wrapArgs :: String -> [HType] -> [HAST] -> HAST
