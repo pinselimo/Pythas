@@ -1,40 +1,72 @@
 module FFIUtils where
 
 import HTypes (HType(..))
-import ParseTypes (TypeDef(funcN, funcT))
 
-data FromTo = ToC String
-            | FromC String
-            deriving (Show, Eq)
+data HAST = Function String [HAST] HType
+          | Variable String HType
+          | Bind     HAST HAST
+          | Bindl    HAST HAST
+          | Lambda   [HAST] HAST
+          | Next     HAST HAST
+          deriving (Eq)
 
-newtype Free = Free String
-          deriving (Show, Eq)
+instance Show HAST where
+    show = showHAST
 
-data Convert = Pure FromTo
-             | IOIn FromTo
-             | IOOut Free FromTo   -- ↓peek↓
-             | Nested Convert Convert String
-             deriving (Show, Eq)
+showHAST :: HAST -> String
+showHAST h = case h of
+    Variable n _ -> ' ':n
+    Lambda as bd -> ' ':parens ("\\" ++ (concat $ map showHAST as) ++ " -> " ++ showHAST bd)
+    Bind a b     -> showHAST a ++ " >>=\n    " ++ showHAST b
+    Bindl a b    -> showHAST a ++ " =<< " ++ showHAST b
+    Next a b     -> showHAST a ++ " >>" ++ showHAST b
+    Function n as _ -> ' ':parens (n ++ (concat $ map showHAST as))
 
-data Map = Map
-         | MapM
+typeOf :: HAST -> HType
+typeOf h = case h of
+    Function _ _ t -> t
+    Variable _ t   -> t
+    Bind a b       -> HIO $ typeOf b
+    Bindl a b      -> HIO $ typeOf a
+    Next a b       -> HIO $ typeOf b
+    Lambda as b    -> typeOf b
 
-instance Show Map where
-  show map = case map of
-                Map -> "map"
-                MapM -> "mapM"
+return' :: HAST -> HAST
+return' hast = case hast of
+    Function _ _ (HIO _) -> hast
+    Function _ _ ht -> Function "return" [hast] $ HIO ht
+    Variable _ ht   -> Function "return" [hast] $ HIO ht
+    Lambda args body -> Lambda args $ return' body
+    _                -> hast
+
+id' :: HType -> HAST
+id' = Function "id" []
+
+add :: HAST -> HAST -> HAST
+add hast hast' = case hast of
+    Function "return" (f:[]) ft -> Function "return" [add f hast'] ft
+    Function fn args ft -> Function fn (hast':args) ft
+    Bind a b            -> Bind a $ add b hast'
+    Bindl a b           -> Bindl a $ add b hast'
+    Next a b            -> Next a $ add b hast'
+    Lambda as b         -> Lambda as $ add b hast'
+
+map' :: HAST -> HAST -> HAST
+map' f a = case typeOf f of
+    (HIO ht)  -> mapM' ht
+    HCWString -> mapM' HCWString
+    HCArray a -> mapM' a
+    ht       -> Function "map"  [mapF f a,a] (HList ht)
+    where mapM' ht = Function "mapM" [mapF f a,a] (HIO (HList ht))
+
+mapF :: HAST -> HAST-> HAST
+mapF f a = case f of
+    Function fn args ft  -> case last args of
+            Variable _ _ -> Function fn (init args) ft
+            _            -> Lambda [a] f
+    _ -> Lambda [a] f
 
 finalizerName = (++"Finalizer")
-
-putMaps :: Map -> Int -> String
-putMaps m i 
- | i > 0 = '(':putMaps' m i ++ ")"
- | otherwise = ""
-
-putMaps' :: Map -> Int -> String
-putMaps' mapExp maps
-         | maps > 1  = (putMaps mapExp (maps-1)) ++ ' ':'.':' ':show mapExp
-         | otherwise = show mapExp
 
 -- FFI Export Type Construction
 toFFIType :: Bool -> HType -> HType
@@ -45,7 +77,7 @@ toFFIType anyIO ht = let ht' = toFFIType' ht
 
 toFFIType' :: HType -> HType
 toFFIType' ht = case ht of
- HString -> HIO HCWString
+ HString -> HIO $ HCWString
  HList x -> HIO $ HCArray $ toFFIType'' x
  HTuple [x] -> undefined
  HFunc [x] -> undefined
@@ -55,10 +87,7 @@ toFFIType' ht = case ht of
  HDouble -> HCDouble
  HFloat -> HCFloat
  _ -> ht
- where toFFIType'' ht = let ht' = toFFIType' ht
-                        in case ht' of
-                          HIO ht'' -> ht''
-                          _        -> ht'
+ where toFFIType'' ht = stripIO $ toFFIType' ht
 
 fromFFIType :: HType -> HType
 fromFFIType ht = case ht of
@@ -69,42 +98,18 @@ fromFFIType ht = case ht of
  HInteger -> HLLong
  HInt -> HCInt
  HBool -> HCBool
+ HDouble -> HCDouble
+ HFloat -> HCFloat
  _ -> ht
 
--- FFI Export Type Converter Construction
-toFFIConvert :: HType -> Convert
-toFFIConvert ht = case ht of
- HString -> IOOut (Free "freeCWString") $ ToC "newCWString"
- HList x -> Nested (IOOut (Free "freeArray") $ ToC "newArray") (toFFIConvert x) "peekArray"
- HTuple [x] -> undefined -- TODO Tuples
- HFunc  [x] -> undefined -- TODO Functions
- HInteger -> Pure $ ToC "fromIntegral"
- HInt -> Pure $ ToC "fromIntegral"
- HBool -> Pure $ ToC "fromBool"
- HDouble -> Pure $ ToC "CDouble"
- HFloat -> Pure $ ToC "CFloat"
- _ -> Pure $ ToC "id"
+isIO :: HType -> Bool
+isIO (HIO _) = True
+isIO _ = False
 
-fromFFIConvert :: HType -> Convert
-fromFFIConvert ht = case ht of
- HString -> IOIn $ FromC "peekCWString"
- HList x -> Nested (IOIn $ FromC "peekArray") (fromFFIConvert x) "peekArray"
- HTuple [x] -> undefined -- TODO Tuples
- HFunc  [x] -> undefined -- TODO Functions
- HInteger -> Pure $ FromC "fromIntegral"
- HInt -> Pure $ FromC "fromIntegral"
- HBool -> Pure $ FromC "fromBool"
- _ -> Pure $ FromC "id"
-
-isIO :: Convert -> Bool
-isIO (Pure _) = False
-isIO (Nested a b _) = isIO a || isIO b
-isIO _ = True
-
-needsFinalizer :: Convert -> Bool
-needsFinalizer (IOOut _ _) = True
-needsFinalizer (Nested a b _) = True
-needsFinalizer _ = False
+stripIO :: HType -> HType
+stripIO ht = case ht of
+    HIO ht -> ht
+    _      -> ht
 
 -- Writer functions
 sp s = ' ':s
@@ -119,4 +124,3 @@ concat' = foldr (\a b->' ':a:b) ""
 concatNL :: [String] -> String
 concatNL = foldr (\a b -> a ++ tab ++ b) ""
 parens s = '(':s++")"
-return' = "return"

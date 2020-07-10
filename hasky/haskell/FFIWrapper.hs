@@ -1,82 +1,109 @@
 module FFIWrapper where
 
-import HTypes (HType(HIO))
+import HTypes (HType(..))
 import FFIUtils
 
-type Modname = String
-type Funcname = String
+wrap :: String -> String -> [HType] -> String
+wrap modname funcname functype = funcname ++ (concat $ map show args) ++ " = " ++ show body
+    where body = wrapFunc (modname ++ '.':funcname) functype args
+          args = zipWith (\c t -> Variable [c] t) ['a'..'z'] $ init functype
 
-data Wrapper = Wrapper
-    { mname :: Modname
-    , fname :: Funcname
-    , argconv :: [Convert]
-    , reswrap :: Convert
-    , originalres :: HType
-    }
+wrapFunc :: String -> [HType] -> [HAST] -> HAST
+wrapFunc fn fts args = wrapHAST func ft
+    where func = wrapArgs fn fts args
+          ft   = last fts
 
-instance Show Wrapper where
-  show = wrapString
+wrapHAST :: HAST -> HType -> HAST
+wrapHAST func ft
+    | (isIO $ typeOf func) && (isIO $ toFFIType' ft) = case ft of
+                   HIO HUnit -> func
+                   _         -> Bind func (Lambda [res] $ toC res)
+    | isIO $ typeOf func = Bind func (Lambda [res] $ return' $ toC res)
+    | otherwise               = case ft of
+         (HList _) -> Bind (return' func) (Lambda [res] $ toC res)
+         _         -> toC func
+    where res  = Variable "res" ft
+          toC  = convertToC ft
 
-argnames :: [a] -> String
-argnames cs = take (length cs) ['a'..'z']
+wrapArgs :: String -> [HType] -> [HAST] -> HAST
+wrapArgs fn ts args = foldr ($) (mkFunc fn ts) convfuncs
+    where convfuncs = zipWith convertFromC ts args
 
-wrapString :: Wrapper -> String
-wrapString w = let
-       start = fname w ++ concat' args ++ equals
-       qname = sp $ mname w ++ '.':fname w
-       lmbds = concatNL $ lambdas w args
-       args  = argnames $ argconv w
-       argv  = wrapArgs w args
-       resv  = wrapRes (reswrap w) (originalres w) (any isIO $ argconv w) $ qname ++ argv
-       in start ++ lmbds ++ resv
+mkFunc :: String -> [HType] -> HAST
+mkFunc fn ts = let
+    htin = map toFFIType' $ init ts
+    in if any isIO htin && not (isIO $ last ts)
+    then return' norm
+    else norm
+    where norm = Function fn []  $ last ts
 
-lambdas :: Wrapper -> [Char] -> [String]
-lambdas w = lambdas' . zip (argconv w)
+convertFromC :: HType -> HAST -> HAST -> HAST
+convertFromC ht arg f = let
+    in case ht of
+    HString -> Bind (fromC ht arg)
+                    (Lambda [arg] $ adf arg)
+    HList a -> Bind (fromArray a arg)
+                    (Lambda [arg] $ adf arg)
 
-lambdas' :: [(Convert,Char)] -> [String]
-lambdas' = map (uncurry lambda) . filter (\(a,_) -> needsLambda a)
+    HTuple [a] -> undefined
+    HFunc  [a] -> undefined
+    _          -> adf $ fromC ht arg
+    where adf = add f
 
-needsLambda :: Convert -> Bool
-needsLambda cv = case cv of
-    (Nested a b _) -> needsLambda a || needsLambda b
-    (IOIn _)       -> True
-    _              -> False
+fromArray :: HType -> HAST -> HAST
+fromArray ht arg = let
+    inner = case ht of
+        HList a  -> Just $ map' (fromArray a arg) arg
+        HString  -> Just $ map' (fromC ht arg) arg
+        _        -> let
+            f = fromC ht arg
+            in case f of
+                Function _ _ (HIO _) -> Just $ map' f arg
+                Function _ _ _       -> Just $ map' (return' f) arg
+                _                -> Nothing
+    in case inner of
+        Just f  -> Bind (fromC (HList ht) arg)
+                        (Lambda [arg] f)
+        Nothing -> fromC (HList ht) arg
 
-lambda :: Convert -> Char -> String
-lambda c v = lambda' c v 0
+fromC :: HType -> HAST -> HAST
+fromC ht arg = case ht of
+    HString  -> f "peekCWString"
+    HList _  -> f "peekArray"
+    HInteger -> f "fromIntegral"
+    HInt     -> f "fromIntegral"
+    HBool    -> f "fromBool"
+    HDouble  -> f "realToFrac"
+    HFloat   -> f "realToFrac"
+    _        -> arg
+    where f n = Function n [arg] $ fromFFIType ht
 
-lambda' :: Convert -> Char -> Int -> String
-lambda' cv var maps = case cv of
-    (Nested a b _)    -> lambda' a var maps ++ tab ++ lambda' b var (maps+1)
-    (IOIn (FromC cv')) -> parens (end MapM cv') ++ next
-    (Pure (FromC cv')) -> parens (return' ++ cash ++ end Map cv') ++ next
-    where end m cv' = putMaps m maps++' ':cv'++[' ',var]
-          next    = bind ++ '\\':var:" ->"
+convertToC :: HType -> HAST -> HAST
+convertToC ht arg = case ht of
+    HList a  -> toArray a arg
+    _        -> toC ht arg
 
-wrapArgs :: Wrapper -> [Char] -> String
-wrapArgs w args = concat $ zipWith wrapArg (argconv w) args
+toArray :: HType -> HAST -> HAST
+toArray ht arg = let
+    inner = case ht of
+        HList a -> Just $ map' (toArray a arg) arg
+        _       -> case toC ht arg of
+            Function _ _ _ -> Just $ map' (toC ht arg) arg
+            _              -> Nothing
+    in case inner of
+        Just f  -> Bind (return' f) (Lambda [arg] $ toC (HList ht) arg)
+        Nothing -> toC (HList ht) arg
 
-wrapArg :: Convert -> Char -> String
-wrapArg cv c = case cv of
-    (Pure (FromC cv)) -> sp $ parens $ cv ++ v
-    _                 -> v
-    where v = [' ',c]
-
-wrapRes :: Convert -> HType -> Bool -> String -> String
-wrapRes (Pure (ToC cv)) ht io res = case ht of
-    HIO _ -> parens (return'++ring++cv) ++ bindr ++ res
-    _     -> if io
-    then return' ++ cash ++ func
-    else "" ++ func
-    where func = cv ++ cash ++ res
-wrapRes cv ht _ res = case ht of
-    HIO _ -> w $ bindr ++ res
-    _     -> w $ cash  ++ res
-    where w = wrapRes' cv 0
-
-wrapRes' :: Convert -> Int -> String -> String
-wrapRes' cv maps res = case cv of
-    (Nested a b _)      -> wrapRes' a maps "" ++ bindr ++ wrapRes' b (maps+1) res
-    (IOOut _ (ToC cv')) -> parens $ end MapM cv'
-    (Pure (ToC cv'))    -> parens $ return' ++ ring ++ end Map cv'
-    where end m cv' = putMaps m maps ++ sp cv' ++res
+toC :: HType -> HAST -> HAST
+toC ht arg = case ht of
+    HString  -> f "newCWString"
+    HList _  -> f "newArray"
+    HTuple _ -> undefined
+    HFunc _  -> undefined
+    HInteger -> f "fromIntegral"
+    HInt     -> f "fromIntegral"
+    HBool    -> f "fromBool"
+    HDouble  -> f "CDouble"
+    HFloat   -> f "CFloat"
+    _        -> arg
+    where f n  = Function n [arg] $ toFFIType' ht
