@@ -18,9 +18,9 @@ showAST :: AST -> String
 showAST h = case h of
     Variable n _ -> ' ':n
     Lambda as bd -> ' ':parens ("\\" ++ (concat $ map showAST as) ++ " -> " ++ showAST bd)
-    Bind a b     -> showAST a ++ " >>=\n    " ++ showAST b
+    Bind a b     -> ' ':parens (showAST a ++ " >>=\n    " ++ showAST b)
     Bindl a b    -> showAST a ++ " =<< " ++ showAST b
-    Next a b     -> showAST a ++ " >>" ++ showAST b
+    Next a b     -> showAST a ++ " >>\n    " ++ showAST b
     Tuple as     -> ' ':parens (foldr (\a b -> a ++ ", " ++ b)
                        (showAST $ last as) $ map showAST $ init as)
     Function n as _ -> ' ':parens (n ++ (concat $ map showAST as))
