@@ -86,3 +86,10 @@ free' ht arg = case ht of
     _         -> Nothing
     where f n = Function n [arg] $ HIO HUnit
 
+varA = Variable "a"
+varB = Variable "b"
+varC = Variable "c"
+tuple as = case as of
+        a:b:[]   -> Tuple [varA a, varB b]
+        a:b:c:[] -> Tuple [varA a, varB b, varC c]
+

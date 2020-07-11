@@ -3,7 +3,7 @@ module FFIFinalizer where
 import Control.Monad (liftM2, liftM)
 
 import HTypes (HType(..))
-import FFIUtils (free', fromC, finalizerName, stripIO)
+import FFIUtils (free', fromC, finalizerName, stripIO, tuple, varA, varB, varC)
 import AST (AST(..), map')
 
 maybeFinalizerFunc :: String -> HType -> Maybe String
@@ -15,11 +15,6 @@ maybeFinalizerFunc' :: HType -> Maybe AST
 maybeFinalizerFunc' ht = finalize ht (varXiable [varX]  ht)
 
 varX = 'x'
-varA = Variable "a"
-varB = Variable "b"
-varC = Variable "c"
-tuple2 a b = Tuple [varA a , varB b]
-tuple3 a b c = Tuple [varA a, varB b, varC c]
 
 finalize :: HType -> AST -> Maybe AST
 finalize ht hast = case ht of
@@ -39,9 +34,6 @@ freeArray ht hast = let
 
 freeTuple :: [HType] -> AST -> Maybe AST
 freeTuple as hast = let
-    tuple = case as of
-        a:b:[]   -> tuple2 a b
-        a:b:c:[] -> tuple3 a b c
     inner = case as of
         a:b:[]   -> freeTuple2 (f a varA) $ f b varB
         a:b:c:[] -> freeTuple3 (f a varA) (f b varB) $ f c varC
@@ -49,7 +41,7 @@ freeTuple as hast = let
         where f = finalize
     in case inner of
         Just inner -> liftM2 Next
-                      (Just $ Bind (fromC (HTuple ht) hast) $ Lambda [tuple] inner)
+                      (Just $ Bind (fromC (HTuple ht) hast) $ Lambda [tuple as] inner)
                       free
         Nothing    -> free
     where free = free' (HTuple ht) hast
