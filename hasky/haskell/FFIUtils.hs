@@ -72,5 +72,14 @@ toC ht arg = case ht of
     HDouble  -> f "CDouble"
     HFloat   -> f "CFloat"
     _        -> arg
-    where f n  = Function n [arg] $ toFFIType' ht
+    where f n = Function n [arg] $ toFFIType' ht
+
+free' :: HType -> AST -> Maybe AST
+free' ht arg = case ht of
+    HString   -> Just $ f "freeCWString"
+    HList  _  -> Just $ f "freeArray"
+    HTuple _  -> undefined
+    HCPtr  _  -> Just $ f "free"
+    _         -> Nothing
+    where f n = Function n [arg] $ HIO HUnit
 
