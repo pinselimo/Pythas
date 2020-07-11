@@ -14,30 +14,30 @@ toFFIType anyIO ht = let ht' = toFFIType' ht
 
 toFFIType' :: HType -> HType
 toFFIType' ht = case ht of
- HString -> HIO $ HCWString
- HList x -> HIO $ HCArray $ toFFIType'' x
+ HString   -> HIO $ HCWString
+ HList x   -> HIO $ HCArray $ toFFIType'' x
  HTuple xs -> HIO $ HTuple $ map toFFIType'' xs
- HFunc xs -> undefined
- HInteger -> HLLong
- HInt -> HCInt
- HBool -> HCBool
- HDouble -> HCDouble
- HFloat -> HCFloat
- _ -> ht
+ HFunc xs  -> undefined
+ HInteger  -> HLLong
+ HInt      -> HCInt
+ HBool     -> HCBool
+ HDouble   -> HCDouble
+ HFloat    -> HCFloat
+ _         -> ht
  where toFFIType'' ht = stripIO $ toFFIType' ht
 
 fromFFIType :: HType -> HType
 fromFFIType ht = case ht of
- HString -> HCWString
- HList x -> HCArray $ fromFFIType x
+ HString    -> HCWString
+ HList x    -> HCArray $ fromFFIType x
  HTuple [x] -> undefined
  HFunc [x]  -> undefined
- HInteger -> HLLong
- HInt -> HCInt
- HBool -> HCBool
- HDouble -> HCDouble
- HFloat -> HCFloat
- _ -> ht
+ HInteger   -> HLLong
+ HInt       -> HCInt
+ HBool      -> HCBool
+ HDouble    -> HCDouble
+ HFloat     -> HCFloat
+ _          -> ht
 
 isIO :: HType -> Bool
 isIO (HIO _) = True
@@ -50,6 +50,7 @@ stripIO ht = case ht of
 
 fromC :: HType -> AST -> AST
 fromC ht arg = case ht of
+    HTuple _ -> f "peek"
     HString  -> f "peekCWString"
     HList _  -> f "peekArray"
     HInteger -> f "fromIntegral"
@@ -62,9 +63,11 @@ fromC ht arg = case ht of
 
 toC :: HType -> AST -> AST
 toC ht arg = case ht of
+    HTuple [a,b,c] -> f "newTuple3"
+    HTuple [a,b] -> f "newTuple2"
+    HTuple _ -> undefined
     HString  -> f "newCWString"
     HList _  -> f "newArray"
-    HTuple _ -> undefined
     HFunc _  -> undefined
     HInteger -> f "fromIntegral"
     HInt     -> f "fromIntegral"
@@ -78,7 +81,7 @@ free' :: HType -> AST -> Maybe AST
 free' ht arg = case ht of
     HString   -> Just $ f "freeCWString"
     HList  _  -> Just $ f "freeArray"
-    HTuple _  -> undefined
+    HTuple _  -> Just $ f "free"
     HCPtr  _  -> Just $ f "free"
     _         -> Nothing
     where f n = Function n [arg] $ HIO HUnit
