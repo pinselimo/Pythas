@@ -2,8 +2,8 @@ module FFIFinalizer where
 
 import Control.Monad (liftM2, liftM)
 
-import HTypes (HType(..))
-import FFIUtils (free', fromC, finalizerName, stripIO, tuple, varA, varB, varC)
+import HTypes (HType(..), stripIO)
+import FFIUtils (free', fromC, finalizerName, tuple, varA, varB, varC)
 import AST (AST(..), map')
 
 maybeFinalizerFunc :: String -> HType -> Maybe String
@@ -12,7 +12,7 @@ maybeFinalizerFunc n ht = f $ stripIO ht
           f = liftM mkFinalizer . maybeFinalizerFunc'
 
 maybeFinalizerFunc' :: HType -> Maybe AST
-maybeFinalizerFunc' ht = finalize ht (varXiable [varX]  ht)
+maybeFinalizerFunc' ht = finalize ht (Variable [varX]  ht)
 
 varX = 'x'
 
@@ -35,16 +35,16 @@ freeArray ht hast = let
 freeTuple :: [HType] -> AST -> Maybe AST
 freeTuple as hast = let
     inner = case as of
-        a:b:[]   -> freeTuple2 (f a varA) $ f b varB
+        a:b:[]   -> freeTuple2 (f a varA) (f b varB)
         a:b:c:[] -> freeTuple3 (f a varA) (f b varB) $ f c varC
         _        -> Nothing
-        where f = finalize
+        where f t v = finalize t $ v t
     in case inner of
         Just inner -> liftM2 Next
-                      (Just $ Bind (fromC (HTuple ht) hast) $ Lambda [tuple as] inner)
+                      (Just $ Bind (fromC (HTuple as) hast) $ Lambda [tuple as] inner)
                       free
         Nothing    -> free
-    where free = free' (HTuple ht) hast
+    where free = free' (HTuple as) hast
 
 freeTuple2 :: Maybe AST -> Maybe AST -> Maybe AST
 freeTuple2 a b = case (a,b) of
@@ -62,5 +62,5 @@ freeTuple3 a b c = case (a,b,c) of
     (Nothing, Just fb, Just fc) -> Just $ Next fb fc
     (fa, Nothing, Nothing) -> fa
     (_ , fb, Nothing)      -> fb
-    (_ , _ , fc)           -> fb
+    (_ , _ , fc)           -> fc
 
