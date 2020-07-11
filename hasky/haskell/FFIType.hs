@@ -1,7 +1,7 @@
 module FFIType where
 
-import FFIUtils
-import HTypes (HType(..))
+import FFIUtils (finalizerName, toFFIType', toFFIType, fromFFIType)
+import HTypes (HType(..), stripIO, isIO)
 
 typeDef = " :: "
 fec = ("foreign export ccall "++)

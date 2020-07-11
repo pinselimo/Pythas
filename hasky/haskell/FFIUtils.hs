@@ -1,7 +1,7 @@
 module FFIUtils where
 
-import HTypes (HType(..))
-import AST (AST(Function))
+import HTypes (HType(..), stripIO, isIO)
+import AST (AST(Function, Tuple, Variable))
 
 finalizerName = (++"Finalizer")
 
@@ -39,18 +39,11 @@ fromFFIType ht = case ht of
  HFloat     -> HCFloat
  _          -> ht
 
-isIO :: HType -> Bool
-isIO (HIO _) = True
-isIO _ = False
-
-stripIO :: HType -> HType
-stripIO ht = case ht of
-    HIO ht -> ht
-    _      -> ht
-
 fromC :: HType -> AST -> AST
 fromC ht arg = case ht of
-    HTuple _ -> f "peek"
+    HTuple [a,b,c] -> f "peekTuple3"
+    HTuple [a,b] -> f "peekTuple2"
+    HTuple _ -> undefined
     HString  -> f "peekCWString"
     HList _  -> f "peekArray"
     HInteger -> f "fromIntegral"
