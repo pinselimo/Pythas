@@ -38,9 +38,6 @@ instance (Storable a, Storable b) => Storable (Tuple2 a b) where
     poke ptr (Tuple2 a b) = do
         poke (castPtr ptr) a
         poke (goto2Snd ptr a) b
-{-    peek _    = undefined -- Tuples are only valid as return types.
-    poke _ _  = undefined -- we never inpoke side-effects ;)
--}
 
 type CTuple3 a b c = Ptr (Tuple3 a b c)
 
