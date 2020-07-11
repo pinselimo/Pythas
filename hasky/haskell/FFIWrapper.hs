@@ -1,8 +1,8 @@
 module FFIWrapper where
 
-import HTypes (HType(..))
+import HTypes (HType(..), isIO, stripIO)
 import AST (AST(..), return', map', typeOf, add)
-import FFIUtils (toC, fromC, isIO, toFFIType', tuple, varA, varB, varC)
+import FFIUtils (toC, fromC, toFFIType', tuple, varA, varB, varC)
 
 wrap :: String -> String -> [HType] -> String
 wrap modname funcname functype = funcname ++ (concat $ map show args) ++ " = " ++ show body
@@ -90,11 +90,14 @@ toTuple hts arg = let
         a:b:[]   -> Just $ toTuple2 (cf a varA) (cf b varB)
         a:b:c:[] -> Just $ toTuple3 (cf a varA) (cf b varB) $ cf c varC
         _        -> Nothing
-        where cf = convertToC
+        where cf t v = convertToC t $ v t
     in case inner of
-        Just inner -> Bind (Lambda [tuple hts] $ return' inner) (Lambda [arg] toT)
+        Just inner -> Bind (dummy $ Lambda [tuple hts] $ return' inner)
+                           (Lambda [arg] toT)
         Nothing    -> toT
-    where toT = toC (HTuple hts) arg
+    where toT = toC t arg
+          dummy ast = Function "" [ast, arg] $ t
+          t = HTuple hts
 
 toTuple2 :: AST -> AST -> AST
 toTuple2 a b = case (isIO $ typeOf a, isIO $ typeOf b) of
