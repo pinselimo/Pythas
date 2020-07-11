@@ -59,25 +59,14 @@ fromArray ht arg = let
         _        -> let
             f = fromC ht arg
             in case f of
-                Function _ _ (HIO _) -> Just $ map' f arg
-                Function _ _ _       -> Just $ map' (return' f) arg
-                _                -> Nothing
+                Function _ _ t -> Just $ if isIO t
+                                  then map' f arg
+                                  else map' (return' f) arg
+                _              -> Nothing
     in case inner of
         Just f  -> Bind (fromC (HList ht) arg)
                         (Lambda [arg] f)
         Nothing -> fromC (HList ht) arg
-
-fromC :: HType -> AST -> AST
-fromC ht arg = case ht of
-    HString  -> f "peekCWString"
-    HList _  -> f "peekArray"
-    HInteger -> f "fromIntegral"
-    HInt     -> f "fromIntegral"
-    HBool    -> f "fromBool"
-    HDouble  -> f "realToFrac"
-    HFloat   -> f "realToFrac"
-    _        -> arg
-    where f n = Function n [arg] $ fromFFIType ht
 
 convertToC :: HType -> AST -> AST
 convertToC ht arg = case ht of
@@ -95,16 +84,3 @@ toArray ht arg = let
         Just f  -> Bind (return' f) (Lambda [arg] $ toC (HList ht) arg)
         Nothing -> toC (HList ht) arg
 
-toC :: HType -> AST -> AST
-toC ht arg = case ht of
-    HString  -> f "newCWString"
-    HList _  -> f "newArray"
-    HTuple _ -> undefined
-    HFunc _  -> undefined
-    HInteger -> f "fromIntegral"
-    HInt     -> f "fromIntegral"
-    HBool    -> f "fromBool"
-    HDouble  -> f "CDouble"
-    HFloat   -> f "CFloat"
-    _        -> arg
-    where f n  = Function n [arg] $ toFFIType' ht

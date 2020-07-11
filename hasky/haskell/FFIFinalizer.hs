@@ -6,7 +6,6 @@ import HTypes (HType(..))
 import ParseTypes (TypeDef(funcN, funcT))
 import FFIUtils
 import AST
-import FFIWrapper (fromC)
 
 maybeFinalizerFunc :: String -> HType -> Maybe String
 maybeFinalizerFunc n ht = case ht of

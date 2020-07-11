@@ -1,6 +1,7 @@
 module FFIUtils where
 
 import HTypes (HType(..))
+import AST (AST(Function))
 
 finalizerName = (++"Finalizer")
 
@@ -46,4 +47,30 @@ stripIO :: HType -> HType
 stripIO ht = case ht of
     HIO ht -> ht
     _      -> ht
+
+fromC :: HType -> AST -> AST
+fromC ht arg = case ht of
+    HString  -> f "peekCWString"
+    HList _  -> f "peekArray"
+    HInteger -> f "fromIntegral"
+    HInt     -> f "fromIntegral"
+    HBool    -> f "fromBool"
+    HDouble  -> f "realToFrac"
+    HFloat   -> f "realToFrac"
+    _        -> arg
+    where f n = Function n [arg] $ fromFFIType ht
+
+toC :: HType -> AST -> AST
+toC ht arg = case ht of
+    HString  -> f "newCWString"
+    HList _  -> f "newArray"
+    HTuple _ -> undefined
+    HFunc _  -> undefined
+    HInteger -> f "fromIntegral"
+    HInt     -> f "fromIntegral"
+    HBool    -> f "fromBool"
+    HDouble  -> f "CDouble"
+    HFloat   -> f "CFloat"
+    _        -> arg
+    where f n  = Function n [arg] $ toFFIType' ht
 
