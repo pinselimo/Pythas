@@ -1,6 +1,7 @@
 module FFIWrapper where
 
 import HTypes (HType(..))
+import AST
 import FFIUtils
 
 wrap :: String -> String -> [HType] -> String
@@ -8,13 +9,13 @@ wrap modname funcname functype = funcname ++ (concat $ map show args) ++ " = " +
     where body = wrapFunc (modname ++ '.':funcname) functype args
           args = zipWith (\c t -> Variable [c] t) ['a'..'z'] $ init functype
 
-wrapFunc :: String -> [HType] -> [HAST] -> HAST
-wrapFunc fn fts args = wrapHAST func ft
+wrapFunc :: String -> [HType] -> [AST] -> AST
+wrapFunc fn fts args = wrapAST func ft
     where func = wrapArgs fn fts args
           ft   = last fts
 
-wrapHAST :: HAST -> HType -> HAST
-wrapHAST func ft
+wrapAST :: AST -> HType -> AST
+wrapAST func ft
     | (isIO $ typeOf func) && (isIO $ toFFIType' ft) = case ft of
                    HIO HUnit -> func
                    _         -> Bind func (Lambda [res] $ toC res)
@@ -25,11 +26,11 @@ wrapHAST func ft
     where res  = Variable "res" ft
           toC  = convertToC ft
 
-wrapArgs :: String -> [HType] -> [HAST] -> HAST
+wrapArgs :: String -> [HType] -> [AST] -> AST
 wrapArgs fn ts args = foldr ($) (mkFunc fn ts) convfuncs
     where convfuncs = zipWith convertFromC ts args
 
-mkFunc :: String -> [HType] -> HAST
+mkFunc :: String -> [HType] -> AST
 mkFunc fn ts = let
     htin = map toFFIType' $ init ts
     in if any isIO htin && not (isIO $ last ts)
@@ -37,7 +38,7 @@ mkFunc fn ts = let
     else norm
     where norm = Function fn []  $ last ts
 
-convertFromC :: HType -> HAST -> HAST -> HAST
+convertFromC :: HType -> AST -> AST -> AST
 convertFromC ht arg f = let
     in case ht of
     HString -> Bind (fromC ht arg)
@@ -50,7 +51,7 @@ convertFromC ht arg f = let
     _          -> adf $ fromC ht arg
     where adf = add f
 
-fromArray :: HType -> HAST -> HAST
+fromArray :: HType -> AST -> AST
 fromArray ht arg = let
     inner = case ht of
         HList a  -> Just $ map' (fromArray a arg) arg
@@ -66,7 +67,7 @@ fromArray ht arg = let
                         (Lambda [arg] f)
         Nothing -> fromC (HList ht) arg
 
-fromC :: HType -> HAST -> HAST
+fromC :: HType -> AST -> AST
 fromC ht arg = case ht of
     HString  -> f "peekCWString"
     HList _  -> f "peekArray"
@@ -78,12 +79,12 @@ fromC ht arg = case ht of
     _        -> arg
     where f n = Function n [arg] $ fromFFIType ht
 
-convertToC :: HType -> HAST -> HAST
+convertToC :: HType -> AST -> AST
 convertToC ht arg = case ht of
     HList a  -> toArray a arg
     _        -> toC ht arg
 
-toArray :: HType -> HAST -> HAST
+toArray :: HType -> AST -> AST
 toArray ht arg = let
     inner = case ht of
         HList a -> Just $ map' (toArray a arg) arg
@@ -94,7 +95,7 @@ toArray ht arg = let
         Just f  -> Bind (return' f) (Lambda [arg] $ toC (HList ht) arg)
         Nothing -> toC (HList ht) arg
 
-toC :: HType -> HAST -> HAST
+toC :: HType -> AST -> AST
 toC ht arg = case ht of
     HString  -> f "newCWString"
     HList _  -> f "newArray"

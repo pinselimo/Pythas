@@ -5,6 +5,7 @@ import Control.Monad (liftM2, liftM)
 import HTypes (HType(..))
 import ParseTypes (TypeDef(funcN, funcT))
 import FFIUtils
+import AST
 import FFIWrapper (fromC)
 
 maybeFinalizerFunc :: String -> HType -> Maybe String
@@ -14,15 +15,15 @@ maybeFinalizerFunc n ht = case ht of
     where mkFinalizer h = (finalizerName n) ++ " x = " ++ show h
           f t = liftM mkFinalizer $ maybeFinalizerFunc' t
 
-maybeFinalizerFunc' :: HType -> Maybe HAST
+maybeFinalizerFunc' :: HType -> Maybe AST
 maybeFinalizerFunc' ht = finalize ht (finalizerVar ht)
 
-finalize :: HType -> HAST -> Maybe HAST
+finalize :: HType -> AST -> Maybe AST
 finalize ht hast = case ht of
       HList a -> freeArray a hast
       _       -> free' ht hast
 
-freeArray :: HType -> HAST -> Maybe HAST
+freeArray :: HType -> AST -> Maybe AST
 freeArray ht hast = let
     inner = case ht of
         HList a -> liftM2 map' (freeArray a hast) $ Just hast
@@ -31,7 +32,7 @@ freeArray ht hast = let
             Just f  -> liftM2 Next (Just $ Bind (fromC (HList ht) hast) $ Lambda [hast] f) $ free' (HList ht) hast
             Nothing -> free' (HList ht) hast
 
-free' :: HType -> HAST -> Maybe HAST
+free' :: HType -> AST -> Maybe AST
 free' ht hast = case ht of
     HString   -> Just $ f "freeCWString"
     HList  _  -> Just $ f "freeArray"
