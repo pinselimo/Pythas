@@ -20,8 +20,8 @@ t2Alignment ct = aConstraint + bConstraint
     where aConstraint = alignment $ c2fst ct
           bConstraint = alignment $ c2snd ct
 
-newTuple2 :: (Storable a, Storable b) => a -> b -> IO (CTuple2 a b)
-newTuple2 x y = new $ Tuple2 x y
+newTuple2 :: (Storable a, Storable b) => (a, b) -> IO (CTuple2 a b)
+newTuple2 (a, b) = new $ Tuple2 x y
 
 goto2Snd :: (Storable a, Storable b) => Ptr (Tuple2 a b) -> a -> Ptr b
 goto2Snd ptr x = let align p = alignPtr p $ sizeOf p
@@ -56,8 +56,8 @@ t3Alignment ct = aConstraint + bConstraint + cConstraint
           bConstraint = alignment $ c3snd ct
           cConstraint = alignment $ c3trd ct
 
-newTuple3 :: (Storable a, Storable b, Storable c) => a -> b -> c -> IO (CTuple3 a b c)
-newTuple3 x y z = new $ Tuple3 x y z
+newTuple3 :: (Storable a, Storable b, Storable c) => (a, b, c) -> IO (CTuple3 a b c)
+newTuple3 (x, y, z) = new $ Tuple3 x y z
 
 instance (Storable a, Storable b, Storable c) => Storable (Tuple3 a b c) where
     sizeOf    = t3Size
