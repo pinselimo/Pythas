@@ -112,6 +112,6 @@ toTuple3 a b c = case (isIO $ typeOf a, isIO $ typeOf b, isIO $ typeOf c) of
     (False, False, False) -> return' $ toTup [a,b,c]
     _              -> liftM' (toTup []) (return' a) (return' b) (return' c)
     where toTup  as = Function "(,)" as $ HTuple ts
-          liftM' f a b c = Function "liftM2" [f,a,b,c] $ HIO $ stripIO $ typeOf f
+          liftM' f a b c = Function "liftM3" [f,a,b,c] $ HIO $ stripIO $ typeOf f
           ts = map (stripIO . typeOf) [a,b,c]
 
