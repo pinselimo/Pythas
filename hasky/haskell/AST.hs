@@ -1,6 +1,6 @@
 module AST where
 
-import HTypes (HType(..))
+import HTypes (HType(..), stripIO, isIO)
 
 data AST = Function String [AST] HType
           | Variable String HType
@@ -21,8 +21,8 @@ showAST h = case h of
     Bind a b     -> showAST a ++ " >>=\n    " ++ showAST b
     Bindl a b    -> showAST a ++ " =<< " ++ showAST b
     Next a b     -> showAST a ++ " >>" ++ showAST b
-    Tuple as     -> ' ':parens $ foldr (\a b -> a ++ ", " ++ b)
-                       (showAST last as) $ map showAST $ init as
+    Tuple as     -> ' ':parens (foldr (\a b -> a ++ ", " ++ b)
+                       (showAST $ last as) $ map showAST $ init as)
     Function n as _ -> ' ':parens (n ++ (concat $ map showAST as))
     where parens s = '(':s++")"
 
@@ -34,7 +34,7 @@ typeOf h = case h of
     Bindl a b      -> HIO $ stripIO $ typeOf a
     Next a b       -> HIO $ stripIO $ typeOf b
     Tuple as       -> let inner = map typeOf as in
-                   if any $ isIO inner
+                   if any isIO inner
                    then HIO (HTuple $ map stripIO inner)
                    else HTuple inner
     Lambda as b    -> typeOf b
