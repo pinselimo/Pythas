@@ -21,7 +21,12 @@ t2Alignment ct = aConstraint + bConstraint
           bConstraint = alignment $ c2snd ct
 
 newTuple2 :: (Storable a, Storable b) => (a, b) -> IO (CTuple2 a b)
-newTuple2 (a, b) = new $ Tuple2 x y
+newTuple2 (x, y) = new $ Tuple2 x y
+
+peekTuple2 :: (Storable a, Storable b) => CTuple2 a b -> IO (a,b)
+peekTuple2 ct = do
+    t <- peek ct
+    return (c2fst t, c2snd t)
 
 goto2Snd :: (Storable a, Storable b) => Ptr (Tuple2 a b) -> a -> Ptr b
 goto2Snd ptr x = let align p = alignPtr p $ sizeOf p
@@ -59,8 +64,14 @@ t3Alignment ct = aConstraint + bConstraint + cConstraint
 newTuple3 :: (Storable a, Storable b, Storable c) => (a, b, c) -> IO (CTuple3 a b c)
 newTuple3 (x, y, z) = new $ Tuple3 x y z
 
+peekTuple3 :: (Storable a, Storable b, Storable c) => CTuple3 a b c -> IO (a,b,c)
+peekTuple3 ct = do
+    t <- peek ct
+    return (c3fst t, c3snd t, c3trd t)
+
 instance (Storable a, Storable b, Storable c) => Storable (Tuple3 a b c) where
     sizeOf    = t3Size
     alignment = t3Alignment
     peek _    = undefined
     poke _ _  = undefined
+
