@@ -21,9 +21,9 @@ createFFIType ts =
 finalizerExport :: String -> HType -> String
 finalizerExport n ht = case ht of
         HIO t -> fec $ finalizerName n
-                                 ++ typeDef
-                                 ++ ffiType t
-                                 ++ " -> IO ()"
+                                  ++ typeDef
+                                  ++ ffiType t
+                                  ++ " -> IO ()"
         _     -> ""
 
 ffiType :: HType -> String
