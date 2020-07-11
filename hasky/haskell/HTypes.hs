@@ -1,4 +1,4 @@
-module HTypes (HType(..), htype) where
+module HTypes (HType(..), htype, stripIO, isIO) where
 
 import Text.Parsec ((<|>), unexpected, try, skipMany)
 import qualified Text.Parsec.Char as PC (string)
@@ -68,4 +68,13 @@ string = mp HString ["[Char]","String"]
 int = mp HInt ["Int"]
 integer = mp HInteger ["Integer"]
 cwstring = mp HCWString ["CWString", "Ptr CWchar"]
+
+isIO :: HType -> Bool
+isIO (HIO _) = True
+isIO _ = False
+
+stripIO :: HType -> HType
+stripIO ht = case ht of
+    HIO ht -> ht
+    _      -> ht
 
