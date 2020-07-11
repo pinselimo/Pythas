@@ -1,123 +1,83 @@
 module FFIWrapper where
 
-import HTypes (HType(HIO))
-import FFIUtils
+import HTypes (HType(..))
+import AST (AST(..), return', map', typeOf, add)
+import FFIUtils (toC, fromC, isIO, toFFIType')
 
-tab = "    "
+wrap :: String -> String -> [HType] -> String
+wrap modname funcname functype = funcname ++ (concat $ map show args) ++ " = " ++ show body
+    where body = wrapFunc (modname ++ '.':funcname) functype args
+          args = zipWith (\c t -> Variable [c] t) ['a'..'z'] $ init functype
 
-type Modname = String
-type Funcname = String
+wrapFunc :: String -> [HType] -> [AST] -> AST
+wrapFunc fn fts args = wrapAST func ft
+    where func = wrapArgs fn fts args
+          ft   = last fts
 
-data Wrapper = Wrapper
-    { mname :: Modname
-    , fname :: Funcname
-    , argconv :: [Convert]
-    , reswrap :: Convert
-    , originalres :: HType
-    }
+wrapAST :: AST -> HType -> AST
+wrapAST func ft
+    | bothIO    = if ft == (HIO HUnit)
+                then func
+                else Bind func (Lambda [res] $ convert res)
+    | funcIO    = Bind func (Lambda [res] $ return' $ convert res)
+    | outpIO    = Bind (return' func) (Lambda [res] $ convert res)
+    | otherwise = convert func
+    where res = Variable "res" ft
+          convert = convertToC ft
+          funcIO  = isIO $ typeOf func
+          outpIO  = isIO $ toFFIType' ft
+          bothIO  = funcIO && outpIO
 
-instance Show Wrapper where
-  show = wrapString
+wrapArgs :: String -> [HType] -> [AST] -> AST
+wrapArgs fn ts args = foldr ($) (mkFunc fn ts) convfuncs
+    where convfuncs = zipWith convertFromC ts args
 
-argnames :: [Convert] -> String
-argnames cs = take (length cs) ['a'..'z']
+mkFunc :: String -> [HType] -> AST
+mkFunc fn ts = let
+    ioIn  = any isIO $ map toFFIType' $ init ts
+    ioOut = isIO $ last ts
+    in if ioIn && not ioOut
+    then return' norm
+    else norm
+    where norm = Function fn []  $ last ts
 
-wrapString :: Wrapper -> String
-wrapString w = let
-       start = fname w ++ foldr (\a b->' ':a:b) " " args ++ " = "
-       qname = ' ':mname w ++ '.':fname w
-       lmbds = foldr (\a b -> a ++ '\n':tab ++ b) "" $ lambdas w args
-       args  = argnames $ argconv w
-       argv  = wrapArgs w args
-       resv  = wrapRes (reswrap w) (originalres w) (any isIO $ argconv w) $ qname ++ argv
-       in case lmbds of
-            "" -> start ++ resv
-            _  -> start ++ lmbds ++ resv
+convertFromC :: HType -> AST -> AST -> AST
+convertFromC ht arg f = case ht of
+    HString -> Bind (fromC ht arg)
+                    (Lambda [arg] $ adf arg)
+    HList a -> Bind (fromArray a arg)
+                    (Lambda [arg] $ adf arg)
+    HTuple [a] -> undefined
+    HFunc  [a] -> undefined
+    _          -> adf $ fromC ht arg
+    where adf = add f
 
-lambdas :: Wrapper -> [Char] -> [String]
-lambdas w = lambdas' . zip (argconv w)
+convertToC :: HType -> AST -> AST
+convertToC ht arg = case ht of
+    HList a  -> toArray a arg
+    _        -> toC ht arg
 
-lambdas' :: [(Convert,Char)] -> [String]
-lambdas' = map (uncurry lambda) . filter (\(a,_) -> needsLambda a)
+fromArray :: HType -> AST -> AST
+fromArray ht arg = let
+    converter = fromC ht arg
+    inner     = case (ht, converter) of
+        (HList a, _)        -> Just $ map' (fromArray a arg) arg
+        (HString, _)        -> Just $ map' (fromC ht arg) arg
+        (_, Function _ _ t) -> Just $ if isIO t
+                                    then map' converter arg
+                                    else map' (return' converter) arg
+        _                   -> Nothing
+    in case inner of
+        Just inner -> Bind (fromC (HList ht) arg) $ Lambda [arg] inner
+        Nothing    -> fromC (HList ht) arg
 
-needsLambda :: Convert -> Bool
-needsLambda cv = case cv of
-    (Nested a b _) -> needsLambda a || needsLambda b
-    (IOIn _)       -> True
-    _              -> False
+toArray :: HType -> AST -> AST
+toArray ht arg = let
+    inner = case (ht, toC ht arg) of
+        (HList a, _)        -> Just $ map' (toArray a arg) arg
+        (_, Function _ _ _) -> Just $ map' (toC ht arg) arg
+        _                   -> Nothing
+    in case inner of
+        Just inner -> Bind (return' inner) (Lambda [arg] $ toC (HList ht) arg)
+        Nothing    -> toC (HList ht) arg
 
-lambda :: Convert -> Char -> String
-lambda c v = lambda' c v 0
-
-lambda' :: Convert -> Char -> Int -> String
-lambda' cv var maps = case cv of
-    (Nested a b _)    -> lambda' a var maps ++ '\n':tab ++ lambda' b var (maps+1)
-    (IOIn (FromC cv)) -> '(':putMaps MapM maps++' ':cv++' ':var:") >>= \\"++var:" ->"
-    (Pure (FromC cv)) -> '(':"return $ "++putMaps Map maps++' ':cv++' ':var:") >>= \\"++var:" ->"
-
-wrapArgs :: Wrapper -> [Char] -> String
-wrapArgs w args = concat $ zipWith wrapArg (argconv w) args
-
-wrapArg :: Convert -> Char -> String
-wrapArg (Pure (FromC cv)) c = ' ':'(':cv ++ ' ':c:")"
-wrapArg _ c = [' ',c]
-
-wrapRes :: Convert -> HType -> Bool -> String -> String
-wrapRes (Pure (ToC cv)) ht io res = case ht of
-    HIO _ -> "(return . "++cv++") =<< " ++ res
-    _     -> if io
-    then "return $ " ++ func
-    else "" ++ func
-    where func = cv ++ " $ " ++ res
-wrapRes cv ht _ res = case ht of
-    HIO _ -> w $ " =<< " ++ res
-    _     -> w $ " $ " ++ res
-    where w = wrapRes' cv 0
-
-wrapRes' :: Convert -> Int -> String -> String
-wrapRes' cv maps res = case cv of
-    (IOOut _ (ToC cv)) -> '(':putMaps MapM maps ++ ' ':cv++res++")"
-    (Pure (ToC cv))    -> let m = putMaps Map maps
-                              r = "(return"
-                              e = ' ':cv++res++")"
-                          in case res of
-                                "" -> r ++ " . " ++ e
-                                _  -> r ++ " $ " ++ m ++ e
-    (Nested a b _)     -> wrapRes' a maps "" ++ " =<< " ++ wrapRes' b (maps+1) res
-    (Tuple2 a b)       -> putMaps Map maps ++ "(\\(a,b) -> ((liftM2 (,)) (" ++ wrapRes' a 0 " a)" ++ ' ':'(':wrapRes' b 0 " b))"  ++ " >>= (\\(a,b) -> newTuple2 a b)) " ++ res
-    (Tuple3 a b c)     -> putMaps Map maps ++ "(\\(a,b,c) -> ((liftM3 (,,)) (" ++ wrapRes' a 0 " a)" ++ ' ':'(':wrapRes' b 0 " b)" ++ ' ':'(':wrapRes' c 0 " c))" ++ " >>= (\\(a,b,c) -> newTuple3 a b c)) " ++ res
-
-
-finalizerFunc :: String -> Convert -> String
-finalizerFunc n freer = needsFinalizer freer $ finalizerName n ++ " x = " ++ finalizerFunc' freer 0 " x" ++ "\n"
-
-finalizerFunc' :: Convert -> Int -> String -> String
-finalizerFunc' = finalizerFunc'' [""]
-
-finalizerFunc'' :: [String] -> Convert -> Int -> String -> String
-finalizerFunc'' peek cv maps var =
-    let tuple2access = ["c2fst","c2snd"]
-        tuple3access = ["c3fst","c3snd","c3trd"]
-        nestedff x = finalizerFunc'' peek x maps var
-    in case cv of
-    Tuple2 a b          -> '(':putMaps MapM maps ++ "peek x) >>= \\x -> " ++ finalizeTuple tuple2access peek [a,b] maps var
-    Tuple3 a b c        -> '(':putMaps MapM maps ++ "peek x) >>= \\x -> " ++ finalizeTuple tuple3access peek [a,b,c] maps var
-    Nested a (Pure _) p -> nestedff a
-    Nested a b p        -> finalizerFunc'' (p:peek) b (maps+1) var ++ plus ++ nestedff a
-    IOOut (Free f) _    -> if maps > 0
-                     then '(':'(':putMaps MapM maps ++ ' ':f++')':get maps peek var
-                     else '(':putMaps MapM maps ++ ' ':f++var++")"
-
-finalizeTuple :: [String] -> [String] -> [Convert] -> Int -> String -> String
-finalizeTuple access peek cvs maps var = case fs of
-                 []     -> ""
-                 (x:[]) -> x
-                 _      -> foldr (\a b-> a ++ plus ++ b) (last fs) (init fs)
-    where tupleff p x = '(':finalizerFunc'' peek x maps "" ++ " $ " ++ p ++ var ++ ")"
-          fs = map (uncurry tupleff) $ filter (\(_,a)->needsFinalizer' a) $ zip access cvs
-
-get :: Int -> [String] -> String -> String
-get 0 _  var   = var ++ ")"
-get maps (peek:ps) var = " =<< " ++ putMaps MapM (maps-1) ++ ' ':peek ++ get (maps-1) ps var
-
-plus = '\n':tab++" >> "

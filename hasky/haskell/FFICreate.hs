@@ -1,9 +1,10 @@
 module FFICreate (createFFI) where
 
 import ParseTypes (TypeDef(funcN, funcT))
-import FFIType
-import FFIWrapper
-import FFIUtils (needsFinalizer)
+
+import FFIType (createFFIType, makeFFIType, finalizerExport)
+import FFIWrapper (wrap)
+import FFIFinalizer (maybeFinalizerFunc)
 
 imports = map ("import "++)
           ["Foreign.C.Types"
@@ -21,7 +22,7 @@ createFFI fn modname exports typeDefs =
  let ffiFilename = takeWhile (/='.') fn ++ "_hasky_ffi.hs"
      ffiModname = modname ++ "_hasky_ffi"
      exportedFuncTypes = filter ((`elem` exports) . funcN) typeDefs
-     ffiFunctions = map (makeFFIExport modname) exportedFuncTypes
+     ffiFunctions = concat $ map (makeFFIExport modname) exportedFuncTypes
      ffiContent = "{-# LANGUAGE ForeignFunctionInterface #-}\n"
              ++ "module " ++ ffiModname
              ++ " where\n\n"
@@ -30,14 +31,14 @@ createFFI fn modname exports typeDefs =
 
  in (ffiFilename, ffiContent)
 
-makeFFIExport :: String -> TypeDef -> String
+makeFFIExport :: String -> TypeDef -> [String]
 makeFFIExport modname typedef = let
-     (functype, fromC, toC) = createFFIType $ funcT typedef
+     functype = createFFIType $ funcT typedef
      ffitypedef = makeFFIType (funcN typedef) functype
-     ffifunc    = show $ Wrapper modname (funcN typedef) fromC toC (last $ funcT typedef)
-     finalizerF = finalizerFunc (funcN typedef) toC
-     finalizerT = finalizerExport (funcN typedef) toC (last functype)
-  in case needsFinalizer toC "?" of
-        "" -> pack [ffitypedef, ffifunc]
-        _  -> pack [ffitypedef, ffifunc, '\n':finalizerT, finalizerF]
-  where pack = foldr (\a b -> a++'\n':b) ""
+     ffifunc    = wrap modname (funcN typedef) (funcT typedef)
+     maybeFinal = maybeFinalizerFunc (funcN typedef) (last $ funcT typedef)
+     finalizerT = finalizerExport (funcN typedef) (last functype)
+  in case maybeFinal of
+     Just finalizer -> ["",ffitypedef, ffifunc, "", finalizerT, finalizer]
+     Nothing        -> ["",ffitypedef, ffifunc]
+

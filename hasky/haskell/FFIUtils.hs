@@ -1,53 +1,20 @@
 module FFIUtils where
 
 import HTypes (HType(..))
-import ParseTypes (TypeDef(funcN, funcT))
-
-data FromTo = ToC String
-            | FromC String
-            deriving (Show, Eq)
-
-data Free = Free String
-          deriving (Show, Eq)
-
-data Convert = Pure FromTo
-             | IOIn FromTo
-             | IOOut Free FromTo   -- ↓peek↓
-             | Nested Convert Convert String
-             | Tuple2 Convert Convert
-             | Tuple3 Convert Convert Convert
-             deriving (Show, Eq)
-
-data Map = Map
-         | MapM
-
-instance Show Map where
-  show map = case map of
-                Map -> "map"
-                MapM -> "mapM"
+import AST (AST(Function))
 
 finalizerName = (++"Finalizer")
-
-putMaps :: Map -> Int -> String
-putMaps m i
- | i > 0 = '(':putMaps' m i ++ ")"
- | otherwise = ""
-
-putMaps' :: Map -> Int -> String
-putMaps' mapExp maps
-         | maps > 1  = (putMaps mapExp (maps-1)) ++ ' ':'.':' ':show mapExp
-         | otherwise = show mapExp
 
 -- FFI Export Type Construction
 toFFIType :: Bool -> HType -> HType
 toFFIType anyIO ht = let ht' = toFFIType' ht
-        in case ht' of
-             HIO _ -> ht'
-             _     -> if anyIO then HIO ht' else ht'
+        in if anyIO && (not $ isIO ht')
+           then HIO ht'
+           else ht'
 
 toFFIType' :: HType -> HType
 toFFIType' ht = case ht of
- HString -> HIO HCWString
+ HString -> HIO $ HCWString
  HList x -> HIO $ HCArray $ toFFIType'' x
  HTuple xs -> HIO $ HTuple $ map toFFIType'' xs
  HFunc xs -> undefined
@@ -57,10 +24,7 @@ toFFIType' ht = case ht of
  HDouble -> HCDouble
  HFloat -> HCFloat
  _ -> ht
- where toFFIType'' ht = let ht' = toFFIType' ht
-                        in case ht' of
-                          HIO ht'' -> ht''
-                          _        -> ht'
+ where toFFIType'' ht = stripIO $ toFFIType' ht
 
 fromFFIType :: HType -> HType
 fromFFIType ht = case ht of
@@ -71,52 +35,51 @@ fromFFIType ht = case ht of
  HInteger -> HLLong
  HInt -> HCInt
  HBool -> HCBool
+ HDouble -> HCDouble
+ HFloat -> HCFloat
  _ -> ht
 
--- FFI Export Type Converter Construction
-toFFIConvert :: HType -> Convert
-toFFIConvert ht = case ht of
- HString -> IOOut (Free "freeCWString") $ ToC "newCWString"
- HList x -> Nested (IOOut (Free "freeArray") $ ToC "newArray") (toFFIConvert x) "peekArray"
- HTuple xs -> case map toFFIConvert xs of
-    (a:b:[])   -> Tuple2 a b
-    (a:b:c:[]) -> Tuple3 a b c
- HFunc  [x] -> undefined -- TODO Functions
- HInteger -> Pure $ ToC "fromIntegral"
- HInt -> Pure $ ToC "fromIntegral"
- HBool -> Pure $ ToC "fromBool"
- HDouble -> Pure $ ToC "CDouble"
- HFloat -> Pure $ ToC "CFloat"
- _ -> Pure $ ToC "id"
+isIO :: HType -> Bool
+isIO (HIO _) = True
+isIO _ = False
 
-fromFFIConvert :: HType -> Convert
-fromFFIConvert ht = case ht of
- HString -> IOIn $ FromC "peekCWString"
- HList x -> Nested (IOIn $ FromC "peekArray") (fromFFIConvert x) "peekArray"
- HTuple [x] -> undefined -- TODO Tuples
- HFunc  [x] -> undefined -- TODO Functions
- HInteger -> Pure $ FromC "fromIntegral"
- HInt -> Pure $ FromC "fromIntegral"
- HBool -> Pure $ FromC "fromBool"
- _ -> Pure $ FromC "id"
+stripIO :: HType -> HType
+stripIO ht = case ht of
+    HIO ht -> ht
+    _      -> ht
 
-isIO :: Convert -> Bool
-isIO cv = case cv of 
-    (Pure _)       -> False
-    (Nested a b _) -> isIO a || isIO b
-    (Tuple2 a b)   -> isIO a || isIO b
-    (Tuple3 a b c) -> isIO a || isIO b || isIO c
-    _              -> True
+fromC :: HType -> AST -> AST
+fromC ht arg = case ht of
+    HString  -> f "peekCWString"
+    HList _  -> f "peekArray"
+    HInteger -> f "fromIntegral"
+    HInt     -> f "fromIntegral"
+    HBool    -> f "fromBool"
+    HDouble  -> f "realToFrac"
+    HFloat   -> f "realToFrac"
+    _        -> arg
+    where f n = Function n [arg] $ fromFFIType ht
 
-htIO :: HType -> Bool
-htIO (HIO _) = True
-htIO _ = False
+toC :: HType -> AST -> AST
+toC ht arg = case ht of
+    HString  -> f "newCWString"
+    HList _  -> f "newArray"
+    HTuple _ -> undefined
+    HFunc _  -> undefined
+    HInteger -> f "fromIntegral"
+    HInt     -> f "fromIntegral"
+    HBool    -> f "fromBool"
+    HDouble  -> f "CDouble"
+    HFloat   -> f "CFloat"
+    _        -> arg
+    where f n = Function n [arg] $ toFFIType' ht
 
-needsFinalizer :: Convert -> String -> String
-needsFinalizer cv s = if needsFinalizer' cv then s else ""
-needsFinalizer' cv = case cv of
-    (IOOut _ _)    -> True
-    (Nested a b _) -> True
-    (Tuple2 a b)   -> needsFinalizer' a || needsFinalizer' b
-    (Tuple3 a b c) -> needsFinalizer' a || needsFinalizer' b || needsFinalizer' c
-    _              -> False
+free' :: HType -> AST -> Maybe AST
+free' ht arg = case ht of
+    HString   -> Just $ f "freeCWString"
+    HList  _  -> Just $ f "freeArray"
+    HTuple _  -> undefined
+    HCPtr  _  -> Just $ f "free"
+    _         -> Nothing
+    where f n = Function n [arg] $ HIO HUnit
+

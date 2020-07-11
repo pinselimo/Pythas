@@ -6,11 +6,11 @@ from sys import platform
 from .ghc import ghc_compile_cmd
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-libparsehs = os.path.join( dir_path, "libparsehs.so")
+libparsehs = os.path.join( dir_path, "libhaskyffi.so")
 
 dir = os.path.dirname(os.path.realpath(__file__))
 src = os.path.join( dir, "Exports.hs")
-lib = os.path.join( dir, "libparsehs")
+lib = os.path.join( dir, "libhaskyffi")
 if not os.path.exists( lib ):
     if platform.startswith('linux'):
         lib += '.so'

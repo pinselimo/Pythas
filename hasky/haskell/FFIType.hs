@@ -3,25 +3,28 @@ module FFIType where
 import FFIUtils
 import HTypes (HType(..))
 
-makeFFIType :: String -> [HType] -> String
-makeFFIType funcname ccompattypes = fec funcname ++ " :: " ++ functype
- where functype = argtypes ++ rettype
-       argtypes = foldr (\a b -> ffiType a ++ " -> " ++ b) "" $ init ccompattypes
-       rettype  = ffiType $ last ccompattypes
+typeDef = " :: "
+fec = ("foreign export ccall "++)
 
-createFFIType :: [HType] -> ([HType], [Convert], Convert)
+makeFFIType :: String -> [HType] -> String
+makeFFIType funcname ccompattypes = fec funcname ++ typeDef ++ functype
+ where functype = typeConcat $ init ccompattypes
+       rettype  = ffiType $ last ccompattypes
+       typeConcat = foldr (\a b -> ffiType a ++ " -> " ++ b) rettype
+
+createFFIType :: [HType] -> [HType]
 createFFIType ts =
     let fromT = map fromFFIType $ init ts
-        toT   = toFFIType (any isIO fromC) $ last ts
-        fromC = map fromFFIConvert $ init ts
-        toC   = toFFIConvert $ last ts
-    in (fromT ++ [toT], fromC, toC)
+        toT   = toFFIType (any isIO $ map toFFIType' $ init ts) $ last ts
+    in  map stripIO fromT ++ [toT]
 
-finalizerExport :: String -> Convert -> HType -> String
-finalizerExport n c (HIO t) = needsFinalizer c $ fec $ finalizerName n ++ " :: " ++ ffiType t ++ " -> IO ()"
-finalizerExport _ _ _ = ""
-
-fec = ("foreign export ccall "++)
+finalizerExport :: String -> HType -> String
+finalizerExport n ht = case ht of
+        HIO t -> fec $ finalizerName n
+                                  ++ typeDef
+                                  ++ ffiType t
+                                  ++ " -> IO ()"
+        _     -> ""
 
 ffiType :: HType -> String
 ffiType ht = case ht of
@@ -53,5 +56,6 @@ ffiType ht = case ht of
                     2 -> "CTuple2 " ++ furthers hts
                     3 -> "CTuple3 " ++ furthers hts
     _ -> fail ("Non C-compatible type \"" ++ show ht ++ "\" in export")
-    where further  = (\s -> "( " ++ s ++ " )") . ffiType
+    where further  = (\s -> "(" ++ s ++ ")") . ffiType
           furthers = concat . map ((' ':) . further)
+
