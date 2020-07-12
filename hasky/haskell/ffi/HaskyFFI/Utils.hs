@@ -1,7 +1,7 @@
-module FFIUtils where
+module HaskyFFI.Utils where
 
-import HTypes (HType(..))
-import AST (AST(Function))
+import HaskyFFI.HTypes (HType(..))
+import HaskyFFI.AST (AST(Function))
 
 finalizerName = (++"Finalizer")
 

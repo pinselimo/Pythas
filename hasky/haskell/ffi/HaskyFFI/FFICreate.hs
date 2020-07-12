@@ -1,10 +1,9 @@
-module FFICreate (createFFI) where
+module HaskyFFI.FFICreate (createFFI) where
 
-import ParseTypes (TypeDef(funcN, funcT))
-
-import FFIType (createFFIType, makeFFIType, finalizerExport)
-import FFIWrapper (wrap)
-import FFIFinalizer (maybeFinalizerFunc)
+import HaskyFFI.ParseTypes (TypeDef(funcN, funcT))
+import HaskyFFI.FFIType (createFFIType, makeFFIType, finalizerExport)
+import HaskyFFI.Wrapper (wrap)
+import HaskyFFI.Finalizer (maybeFinalizerFunc)
 
 imports = map ("import "++)
           ["Foreign.C.Types"

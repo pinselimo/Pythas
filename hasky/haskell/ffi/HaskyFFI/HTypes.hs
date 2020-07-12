@@ -1,4 +1,4 @@
-module HTypes (HType(..), htype) where
+module HaskyFFI.HTypes (HType(..), htype) where
 
 import Text.Parsec ((<|>), unexpected, try, skipMany)
 import qualified Text.Parsec.Char as PC (string)

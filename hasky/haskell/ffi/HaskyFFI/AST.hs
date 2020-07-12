@@ -1,6 +1,6 @@
-module AST where
+module HaskyFFI.AST where
 
-import HTypes (HType(..))
+import HaskyFFI.HTypes (HType(..))
 
 data AST = Function String [AST] HType
           | Variable String HType

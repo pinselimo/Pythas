@@ -1,10 +1,10 @@
-module FFIFinalizer where
+module HaskyFFI.Finalizer where
 
 import Control.Monad (liftM2, liftM)
 
-import HTypes (HType(..))
-import FFIUtils (free', fromC, finalizerName, stripIO)
-import AST (AST(..), map')
+import HaskyFFI.HTypes (HType(..))
+import HaskyFFI.AST (AST(..), map')
+import HaskyFFI.Utils (free', fromC, finalizerName, stripIO)
 
 maybeFinalizerFunc :: String -> HType -> Maybe String
 maybeFinalizerFunc n ht = f $ stripIO ht
