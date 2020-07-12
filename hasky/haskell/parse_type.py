@@ -3,7 +3,7 @@ from functools import partial
 
 from ..types import *
 from ..parser import FuncInfo
-from .utils import applyT2, applyT3, strip_io
+from .utils import applyT2, applyT3, strip_io, tuple_types
 
 HS2PY = {
         ### void ###
