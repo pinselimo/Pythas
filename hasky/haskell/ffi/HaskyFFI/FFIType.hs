@@ -1,7 +1,7 @@
-module FFIType where
+module HaskyFFI.FFIType where
 
-import FFIUtils (finalizerName, toFFIType', toFFIType, fromFFIType)
-import HTypes (HType(..), stripIO, isIO)
+import HaskyFFI.HTypes (HType(..), stripIO, isIO)
+import HaskyFFI.Utils (finalizerName, toFFIType', toFFIType, fromFFIType)
 
 typeDef = " :: "
 fec = ("foreign export ccall "++)

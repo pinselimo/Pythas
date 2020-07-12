@@ -1,10 +1,10 @@
-module ParseTypes (parseTypeDefs, TypeDef(funcN, funcT)) where
+module HaskyFFI.ParseTypes (parseTypeDefs, TypeDef(funcN, funcT)) where
 
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
-import HTypes (HType(..), htype)
-import ParseUtils
+import HaskyFFI.HTypes (HType(..), htype)
+import HaskyFFI.ParseUtils
 
 data TypeDef = TypeDef {
     funcN :: String,
@@ -44,3 +44,4 @@ list  = HList  <$> (brackets (strip parseType))
 isFunc = try $ lookAhead $ parens (identifier *> many1 (strip $ arrow *> parseType))
 isTuple = try $ lookAhead $ parens (parseType *> many1 (strip $ comma *> parseType))
 isTypeDef = try $ lookAhead parseTypeDef
+

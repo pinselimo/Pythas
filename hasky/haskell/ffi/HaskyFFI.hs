@@ -7,16 +7,16 @@ import Text.Parsec.Error (ParseError)
 import Foreign.C.String (CWString, peekCWString, newCWString)
 import Control.Exception (Exception, throw)
 
-import ParseTypes (parseTypeDefs, TypeDef(funcN))
-import ParseExports (parseExports, parseModname)
-import FFICreate (createFFI)
+import HaskyFFI.ParseTypes (parseTypeDefs, TypeDef(funcN))
+import HaskyFFI.ParseExports (parseExports, parseModname)
+import HaskyFFI.FFICreate (createFFI)
 
 foreign export ccall createFileBindings :: CWString -> IO CWString
 foreign export ccall freeReturnedString :: CWString -> IO ()
 
-newtype HaskyExepction = ParseException ParseError
+newtype HaskyException = ParseException ParseError
  deriving (Show)
-instance Exception HaskyExepction
+instance Exception HaskyException
 
 createFileBindings :: CWString -> IO CWString
 createFileBindings cfn = do

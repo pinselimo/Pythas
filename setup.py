@@ -19,6 +19,6 @@ setup(
    url="https://www.behaviour.space/",
    packages=['hasky','hasky.haskell'],
    package_dir={'hasky':'hasky','hasky.haskell':'hasky/haskell'},
-   package_data={'hasky.haskell': ['res/*.c','res/*.hs','*.hs']},
+   package_data={'hasky.haskell': ['res/*.c','res/*.hs','ffi/*.hs','ffi/HaskyFFI/*.hs']},
    install_requires=install_requires,
 )

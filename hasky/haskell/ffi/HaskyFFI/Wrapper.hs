@@ -1,8 +1,8 @@
-module FFIWrapper where
+module HaskyFFI.Wrapper where
 
-import HTypes (HType(..), isIO, stripIO)
-import AST (AST(..), return', map', typeOf, add)
-import FFIUtils (toC, fromC, toFFIType', tuple, varA, varB, varC)
+import HaskyFFI.HTypes (HType(..), isIO, stripIO)
+import HaskyFFI.AST (AST(..), return', map', typeOf, add)
+import HaskyFFI.Utils (toC, fromC, toFFIType', tuple, varA, varB, varC)
 
 wrap :: String -> String -> [HType] -> String
 wrap modname funcname functype = funcname ++ (concat $ map show args) ++ " = " ++ show body

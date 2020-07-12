@@ -1,7 +1,7 @@
-module FFIUtils where
+module HaskyFFI.Utils where
 
-import HTypes (HType(..), stripIO, isIO)
-import AST (AST(Function, Tuple, Variable))
+import HaskyFFI.HTypes (HType(..), stripIO, isIO)
+import HaskyFFI.AST (AST(Function, Tuple, Variable))
 
 finalizerName = (++"Finalizer")
 

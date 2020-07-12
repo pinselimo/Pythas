@@ -9,7 +9,6 @@ import os.path
 from .haskell.ghc import GHC_VERSION, ghc_compile_cmd
 from .haskell import hsparser
 from .haskell.parse_file import parse_haskell
-from .haskell.ffi import create_ffi_file
 from .utils import custom_attr_getter, find_source, DOT
 
 from importlib.abc import MetaPathFinder

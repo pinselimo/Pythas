@@ -1,4 +1,4 @@
-module ParseUtils where
+module HaskyFFI.ParseUtils where
 
 import qualified Text.Parsec.Token as P
 import Text.Parsec.Language (haskellDef)
