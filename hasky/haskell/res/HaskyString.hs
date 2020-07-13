@@ -1,8 +1,22 @@
-module HaskyString (CWString, newCWString, peekCWString, withCWString, freeCWString, fromCWString) where
+module HaskyString (CWString, newCWString, peekCWString, freeCWString) where
 
-import Foreign.C.String
-import Foreign.Marshal.Alloc (free)
+import qualified Foreign.C.String as STR
+import Foreign.Marshal.Alloc (malloc, free)
+import Foreign.Ptr
+import Foreign.Storable
 import System.IO.Unsafe (unsafePerformIO)
 
-fromCWString = unsafePerformIO . peekCWString
-freeCWString = free
+type CWString = Ptr STR.CWString
+
+newCWString :: String -> IO CWString
+newCWString s = do
+ p <- malloc
+ s <- STR.newCWString s
+ poke p s
+ return p
+
+peekCWString :: CWString -> IO String
+peekCWString cws = peek cws >>= STR.peekCWString
+
+freeCWString :: CWString -> IO ()
+freeCWString cws = peek cws >>= free >> free cws

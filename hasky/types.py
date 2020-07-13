@@ -1,7 +1,11 @@
 import ctypes as cl
+from functools import partial
+
+class LinkedList:
+    pass
 
 def new_linked_list(ctype):
-    class c_linked_list(cl.Structure):
+    class c_linked_list(LinkedList, cl.Structure):
         pass
     c_linked_list._fields_ = [('value',ctype),('next',cl.POINTER(c_linked_list))]
     return c_linked_list
@@ -29,8 +33,11 @@ def from_linked_list(ll):
         next = next.contents.next
     return res
 
+class Array:
+    pass
+
 def new_c_array(ctype):
-    class c_array(cl.Structure):
+    class c_array(Array, cl.Structure):
         _fields_ = [('len',cl.c_int),('ptr',cl.POINTER(ctype))]
     return c_array
 
@@ -38,7 +45,23 @@ def to_c_array(cls, seq):
     arr = cls()
     arr.len = cl.c_int(len(seq))
     ctype = cls._fields_[1][1]._type_
-    a = (ctype * len(seq))(*map(ctype,seq))
+    if issubclass(ctype, cl._Pointer):
+        subtype = ctype._type_
+        if issubclass(subtype, Array):
+            subconstr = lambda x: cl.pointer(to_c_array(subtype,x))
+            content = map(subconstr,seq)
+        elif issubclass(subtype, LinkedList):
+            subconstr = lambda x: cl.pointer(to_linked_list(subtype,x))
+            content = map(subconstr, seq)
+        else:
+            # For any pointer the value needs to be 
+            # packed first in the subtype and then
+            # in the actual type
+            subconstr = lambda x: ctype(subtype(x))
+            content = map(subconstr,seq)
+    else:
+        content = map(ctype,seq)
+    a = (ctype * len(seq))(*content)
     arr.ptr = cl.cast(a,cl.POINTER(ctype))
     return arr
 

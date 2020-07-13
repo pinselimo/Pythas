@@ -4,8 +4,6 @@ from functools import partial
 from ..types import *
 from ..parser import FuncInfo
 
-USE_LIST = True
-
 HS2PY = {
         ### void ###
         '()':None,
@@ -32,59 +30,15 @@ HS2PY = {
         'CFloat':cl.c_float,
         'Float':cl.c_float, # CFloat builds a newtype over Float
 
-
         ### String ###
         'CString':cl.c_char_p,
+        # Strings cannot be freed of cl.c_wchar_p is the return type
+        # however, ctypes does also not take over marshalling so
+        # this weird behaviour results in memory leakage
+        # Our way around this problem is to 'hide' the string behind
+        # a pointer:
+        'CWString':cl.POINTER(cl.c_wchar_p)
     }
-
-HS2HS = {
-    'Int':('CInt','fromIntegral','fromIntegral'),
-    'Integer':('CLLong','fromIntegral','fromIntegral'),
-    'Bool':('CBool','fromBool','toBool'),
-}
-
-def hs_2_hsc(hs_type):
-    hs_type = hs_type.strip('( )')
-    if hs_type == "":
-        return '()', '', ''
-
-    if hs_type in HS2PY or 'CList' in hs_type or 'CArray' in hs_type:
-        return hs_type, '', ''
-
-    elif hs_type in HS2HS:
-        return HS2HS[hs_type]
-
-    elif hs_type.startswith('[') and hs_type.endswith(']'):
-        inner_type, from_c, to_c = hs_2_hsc(hs_type[1:-1])
-        if USE_LIST:
-            if from_c:
-                from_c = 'newList $ map {}'.format(from_c)
-            else:
-                from_c = 'newList'
-            if to_c:
-                to_c = '(map {}) $ fromList'.format(to_c)
-            else:
-                to_c = 'fromList'
-
-            hsc_type = '(CList {})'.format(inner_type)
-        else: # use array
-            if from_c:
-                from_c = 'newArray $ map {}'.format(from_c)
-            else:
-                from_c = 'newArray'
-            if to_c:
-                to_c = '(map {}) $ fromArray'.format(to_c)
-            else:
-                to_c = 'fromArray'
-
-            hsc_type = '(CArray {})'.format(inner_type)
-
-        return hsc_type, from_c, to_c
-
-    elif hs_type.islower():
-        raise TypeError('Typevariables cannot be used with the FFI')
-    else:
-        raise TypeError('Non-simple type "{}" cannot be used with Hasky'.format(hs_type))
 
 def simple_hs_2_py(hs_type):
     if hs_type in HS2PY:
@@ -105,6 +59,7 @@ def hs2py(hs_type):
         hs_type = '()'
     ll = hs_type.find('CList ')
     arr = hs_type.find('CArray ')
+    st = hs_type.find('CWString')
     if ll+1 and (ll < arr or arr < 0): ## Linked List first
         cls = cl.POINTER(new_linked_list(hs2py(hs_type[ll+len('CList '):])))
     elif arr+1 and (arr < ll or ll < 0): ## array first
@@ -118,31 +73,43 @@ def argtype(hs_type):
     returns: tuple : (type of argument, constructor)
     '''
     argt = hs2py(hs_type)
-
     ll = hs_type.find('CList ')
-    if ll < 0:
-        arr = hs_type.find('CArray ')
-        if arr < 0:
-            return argt, argt
-        else:
-            return argt, partial(to_c_array, argt._type_)
-    else:
-        return argt, partial(to_linked_list, argt._type_)
+    arr = hs_type.find('CArray ')
+    st = hs_type.find('CWString')
+    if ll+1 and (ll < arr or arr < 0): ## Linked List first
+        # subconstr = argtype(hs_type[ll+len('CList '):])[1]
+        constr = lambda x: partial(to_linked_list, argt._type_)(list(map(subconstr,x)))
+    elif arr+1 and (arr < ll or ll < 0): ## array first
+        subconstr = argtype(hs_type[arr+len('CArray '):])[1]
+        #constr = lambda x: partial(to_c_array, argt._type_)(list(map(subconstr,x)))
+        constr = partial(to_c_array, argt._type_)
+    elif st+1:
+        constr = lambda x: cl.pointer(cl.c_wchar_p(x))
+    else: # neither linked list nor array
+        constr = argt
+    return argt, constr
 
 def restype(hs_type):
     '''
     returns: tuple : (type of result, reconstructor, bool: needsFinalizer)
     '''
+    rtype = hs2py(hs_type)
+    final = True
     ll = hs_type.find('CList ')
-    restype = hs2py(hs_type)
-    if ll < 0:
-        arr = hs_type.find('CArray ')
-        if arr < 0:
-            return restype, lambda x:x, None, None
-        else:
-            return restype, from_c_array, 'freeArray', hs_type
-    else:
-        return restype, from_linked_list, 'freeList', hs_type
+    arr = hs_type.find('CArray ')
+    st = hs_type.find('CWString')
+    if ll+1 and (ll < arr or arr < 0): ## Linked List first
+        inner = restype(hs_type[ll+len('CList '):])[1]
+        recon = lambda x: list(map(inner,from_linked_list(x)))
+    elif arr+1 and (arr < ll or ll < 0): ## array first
+        inner = restype(hs_type[arr+len('CArray '):])[1]
+        recon = lambda x: list(map(inner,from_c_array(x)))
+    elif st+1:
+        recon = lambda x:x.contents.value
+    else: # neither linked list nor array
+        recon = lambda x:x
+        final = False
+    return rtype, recon, final
 
 def strip_io(tp):
     '''
@@ -156,22 +123,7 @@ def strip_io(tp):
     else:
         return 'IO ',tp[io+3:]
 
-def reconstruct_hs_type(constraints, inp, io, out):
-    t = ''
-    if constraints:
-        t += "({}) => ".format(constraints)
-    if inp:
-        t +=  ' -> '.join(inp) + ' -> '
-    if out == '()' and io:
-        t += 'IO ()'
-    elif io or 'CList' in out or 'CArray' in out:
-        t += 'IO ({})'.format(out)
-    else:
-        t += '{}'.format(out)
-    return t
-
 def parse_type(name, hs_type):
-    *constraints,hs_type = hs_type.split('=>')
     types = [t.strip() for t in hs_type.split('->')]
     if any(('(' in t) != (')' in t) for t in types):
         raise TypeError('Functions as arguments like "{}" not supported'.format(hs_type))
@@ -179,30 +131,16 @@ def parse_type(name, hs_type):
     *inp,out = types
     io, out = strip_io(out)
 
-    rev_inp = list()
-
-    native_from_c = []
-    native_to_c = ''
-    for i in inp:
-        hsc_type, to_c, from_c = hs_2_hsc(i)
-        native_from_c.append(from_c)
-        rev_inp.append(hsc_type)
-    else:
-        rev_out, to_c, from_c = hs_2_hsc(out)
-        native_to_c = to_c
-
     argtypes = list()
     constructors = list()
-    for i in rev_inp:
+    for i in inp:
         argt, constructor = argtype(i)
         argtypes.append(argt)
         constructors.append(constructor)
 
-    restp, reconstructor, destructor, destr_type = restype(rev_out)
+    restp, reconstructor, destroy = restype(out)
 
-    functype = reconstruct_hs_type(constraints, inp, io, out)
-    exporttype = reconstruct_hs_type(constraints, rev_inp, io, rev_out)
     return FuncInfo(
-        name, functype, exporttype, argtypes, restp, constructors, 
-        reconstructor, destructor, destr_type, native_from_c, native_to_c
-        )
+              name, argtypes, restp, constructors
+            , reconstructor, destroy, hs_type
+            )

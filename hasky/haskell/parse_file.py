@@ -89,13 +89,6 @@ def parse_line(hs_line, parse_info):
         parse_info.exported_ffi.add(name)
         parse_info.func_infos[name] = parse_type(name, type_def)
 
-    elif '::' in hs_line:
-        name,type_def = hs_line.split('::')
-        name = name.strip()
-        if name in parse_info.excluded or name in parse_info.exported_ffi:
-            return
-        parse_info.func_infos[name] = parse_type(name, type_def)
-
 def remove_trailing_comment(hs_line):
     if '--' in hs_line and not hs_line.startswith(TAG_EXCLUDE):
         return hs_line.split('--')[0].strip()

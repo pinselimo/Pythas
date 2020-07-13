@@ -1,6 +1,8 @@
 module Example where
 
 import Foreign.C.Types (CInt)
+import Foreign.C.String
+import HaskyList
 
 --(HASKY-EXCLUDE someComplicatedFunc
 
@@ -12,8 +14,6 @@ hello = putStrLn "Hello from Haskell!"
 
 square :: CInt -> CInt
 square i = i * i
-
-foreign export ccall multisin :: Int -> Double -> Double
 
 multisin :: Int -> Double -> Double
 multisin x y = (fromIntegral x) * (sin y)
@@ -29,3 +29,9 @@ mapQuarter = map ((*0.25) . fromIntegral)
 
 haskellList :: [Int]
 haskellList = [63]
+
+strings :: String -> String
+strings = filter (/= 'a')
+
+nested :: [[String]] -> [[String]]
+nested = id

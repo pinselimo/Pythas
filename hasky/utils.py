@@ -56,7 +56,7 @@ def custom_attr_getter(obj, name):
             func_infos = info.func_infos[name]
             if is_constant(func_infos):
                 return f()
-            if func_infos.destructor:
+            if func_infos.destroy:
                 destrPtr = getattr(lib,name + 'Finalizer')
             else:
                 destrPtr = None
@@ -74,4 +74,4 @@ def check_ctype_seq(seq):
         return seq
 
 def is_constant(func_infos):
-    return not (func_infos.argtypes or 'IO' in func_infos.exporttype)
+    return not (func_infos.argtypes or 'IO' in func_infos.htype)
