@@ -1,3 +1,6 @@
+def lmap(f,xs):
+    return [f(x) for x in xs]
+
 def applyT2(fs,t):
     fa,fb = fs
     x,y = t

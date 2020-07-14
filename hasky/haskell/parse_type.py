@@ -3,7 +3,7 @@ from functools import partial
 
 from ..types import *
 from ..parser import FuncInfo
-from .utils import applyT2, applyT3, strip_io, tuple_types, parse_generator
+from .utils import lmap, applyT2, applyT3, strip_io, tuple_types, parse_generator
 
 HS2PY = {
         ### void ###
@@ -65,7 +65,6 @@ def hs2py(hs_type):
             lambda hs_inner:cl.POINTER(new_tuple2(*map(hs2py,tuple_types(hs_inner)))),
             lambda hs_inner:cl.POINTER(new_tuple3(*map(hs2py,tuple_types(hs_inner)))),
             default,default)
-
     return parse(hs_type)
 
 def argtype(hs_type):
@@ -88,25 +87,13 @@ def restype(hs_type):
     returns: tuple : (type of result, reconstructor)
     '''
     rtype = hs2py(hs_type)
-    def f_llist(hs_inner):
-        inner = restype(hs_inner)[1]
-        recon = lambda x: list(map(inner,from_linked_list(x)))
-        return recon
-    def f_carray(hs_inner):
-        inner = restype(hs_inner)[1]
-        recon = lambda x: list(map(inner,from_c_array(x)))
-        return recon
-    def f_tuple2(hs_inner):
-        inner = [restype(hs) for hs in tuple_types(hs_inner)]
-        recon = lambda x: applyT2(inner, from_tuple2(x))
-        return recon
-    def f_tuple3(hs_inner):
-        inner = [restype(hs) for hs in tuple_types(hs_inner)]
-        recon = lambda x: applyT3(inner, from_tuple3(x))
-        return recon
-    parse = parse_generator(f_llist, f_carray, f_tuple2, f_tuple3,
-            lambda _:lambda x:x.contents.value,
-            lambda _:lambda x:x)
+    parse = parse_generator(
+        lambda hs_inner:lambda x:lmap(restype(hs_inner)[1],from_linked_list(x)),
+        lambda hs_inner:lambda x:lmap(restype(hs_inner)[1],from_c_array(x)),
+        lambda hs_inner:lambda x:applyT2(lmap(restype,tuple_types(hs_inner)), from_tuple2(x)),
+        lambda hs_inner:lambda x:applyT3(lmap(restype,tuple_types(hs_inner)), from_tuple3(x)),
+        lambda _:lambda x:x.contents.value,
+        lambda _:lambda x:x)
     return rtype,parse(hs_type)
 
 def parse_type(name, hs_type):
