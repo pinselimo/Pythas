@@ -41,17 +41,24 @@ def get_ghc_version():
     except AttributeError: # Regex didn't match, fallback
         return get_ghc_version_from_header()
 
-def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2):
-    RESOURCES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "res")
+def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2, redirect=False):
+    fdir = os.path.dirname(os.path.abspath(__file__))
+    RESOURCES = os.path.join(fdir, "res")
+    BIN = os.path.join(fdir, "bin")
     HS_BRACKET_C = os.path.join(RESOURCES,"hswrap.c")
     GHC_OPT_OPTIMISATION = ["","-O","-O2","-optc-O3"]
     GHC_OUT = "-o"
     HASKY_TYPES = [os.path.join(RESOURCES,t) for t in ['HaskyArray.hs','HaskyList.hs','HaskyString.hs','HaskyTuple.hs',]]
     cmd = []
+    if redirect:
+        OUTP = ["-hidir",BIN,"-odir",BIN]
+    else:
+        OUTP = []
+    GHC_OPTIONS = ["-shared","-fPIC","-i:"+filedir] + OUTP # "-fexternal-dynamic-refs"
 
     if platform.startswith('linux'):
         GHC_CMD = "ghc-" + GHC_VERSION
-        GHC_OPTIONS = ["-dynamic","-shared","-fPIC","-i:"+filedir] # "-fexternal-dynamic-refs"
+        GHC_OPTIONS = ["-dynamic"] + GHC_OPTIONS
         LIB_HS_RTS = "-lHSrts-ghc" + GHC_VERSION
         cmd = [
             GHC_CMD, GHC_OPT_OPTIMISATION[optimisation], *GHC_OPTIONS,
@@ -60,7 +67,6 @@ def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2):
     elif platform.startswith('win32'):
         # https://downloads.haskell.org/~ghc/7.6.3/docs/html/users_guide/win32-dlls.html
         GHC_CMD = "ghc"
-        GHC_OPTIONS = ["-shared","-fPIC","-i:"+filedir] # "-fexternal-dynamic-refs"
         cmd = [
             GHC_CMD, GHC_OPT_OPTIMISATION[optimisation], *GHC_OPTIONS,
             GHC_OUT, libname, filename, *HASKY_TYPES, HS_BRACKET_C
