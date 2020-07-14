@@ -12,7 +12,6 @@ def parse_haskell(hs_file):
         contents = f.readlines()
 
     parse_info = ParseInfo(name, filedir, set(), set(), dict())
-
     parse_info = _parse_haskell(contents, parse_info)
 
     exported_mod = parse_head(contents, name)
@@ -32,14 +31,10 @@ def _parse_haskell(hs_lines, parse_info):
             # Pre-processing of hs_line
             hs_line = hs_line.strip()
             in_comment = '{-' in hs_line
-            if in_comment:
+            if not (in_comment or hs_line.startswith('\n') or hs_line.startswith('--')):
+                parse_line(hs_line, parse_info)
+            elif in_comment:
                 in_comment = not '-}' in hs_line
-            hs_line
-            if (in_comment or hs_line.startswith('\n')
-            or (hs_line.startswith('--') and not hs_line.startswith(TAG_EXCLUDE))):
-                continue
-
-            parse_line(hs_line, parse_info)
     else:
         return parse_info
 
