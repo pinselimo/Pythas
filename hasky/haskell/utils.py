@@ -56,3 +56,28 @@ def match_parens(s, i):
     else:
         return len(s)
 
+def parse_generator(f_llist, f_carray, f_tuple2, f_tuple3, f_string, f_default):
+    def parser(hs_type):
+        ll = hs_type.find('CList ')
+        arr = hs_type.find('CArray ')
+        t2 = hs_type.find('CTuple2 ')
+        t3 = hs_type.find('CTuple3 ')
+        st = hs_type.find('CWString')
+        ## Linked List first
+        if ll+1 and (ll < arr or arr < 0) and (ll < t2 or t2 < 0) and (ll < t3 or t3 < 0):
+            return f_llist(hs_type[ll+len('CList '):])
+        ## Array first
+        elif arr+1 and (arr < t2 or t2 < 0) and (arr < t3 or t3 < 0):
+            return f_carray(hs_type[arr+len('CArray '):])
+        ## Tuple of 2 first
+        elif t2+1 and (t2 < t3 or t3 < 0):
+            return f_tuple2(hs_type[t2+len('CTuple2 '):])
+        ## Tuple of 3 first
+        elif t3+1:
+            return f_tuple3(hs_type[t3+len('CTuple3 '):])
+        elif st+1:
+            return f_string(hs_type[st+len('CWString '):])
+        else:
+            return f_default(hs_type)
+    return parser
+

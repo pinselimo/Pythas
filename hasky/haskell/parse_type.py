@@ -3,7 +3,7 @@ from functools import partial
 
 from ..types import *
 from ..parser import FuncInfo
-from .utils import applyT2, applyT3, strip_io, tuple_types
+from .utils import applyT2, applyT3, strip_io, tuple_types, parse_generator
 
 HS2PY = {
         ### void ###
@@ -58,89 +58,56 @@ def hs2py(hs_type):
     hs_type = hs_type.strip('( )')
     if hs_type == '':
         hs_type = '()'
-    ll = hs_type.find('CList ')
-    arr = hs_type.find('CArray ')
-    t2 = hs_type.find('CTuple2 ')
-    t3 = hs_type.find('CTuple3 ')
-    ## Linked List first
-    if ll+1 and (ll < arr or arr < 0) and (ll < t2 or t2 < 0) and (ll < t3 or t3 < 0):
-        cls = cl.POINTER(new_linked_list(hs2py(hs_type[ll+len('CList '):])))
-    ## Array first
-    elif arr+1 and (arr < t2 or t2 < 0) and (arr < t3 or t3 < 0):
-        cls = cl.POINTER(new_c_array(hs2py(hs_type[arr+len('CArray '):])))
-    ## Tuple of 2 first
-    elif t2+1 and (t2 < t3 or t3 < 0):
-        hs_type = hs_type[t2+len('CTuple2 '):]
-        hs_type_a, hs_type_b = tuple_types(hs_type)
-        cls = cl.POINTER(new_tuple2(hs2py(hs_type_a), hs2py(hs_type_b)))
-    ## Tuple of 3 first
-    elif t3+1:
-        hs_type = hs_type[t3+len('CTuple3 '):]
-        hs_type_a, hs_type_b, hs_type_c = tuple_types(hs_type)
-        cls = cl.POINTER(new_tuple3(hs2py(hs_type_a), hs2py(hs_type_b), hs2py(hs_type_c)))
-    ## Non-packed types
-    else:
-        cls = simple_hs_2_py(hs_type)
-    return cls
+    default = lambda _:simple_hs_2_py(hs_type)
+    parse = parse_generator(
+            lambda hs_inner:cl.POINTER(new_linked_list(hs2py(hs_inner))),
+            lambda hs_inner:cl.POINTER(new_c_array(hs2py(hs_inner))),
+            lambda hs_inner:cl.POINTER(new_tuple2(*map(hs2py,tuple_types(hs_inner)))),
+            lambda hs_inner:cl.POINTER(new_tuple3(*map(hs2py,tuple_types(hs_inner)))),
+            default,default)
+
+    return parse(hs_type)
 
 def argtype(hs_type):
     '''
     returns: tuple : (type of argument, constructor)
     '''
     argt = hs2py(hs_type)
-    ll = hs_type.find('CList ')
-    arr = hs_type.find('CArray ')
-    st = hs_type.find('CWString')
-    if ll+1 and (ll < arr or arr < 0): ## Linked List first
-        # subconstr = argtype(hs_type[ll+len('CList '):])[1]
-        constr = lambda x: partial(to_linked_list, argt._type_)(list(map(subconstr,x)))
-    elif arr+1 and (arr < ll or ll < 0): ## array first
-        # subconstr = argtype(hs_type[arr+len('CArray '):])[1]
-        # constr = lambda x: partial(to_c_array, argt._type_)(list(map(subconstr,x)))
-        constr = partial(to_c_array, argt._type_)
-    elif st+1:
-        constr = lambda x: cl.pointer(cl.c_wchar_p(x))
-    else: # neither linked list nor array
-        constr = argt
-    return argt, constr
+    default = lambda _: argt
+    parse = parse_generator(
+            lambda _: partial(to_linked_list, argt._type_),
+            lambda _: partial(to_c_array, argt._type_),
+            default, default, # Tuples
+            lambda _: lambda x: cl.pointer(cl.c_wchar_p(x)), # Strings
+            default
+            )
+    return argt, parse(hs_type)
 
 def restype(hs_type):
     '''
-    returns: tuple : (type of result, reconstructor, bool: needsFinalizer)
+    returns: tuple : (type of result, reconstructor)
     '''
     rtype = hs2py(hs_type)
-    final = True
-    ll = hs_type.find('CList ')
-    arr = hs_type.find('CArray ')
-    t2 = hs_type.find('CTuple2 ')
-    t3 = hs_type.find('CTuple3 ')
-    st = hs_type.find('CWString')
-    ## Linked List first
-    if ll+1 and (ll < arr or arr < 0) and (ll < t2 or t2 < 0) and (ll < t3 or t3 < 0):
-        inner = restype(hs_type[ll+len('CList '):])[1]
+    def f_llist(hs_inner):
+        inner = restype(hs_inner)[1]
         recon = lambda x: list(map(inner,from_linked_list(x)))
-    ## Array first
-    elif arr+1 and (arr < t2 or t2 < 0) and (arr < t3 or t3 < 0):
-        inner = restype(hs_type[arr+len('CArray '):])[1]
+        return recon
+    def f_carray(hs_inner):
+        inner = restype(hs_inner)[1]
         recon = lambda x: list(map(inner,from_c_array(x)))
-    ## Tuple of 2 first
-    elif t2+1 and (t2 < t3 or t3 < 0):
-        hs_type = hs_type[t2+len('CTuple2 '):]
-        hs_inner = tuple_types(hs_type)
-        inner = [restype(hs) for hs in hs_inner]
+        return recon
+    def f_tuple2(hs_inner):
+        inner = [restype(hs) for hs in tuple_types(hs_inner)]
         recon = lambda x: applyT2(inner, from_tuple2(x))
-    ## Tuple of 3 first
-    elif t3+1:
-        hs_type = hs_type[t3+len('CTuple3 '):]
-        hs_inner = tuple_types(hs_type)
-        inner = [restype(hs) for hs in hs_inner]
+        return recon
+    def f_tuple3(hs_inner):
+        inner = [restype(hs) for hs in tuple_types(hs_inner)]
         recon = lambda x: applyT3(inner, from_tuple3(x))
-    elif st+1:
-        recon = lambda x:x.contents.value
-    else:
-        recon = lambda x:x
-        final = False
-    return rtype, recon, final
+        return recon
+    parse = parse_generator(f_llist, f_carray, f_tuple2, f_tuple3,
+            lambda _:lambda x:x.contents.value,
+            lambda _:lambda x:x)
+    return rtype,parse(hs_type)
 
 def parse_type(name, hs_type):
     types = [t.strip() for t in hs_type.split('->')]
@@ -157,10 +124,10 @@ def parse_type(name, hs_type):
         argtypes.append(argt)
         constructors.append(constructor)
 
-    restp, reconstructor, destroy = restype(out)
+    restp, reconstructor= restype(out)
 
     return FuncInfo(
               name, argtypes, restp, constructors
-            , reconstructor, destroy, hs_type
+            , reconstructor, hs_type
             )
 
