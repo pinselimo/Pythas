@@ -1,12 +1,15 @@
 def lmap(f,xs):
+    '''Like map but returns a list instead of a generator'''
     return [f(x) for x in xs]
 
 def applyT2(fs,t):
+    '''Like haskells ap for tuples of 2'''
     fa,fb = fs
     x,y = t
     return (fa[1](x), fb[1](y))
 
 def applyT3(fs,t):
+    '''Like haskells ap for tuples of 3'''
     fa,fb,fc = fs
     x,y,z = t
     return (fa[1](x), fb[1](y), fc[1](z))
@@ -78,6 +81,7 @@ def parse_generator(f_llist, f_carray, f_tuple2, f_tuple3, f_string, f_default):
         ## Tuple of 3 first
         elif t3+1:
             return f_tuple3(hs_type[t3+len('CTuple3 '):])
+        ## String first
         elif st+1:
             return f_string(hs_type[st+len('CWString '):])
         else:
