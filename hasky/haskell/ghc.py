@@ -3,7 +3,7 @@ import re
 import os.path
 
 REGEX_HS_VERSION = b'(?<=[a-z A-Z])[0-9.]{5}'
-REGEX_C_CONSTANTS = '#define[ \t\n\r\f\v]+([a-zA-Z0-9_]+)[ \t\n\r\f\v]+([0-9+])' # This would cause warning: '#define\s+(\w+)\s+([0-9]+)'
+REGEX_C_CONSTANTS = '#define\s+(\w+)\s+([0-9]+)'
 
 GHC_VERSION_H = '/usr/lib/ghc/include/ghcversion.h'
 
@@ -68,3 +68,4 @@ def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2):
     return cmd
 
 GHC_VERSION = get_ghc_version()
+
