@@ -86,11 +86,11 @@ toArray ht arg = let
 
 toCTuple :: [HType] -> AST -> AST
 toCTuple hts arg = let
-    inner = case zipWith cf hts [varA, varB, varC] of
+    cf t v = convertToC t $ v t
+    inner  = case zipWith cf hts [varA, varB, varC] of
         a:b:[]   -> Just $ toCTuple' [a,b] "(,)" "liftM2"
         a:b:c:[] -> Just $ toCTuple' [a,b,c] "(,,)" "liftM3"
         _        -> Nothing
-        where cf t v = convertToC t $ v t
     in case inner of
         Just inner -> Bind (lambdaf $ return' inner) (Lambda [arg] toT)
         Nothing    -> toT
@@ -99,10 +99,12 @@ toCTuple hts arg = let
           t = HTuple hts
 
 toCTuple' :: [AST] -> String -> String -> AST
-tuCTuple' as f l = let ts = map (stripIO . typeOf) as
+toCTuple' as f l = let
+    ts = map (stripIO . typeOf) as
+    t  = HTuple ts
+    toTup  args = Function f args t
+    liftM' f as = Function l (f:as) $ HIO t
     in if ts /= map typeOf as
      then liftM' (toTup []) $ map return' as
      else return' $ toTup as
-    where toTup args  = Function f args $ HTuple ts
-          liftM' f as = Function l (f:as) $ HIO $ stripIO $ typeOf f
 
