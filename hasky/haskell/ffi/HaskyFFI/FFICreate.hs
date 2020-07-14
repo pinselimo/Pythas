@@ -1,5 +1,7 @@
 module HaskyFFI.FFICreate (createFFI) where
 
+import System.FilePath.Posix (dropExtension)
+
 import HaskyFFI.ParseTypes (TypeDef(funcN, funcT))
 import HaskyFFI.FFIType (createFFIType, makeFFIType, finalizerExport)
 import HaskyFFI.Wrapper (wrap)
@@ -15,7 +17,7 @@ imports = map ("import "++)
 
 createFFI :: FilePath -> String -> [String] -> [TypeDef] -> (FilePath, String)
 createFFI fn modname exports typeDefs =
- let ffiFilename = takeWhile (/='.') fn ++ "_hasky_ffi.hs"
+ let ffiFilename = dropExtension fn ++ "_hasky_ffi.hs"
      ffiModname = modname ++ "_hasky_ffi"
      exportedFuncTypes = filter ((`elem` exports) . funcN) typeDefs
      ffiFunctions = concat $ map (makeFFIExport modname) exportedFuncTypes
@@ -37,3 +39,4 @@ makeFFIExport modname typedef = let
   in case finalizerF of
      Just finalizer -> ["",ffitypedef, ffifunc, "", finalizerT, finalizer]
      Nothing        -> ["",ffitypedef, ffifunc]
+
