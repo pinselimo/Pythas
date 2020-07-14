@@ -127,13 +127,13 @@ def restype(hs_type):
     elif t2+1 and (t2 < t3 or t3 < 0):
         hs_type = hs_type[t2+len('CTuple2 '):]
         hs_inner = tuple_types(hs_type)
-        inner = map(restype,hs_inner)
+        inner = [restype(hs) for hs in hs_inner]
         recon = lambda x: applyT2(inner, from_tuple2(x))
     ## Tuple of 3 first
     elif t3+1:
         hs_type = hs_type[t3+len('CTuple3 '):]
         hs_inner = tuple_types(hs_type)
-        inner = map(restype,hs_inner)
+        inner = [restype(hs) for hs in hs_inner]
         recon = lambda x: applyT3(inner, from_tuple3(x))
     elif st+1:
         recon = lambda x:x.contents.value
