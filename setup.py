@@ -22,3 +22,4 @@ setup(
    package_data={'hasky.haskell': ['res/*.c','res/*.hs','ffi/*.hs','ffi/HaskyFFI/*.hs']},
    install_requires=install_requires,
 )
+
