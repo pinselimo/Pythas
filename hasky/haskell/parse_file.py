@@ -3,8 +3,6 @@ import os.path
 from ..parser import ParseInfo, FuncInfo
 from .parse_type import parse_type
 
-TAG_EXCLUDE = '--(HASKY-EXCLUDE'
-
 def parse_haskell(hs_file):
     # preprocessing of file
     *path, name = os.path.split(hs_file)
@@ -13,14 +11,14 @@ def parse_haskell(hs_file):
     with open(hs_file, 'r') as f:
         contents = f.readlines()
 
-    parse_info = ParseInfo(name, filedir, set(), set(), set(), dict())
+    parse_info = ParseInfo(name, filedir, set(), set(), dict())
 
     parse_info = _parse_haskell(contents, parse_info)
 
     exported_mod = parse_head(contents, name)
     if exported_mod is None:
         parse_info.exported_mod.update(
-            set(parse_info.func_infos.keys()) - parse_info.excluded - parse_info.exported_ffi
+            set(parse_info.func_infos.keys()) - parse_info.exported_ffi
         )
     else:
         parse_info.exported_mod.update( exported_mod )
@@ -32,7 +30,6 @@ def _parse_haskell(hs_lines, parse_info):
     for hs_line in hs_lines:
         for hs_line in hs_line.split(';'):
             # Pre-processing of hs_line
-            hs_line = remove_trailing_comment(hs_line)
             hs_line = hs_line.strip()
             in_comment = '{-' in hs_line
             if in_comment:
@@ -76,21 +73,10 @@ def parse_head(hs_lines, name):
         return {n.strip() for n in head.split(',')}
 
 def parse_line(hs_line, parse_info):
-    if TAG_EXCLUDE in hs_line:
-        exclude_name = hs_line[hs_line.find(TAG_EXCLUDE)+len(TAG_EXCLUDE):].strip()
-        parse_info.excluded.add( exclude_name.strip() )
-
-    elif hs_line.startswith('foreign export ccall'):
+    if hs_line.startswith('foreign export ccall'):
         func_export,type_def = hs_line.split('::')
         *_,name = func_export.strip().split(' ')
         name = name.strip()
-        if name in parse_info.excluded:
-            return
         parse_info.exported_ffi.add(name)
         parse_info.func_infos[name] = parse_type(name, type_def)
 
-def remove_trailing_comment(hs_line):
-    if '--' in hs_line and not hs_line.startswith(TAG_EXCLUDE):
-        return hs_line.split('--')[0].strip()
-    else:
-        return hs_line
