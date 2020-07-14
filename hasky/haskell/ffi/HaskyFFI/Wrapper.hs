@@ -55,7 +55,7 @@ convertFromC ht arg f = case ht of
 convertToC :: HType -> AST -> AST
 convertToC ht arg = case ht of
     HList a   -> toArray a arg
-    HTuple as -> toTuple as arg
+    HTuple as -> toCTuple as arg
     _         -> toC ht arg
 
 fromArray :: HType -> AST -> AST
@@ -76,7 +76,7 @@ toArray :: HType -> AST -> AST
 toArray ht arg = let
     inner = case (ht, toC ht arg) of
         (HList a, _)        -> Just $ map' (toArray a arg) arg
-        (HTuple as, _)      -> Just $ map' (toTuple as arg) arg
+        (HTuple as, _)      -> Just $ map' (toCTuple as arg) arg
         (_, Function _ _ _) -> Just $ map' (toC ht arg) arg
         _                   -> Nothing
     in case inner of
@@ -84,34 +84,25 @@ toArray ht arg = let
         Nothing    -> toA
     where toA = toC (HList ht) arg
 
-toTuple :: [HType] -> AST -> AST
-toTuple hts arg = let
-    inner = case hts of
-        a:b:[]   -> Just $ toTuple2 (cf a varA) (cf b varB)
-        a:b:c:[] -> Just $ toTuple3 (cf a varA) (cf b varB) $ cf c varC
+toCTuple :: [HType] -> AST -> AST
+toCTuple hts arg = let
+    inner = case zipWith cf hts [varA, varB, varC] of
+        a:b:[]   -> Just $ toCTuple' [a,b] "(,)" "liftM2"
+        a:b:c:[] -> Just $ toCTuple' [a,b,c] "(,,)" "liftM3"
         _        -> Nothing
         where cf t v = convertToC t $ v t
     in case inner of
-        Just inner -> Bind (dummy $ Lambda [tuple hts] $ return' inner)
-                           (Lambda [arg] toT)
+        Just inner -> Bind (lambdaf $ return' inner) (Lambda [arg] toT)
         Nothing    -> toT
-    where toT = toC t arg
-          dummy ast = Function "" [ast, arg] $ t
+    where lambdaf body = Function "" [Lambda [tuple hts] body, arg] $ t
+          toT = toC t arg
           t = HTuple hts
 
-toTuple2 :: AST -> AST -> AST
-toTuple2 a b = case (isIO $ typeOf a, isIO $ typeOf b) of
-    (False, False) -> return' $ toTup [a,b]
-    _              -> liftM' (toTup []) (return' a) (return' b)
-    where toTup  as = Function "(,)" as $ HTuple ts
-          liftM' f a b = Function "liftM2" [f,a,b] $ HIO $ stripIO $ typeOf f
-          ts = map (stripIO . typeOf) [a,b]
-
-toTuple3 :: AST -> AST -> AST -> AST
-toTuple3 a b c = case (isIO $ typeOf a, isIO $ typeOf b, isIO $ typeOf c) of
-    (False, False, False) -> return' $ toTup [a,b,c]
-    _              -> liftM' (toTup []) (return' a) (return' b) (return' c)
-    where toTup  as = Function "(,,)" as $ HTuple ts
-          liftM' f a b c = Function "liftM3" [f,a,b,c] $ HIO $ stripIO $ typeOf f
-          ts = map (stripIO . typeOf) [a,b,c]
+toCTuple' :: [AST] -> String -> String -> AST
+tuCTuple' as f l = let ts = map (stripIO . typeOf) as
+    in if ts /= map typeOf as
+     then liftM' (toTup []) $ map return' as
+     else return' $ toTup as
+    where toTup args  = Function f args $ HTuple ts
+          liftM' f as = Function l (f:as) $ HIO $ stripIO $ typeOf f
 
