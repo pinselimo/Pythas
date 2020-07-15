@@ -8,7 +8,7 @@ If you have a file ```Example.hs``` like in the ```example``` directory, it will
 >>>import hasky
 >>>import example.example as e
 >>>e.hello()
-Hello from Haskell
+Hello from Haskell!
 ~~~
 
 You can also just ```from * import```. Try:
@@ -17,18 +17,20 @@ You can also just ```from * import```. Try:
 >>>from example.example import multisin
 >>>from math import pi
 >>>multisin(2,pi)
+2.4492935982947064e-16
 ~~~
 
-and you*ll see: It doesn't stop at invoking side-effects.
+and you'll see: It doesn't stop at invoking side-effects.
 
 ## Sequences
 
-Python ```Sequences``` can be passed as linked lists or as arrays. Depending on which flavour of programming you want to embrace. Currently for speed and space reasons Arrays are used by the backend, but it should be no problem to change that for those hardcore FP nerds stuck in ```Haskell```-land.
+Python ```Sequences``` can be passed as linked lists or as arrays. Depending on which flavour of programming you want to embrace. Currently for speed and space reasons arrays are used by the backend, but it should be no problem to change that for those hardcore FP nerds stuck in ```Haskell```-land.
 Try things like:
 
 ~~~python
 >>>from example.example import mapQuarter
 >>>mapQuarter(range(1000,5000,1000))
+[250.0, 500.0, 750.0, 1000.0]
 ~~~
 
 While in Haskell lists **have** to be used, in Python any kind of sequence can be handed over. Needless to say, varying types won't be supported.
