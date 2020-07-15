@@ -54,7 +54,7 @@ def match_parens(s, i):
     else:
         return len(s)
 
-def parse_generator(f_llist, f_carray, f_tuple2, f_tuple3, f_string, f_default):
+def parse_generator(f_llist, f_carray, f_tuple2, f_tuple3, f_tuple4, f_string, f_default):
     def parser(hs_type):
         ll = hs_type.find('CList ')
         arr = hs_type.find('CArray ')
@@ -72,7 +72,7 @@ def parse_generator(f_llist, f_carray, f_tuple2, f_tuple3, f_string, f_default):
         elif t2+1 and (t2 < t3 or t3 < 0) and (t2 < t4 or t4 < 0):
             return f_tuple2(hs_type[t2+len('CTuple2 '):])
         ## Tuple of 3 first
-        elif t3+1: and (t3 < t4 or t4 < 0)
+        elif t3+1 and (t3 < t4 or t4 < 0):
             return f_tuple3(hs_type[t3+len('CTuple3 '):])
         ## Tuple of 4 first
         elif t4+1:
