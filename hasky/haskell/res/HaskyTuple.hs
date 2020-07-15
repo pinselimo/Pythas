@@ -12,6 +12,12 @@ data Tuple2 a b = Tuple2
     , c2snd :: b
     } deriving (Show, Eq)
 
+next :: (Storable a, Storable b, Storable c) => Ptr a -> b -> Ptr c -> IO (Ptr c)
+next ptr x ptr_x = do
+    let ptr_y = plusPtr ptr $ sizeOf x
+    y <- peek ptr_x
+    return $ alignPtr ptr_y $ alignment y
+
 t2Size :: (Storable a, Storable b) => Tuple2 a b -> Int
 t2Size ct = max size_a align_b + max size_b align_a
     where align_a = alignment $ c2fst ct
@@ -30,21 +36,17 @@ peekTuple2 ct = do
     t <- peek ct
     return (c2fst t, c2snd t)
 
-goto2Snd :: (Storable a, Storable b) => Ptr (Tuple2 a b) -> a -> Ptr b
-goto2Snd ptr x = let align p = alignPtr p $ alignment p
-                     jump = plusPtr ptr $ sizeOf x
-                 in align jump
-
 instance (Storable a, Storable b) => Storable (Tuple2 a b) where
     sizeOf    = t2Size
     alignment = t2Alignment
     peek ptr  = do
         a <- peek (castPtr ptr)
-        b <- peek (goto2Snd ptr a)
+        b <- peek =<< alloca (next ptr a)
         return $ Tuple2 a b
     poke ptr (Tuple2 a b) = do
         poke (castPtr ptr) a
-        poke (goto2Snd ptr a) b
+        ptr_b <- alloca (next ptr a)
+        poke ptr_b b
 
 type CTuple3 a b c = Ptr (Tuple3 a b c)
 
@@ -84,30 +86,20 @@ peekTuple3 ct = do
     t <- peek ct
     return (c3fst t, c3snd t, c3trd t)
 
-goto3snd :: (Storable a, Storable b, Storable c) => Ptr (Tuple3 a b c) -> a -> Ptr b
-goto3snd ptr x = let align p = alignPtr p $ alignment p
-                     jump = plusPtr ptr $ sizeOf x
-                 in align jump
-
-goto3trd :: (Storable b, Storable c) => Ptr b -> b -> Ptr c
-goto3trd ptr x = let align p = alignPtr p $ alignment p
-                     jump = plusPtr ptr $ sizeOf x
-                 in align jump
-
 instance (Storable a, Storable b, Storable c) => Storable (Tuple3 a b c) where
     sizeOf    = t3Size
     alignment = t3Alignment
     peek ptr  = do
         a <- peek (castPtr ptr)
-        let ptr_b = goto3snd ptr a
+        ptr_b <- alloca (next ptr a)
         b <- peek ptr_b
-        let ptr_c = goto3trd ptr_b b
+        ptr_c <- alloca (next ptr_b b)
         c <- peek ptr_c
         return $ Tuple3 a b c
     poke ptr (Tuple3 a b c) = do
         poke (castPtr ptr) a
-        let ptr_b = goto3snd ptr a
+        ptr_b <- alloca (next ptr a)
         poke ptr_b b
-        let ptr_c = goto3trd ptr_b b
+        ptr_c <- alloca (next ptr_b b)
         poke ptr_c c
 
