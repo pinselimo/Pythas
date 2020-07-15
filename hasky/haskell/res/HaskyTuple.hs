@@ -114,19 +114,24 @@ data Tuple4 a b c d = Tuple4
 
 t4Size :: (Storable a, Storable b, Storable c, Storable d) => Tuple4 a b c d -> Int
 t4Size ct
-    | align_a >= sum_bc  = 2 * align_a
-    | align_b >= size_a
-    && align_b >= size_c = 3 * align_b
-    | align_c >= sum_ab  = 2 * align_c
-    | otherwise          = size_a + size_b + size_c -- Fallback
-    where align_a = alignment $ c4fst ct
-          align_b = alignment $ c4snd ct
-          align_c = alignment $ c4trd ct
+    |  sum_abc <= amax
+    || sum_bcd <= amax = 2 * amax
+    |  sum_ab  <= amax
+    && size_d  <= amax = 3 * amax
+    |  size_a  <= amax
+    && sum_cd  <= amax = 3 * amax
+    |  sum_bc  <= amax = 3 * amax
+    |  otherwise       = 4 * amax
+    where amax    = t4Alignment ct
           size_a  = sizeOf $ c4fst ct
           size_b  = sizeOf $ c4snd ct
           size_c  = sizeOf $ c4trd ct
+          size_d  = sizeOf $ c4fth ct
           sum_ab  = size_a + size_b
           sum_bc  = size_b + size_c
+          sum_cd  = size_c + size_d
+          sum_abc = sum_ab + size_c
+          sum_bcd = size_b + sum_cd
 
 t4Alignment :: (Storable a, Storable b, Storable c, Storable d) => Tuple4 a b c d -> Int
 t4Alignment ct = foldr max dConstraint [aConstraint, bConstraint, cConstraint]
