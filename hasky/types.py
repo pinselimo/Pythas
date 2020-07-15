@@ -103,5 +103,5 @@ def new_tuple4(atype, btype, ctype, dtype):
 
 def from_tuple4(cpt):
     ct = cpt.contents
-    return (ct.a, ct.b, ct.c, cl.d)
+    return (ct.a, ct.b, ct.c, ct.d)
 
