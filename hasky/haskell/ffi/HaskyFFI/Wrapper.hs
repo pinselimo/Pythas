@@ -90,6 +90,7 @@ toCTuple hts arg = let
     inner  = case zipWith cf hts [varA, varB, varC] of
         a:b:[]   -> Just $ toCTuple' [a,b] "(,)" "liftM2"
         a:b:c:[] -> Just $ toCTuple' [a,b,c] "(,,)" "liftM3"
+        a:b:c:d:[] -> Just $ toCTuple' [a,b,c,d] "(,,,)" "liftM4"
         _        -> Nothing
     in case inner of
         Just inner -> Bind (lambdaf $ return' inner) (Lambda [arg] toT)

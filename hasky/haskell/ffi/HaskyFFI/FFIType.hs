@@ -55,6 +55,7 @@ ffiType ht = case ht of
     HTuple hts -> case length hts of
                     2 -> "CTuple2 " ++ furthers hts
                     3 -> "CTuple3 " ++ furthers hts
+                    4 -> "CTuple4 " ++ furthers hts
     _ -> fail ("Non C-compatible type \"" ++ show ht ++ "\" in export")
     where further  = (\s -> "(" ++ s ++ ")") . ffiType
           furthers = concat . map ((' ':) . further)
