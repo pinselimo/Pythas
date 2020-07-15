@@ -13,12 +13,14 @@ data Tuple2 a b = Tuple2
     } deriving (Show, Eq)
 
 t2Size :: (Storable a, Storable b) => Tuple2 a b -> Int
-t2Size ct = (sizeOf $ c2fst ct) + (sizeOf $ c2snd ct)
+t2Size ct = max size_a align_b + max size_b align_a
+    where align_a = alignment $ c2fst ct
+          align_b = alignment $ c2snd ct
+          size_a  = sizeOf $ c2fst ct
+          size_b  = sizeOf $ c2snd ct
 
 t2Alignment :: (Storable a, Storable b) => Tuple2 a b -> Int
-t2Alignment ct = aConstraint + bConstraint
-    where aConstraint = alignment $ c2fst ct
-          bConstraint = alignment $ c2snd ct
+t2Alignment ct = max (alignment $ c2fst ct) (alignment $ c2snd ct)
 
 newTuple2 :: (Storable a, Storable b) => (a, b) -> IO (CTuple2 a b)
 newTuple2 (x, y) = new $ Tuple2 x y
@@ -29,7 +31,7 @@ peekTuple2 ct = do
     return (c2fst t, c2snd t)
 
 goto2Snd :: (Storable a, Storable b) => Ptr (Tuple2 a b) -> a -> Ptr b
-goto2Snd ptr x = let align p = alignPtr p $ sizeOf p
+goto2Snd ptr x = let align p = alignPtr p $ alignment p
                      jump = plusPtr ptr $ sizeOf x
                  in align jump
 
@@ -53,10 +55,23 @@ data Tuple3 a b c = Tuple3
     } deriving (Show, Eq)
 
 t3Size :: (Storable a, Storable b, Storable c) => Tuple3 a b c -> Int
-t3Size ct = (sizeOf $ c3fst ct)  + (sizeOf $ c3snd ct) + (sizeOf $ c3trd ct)
+t3Size ct
+    | align_a >= sum_bc  = 2 * align_a
+    | align_b >= size_a
+    && align_b >= size_c = 3 * align_b
+    | align_c >= sum_ab  = 2 * align_c
+    | otherwise          = size_a + size_b + size_c -- Fallback
+    where align_a = alignment $ c3fst ct
+          align_b = alignment $ c3snd ct
+          align_c = alignment $ c3trd ct
+          size_a  = sizeOf $ c3fst ct
+          size_b  = sizeOf $ c3snd ct
+          size_c  = sizeOf $ c3trd ct
+          sum_ab  = size_a + size_b
+          sum_bc  = size_b + size_c
 
 t3Alignment :: (Storable a, Storable b, Storable c) => Tuple3 a b c -> Int
-t3Alignment ct = aConstraint + bConstraint + cConstraint
+t3Alignment ct = max aConstraint $ max bConstraint cConstraint
     where aConstraint = alignment $ c3fst ct
           bConstraint = alignment $ c3snd ct
           cConstraint = alignment $ c3trd ct
@@ -69,9 +84,30 @@ peekTuple3 ct = do
     t <- peek ct
     return (c3fst t, c3snd t, c3trd t)
 
+goto3snd :: (Storable a, Storable b, Storable c) => Ptr (Tuple3 a b c) -> a -> Ptr b
+goto3snd ptr x = let align p = alignPtr p $ alignment p
+                     jump = plusPtr ptr $ sizeOf x
+                 in align jump
+
+goto3trd :: (Storable b, Storable c) => Ptr b -> b -> Ptr c
+goto3trd ptr x = let align p = alignPtr p $ alignment p
+                     jump = plusPtr ptr $ sizeOf x
+                 in align jump
+
 instance (Storable a, Storable b, Storable c) => Storable (Tuple3 a b c) where
     sizeOf    = t3Size
     alignment = t3Alignment
-    peek _    = undefined
-    poke _ _  = undefined
+    peek ptr  = do
+        a <- peek (castPtr ptr)
+        let ptr_b = goto3snd ptr a
+        b <- peek ptr_b
+        let ptr_c = goto3trd ptr_b b
+        c <- peek ptr_c
+        return $ Tuple3 a b c
+    poke ptr (Tuple3 a b c) = do
+        poke (castPtr ptr) a
+        let ptr_b = goto3snd ptr a
+        poke ptr_b b
+        let ptr_c = goto3trd ptr_b b
+        poke ptr_c c
 
