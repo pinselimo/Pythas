@@ -103,3 +103,64 @@ instance (Storable a, Storable b, Storable c) => Storable (Tuple3 a b c) where
         ptr_c <- alloca (next ptr_b b)
         poke ptr_c c
 
+type CTuple4 a b c d = Ptr (Tuple4 a b c d)
+
+data Tuple4 a b c d = Tuple4
+    { c4fst :: a
+    , c4snd :: b
+    , c4trd :: c
+    , c4fth :: d
+    } deriving (Show, Eq)
+
+t4Size :: (Storable a, Storable b, Storable c, Storable d) => Tuple4 a b c d -> Int
+t4Size ct
+    | align_a >= sum_bc  = 2 * align_a
+    | align_b >= size_a
+    && align_b >= size_c = 3 * align_b
+    | align_c >= sum_ab  = 2 * align_c
+    | otherwise          = size_a + size_b + size_c -- Fallback
+    where align_a = alignment $ c4fst ct
+          align_b = alignment $ c4snd ct
+          align_c = alignment $ c4trd ct
+          size_a  = sizeOf $ c4fst ct
+          size_b  = sizeOf $ c4snd ct
+          size_c  = sizeOf $ c4trd ct
+          sum_ab  = size_a + size_b
+          sum_bc  = size_b + size_c
+
+t4Alignment :: (Storable a, Storable b, Storable c, Storable d) => Tuple4 a b c d -> Int
+t4Alignment ct = foldr max dConstraint [aConstraint, bConstraint, cConstraint]
+    where aConstraint = alignment $ c4fst ct
+          bConstraint = alignment $ c4snd ct
+          cConstraint = alignment $ c4trd ct
+          dConstraint = alignment $ c4fth ct
+
+newTuple4 :: (Storable a, Storable b, Storable c, Storable d) => (a, b, c, d) -> IO (CTuple4 a b c d)
+newTuple4 (w, x, y, z) = new $ Tuple4 w x y z
+
+peekTuple4 :: (Storable a, Storable b, Storable c, Storable d) => CTuple4 a b c d -> IO (a,b,c,d)
+peekTuple4 ct = do
+    t <- peek ct
+    return (c4fst t, c4snd t, c4trd t, c4fth t)
+
+instance (Storable a, Storable b, Storable c, Storable d) => Storable (Tuple4 a b c d) where
+    sizeOf    = t4Size
+    alignment = t4Alignment
+    peek ptr  = do
+        a <- peek (castPtr ptr)
+        ptr_b <- alloca (next ptr a)
+        b <- peek ptr_b
+        ptr_c <- alloca (next ptr_b b)
+        c <- peek ptr_c
+        ptr_d <- alloca (next ptr_c c)
+        d <- peek ptr_d
+        return $ Tuple4 a b c d
+    poke ptr (Tuple4 a b c d) = do
+        poke (castPtr ptr) a
+        ptr_b <- alloca (next ptr a)
+        poke ptr_b b
+        ptr_c <- alloca (next ptr_b b)
+        poke ptr_c c
+        ptr_d <- alloca (next ptr_c c)
+        poke ptr_d d
+
