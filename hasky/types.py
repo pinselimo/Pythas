@@ -92,3 +92,16 @@ def new_tuple3(atype, btype, ctype):
 def from_tuple3(cpt):
     ct = cpt.contents
     return (ct.a, ct.b, ct.c)
+
+class Tuple4:
+    pass
+
+def new_tuple4(atype, btype, ctype, dtype):
+    class c_tuple4(Tuple4, cl.Structure):
+        _fields_ = [('a',atype),('b',btype),('c',ctype),('d',dtype)]
+    return c_tuple4
+
+def from_tuple4(cpt):
+    ct = cpt.contents
+    return (ct.a, ct.b, ct.c, cl.d)
+
