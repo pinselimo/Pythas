@@ -1,6 +1,6 @@
 module Test where
 
-import Foreign.C.Types (CInt)
+import Foreign.C.Types
 import Foreign.C.String
 import HaskyList
 
@@ -16,8 +16,14 @@ constantList = [63]
 constantTuple :: (Double, String)
 constantTuple = (0.63, "Haskell yay")
 
-constantTriple :: (Integer, String, Float)
-constantTriple = (63, "63", 0.63)
+testAlignment :: [(Double, CInt, CChar)]
+testAlignment = take 10 $ repeat (0.1, 63, castCharToCChar 'a')
+
+constantTriple :: (Int, Double, Float)
+constantTriple = (63, 0.63, 0.63)
+
+constantQuadruple :: (Int, Double, CChar, CChar)
+constantQuadruple = (63, 0.1, 63, castCharToCChar 'a')
 
 sideEffects :: IO ()
 sideEffects = putStrLn constantString
