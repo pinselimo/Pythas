@@ -2,7 +2,7 @@ module HaskyFFI.Wrapper where
 
 import HaskyFFI.HTypes (HType(..), isIO, stripIO)
 import HaskyFFI.AST (AST(..), return', map', typeOf, add)
-import HaskyFFI.Utils (toC, fromC, toFFIType', tuple, varA, varB, varC)
+import HaskyFFI.Utils (toC, fromC, toFFIType', tuple, varA, varB, varC, varD)
 
 wrap :: String -> String -> [HType] -> String
 wrap modname funcname functype = funcname ++ (concat $ map show args) ++ " = " ++ show body
@@ -87,7 +87,7 @@ toArray ht arg = let
 toCTuple :: [HType] -> AST -> AST
 toCTuple hts arg = let
     cf t v = convertToC t $ v t
-    inner  = case zipWith cf hts [varA, varB, varC] of
+    inner  = case zipWith cf hts [varA, varB, varC, varD] of
         a:b:[]   -> Just $ toCTuple' [a,b] "(,)" "liftM2"
         a:b:c:[] -> Just $ toCTuple' [a,b,c] "(,,)" "liftM3"
         a:b:c:d:[] -> Just $ toCTuple' [a,b,c,d] "(,,,)" "liftM4"

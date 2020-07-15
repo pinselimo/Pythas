@@ -56,6 +56,7 @@ fromC ht arg = case ht of
 
 toC :: HType -> AST -> AST
 toC ht arg = case ht of
+    HTuple [a,b,c,d] -> f "newTuple4"
     HTuple [a,b,c] -> f "newTuple3"
     HTuple [a,b] -> f "newTuple2"
     HTuple _ -> undefined
@@ -82,7 +83,9 @@ free' ht arg = case ht of
 varA = Variable "a"
 varB = Variable "b"
 varC = Variable "c"
+varD = Variable "d"
 tuple as = case as of
         a:b:[]   -> Tuple [varA a, varB b]
         a:b:c:[] -> Tuple [varA a, varB b, varC c]
+        a:b:c:d:[] -> Tuple [varA a, varB b, varC c, varD d]
 
