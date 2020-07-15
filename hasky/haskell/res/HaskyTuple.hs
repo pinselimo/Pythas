@@ -19,11 +19,7 @@ next ptr x ptr_x = do
     return $ alignPtr ptr_y $ alignment y
 
 t2Size :: (Storable a, Storable b) => Tuple2 a b -> Int
-t2Size ct = max size_a align_b + max size_b align_a
-    where align_a = alignment $ c2fst ct
-          align_b = alignment $ c2snd ct
-          size_a  = sizeOf $ c2fst ct
-          size_b  = sizeOf $ c2snd ct
+t2Size ct = 2 * t2Alignment ct
 
 t2Alignment :: (Storable a, Storable b) => Tuple2 a b -> Int
 t2Alignment ct = max (alignment $ c2fst ct) (alignment $ c2snd ct)
@@ -58,14 +54,10 @@ data Tuple3 a b c = Tuple3
 
 t3Size :: (Storable a, Storable b, Storable c) => Tuple3 a b c -> Int
 t3Size ct
-    | align_a >= sum_bc  = 2 * align_a
-    | align_b >= size_a
-    && align_b >= size_c = 3 * align_b
-    | align_c >= sum_ab  = 2 * align_c
-    | otherwise          = size_a + size_b + size_c -- Fallback
-    where align_a = alignment $ c3fst ct
-          align_b = alignment $ c3snd ct
-          align_c = alignment $ c3trd ct
+    |  sum_bc <= amax = 2 * amax
+    |  sum_ab <= amax = 2 * amax
+    |  otherwise      = 3 * amax
+    where amax = t3Alignment cd
           size_a  = sizeOf $ c3fst ct
           size_b  = sizeOf $ c3snd ct
           size_c  = sizeOf $ c3trd ct
