@@ -1,4 +1,4 @@
-module HaskyString (CWString, newCWString, peekCWString, freeCWString) where
+module Foreign.HaskyString (CWString, newCWString, peekCWString, freeCWString) where
 
 import qualified Foreign.C.String as STR
 import Foreign.Marshal.Alloc (malloc, free)

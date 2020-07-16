@@ -1,4 +1,4 @@
-module HaskyTuple where
+module Foreign.HaskyTuple where
 
 import Foreign.Storable
 import Foreign.Ptr
