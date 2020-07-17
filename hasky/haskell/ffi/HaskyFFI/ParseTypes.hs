@@ -30,8 +30,6 @@ parseTypes = skip *> sepBy1 (strip parseType) (strip arrow) <* skipLine
 parseType :: Parser HType
 parseType = func <|> tuple <|> list <|> io <|> unit <|> htype
 
-typeConstr = funcName *> barrow
-
 skipLine = manyTill anyToken (endOfLine <|> semi <|> ('\n' <$ eof))
 
 io    = HIO    <$> (try iomonad *> parseType)

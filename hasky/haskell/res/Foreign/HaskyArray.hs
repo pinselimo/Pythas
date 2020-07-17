@@ -1,4 +1,4 @@
-module HaskyArray (CArray, newArray, peekArray, withArray, freeArray, fromArray) where
+module Foreign.HaskyArray (CArray, newArray, peekArray, withArray, freeArray, fromArray) where
 
 import Foreign.Ptr
 import Foreign.C.Types (CInt)
@@ -15,12 +15,14 @@ data CArrayStruct a = CArrayStruct {
 } deriving (Show)
 
 carrSize :: (Storable a) => CArrayStruct a -> Int
-carrSize a = lenSize + ptrSize
-    where ptrSize = sizeOf $ ptr a
-          lenSize = sizeOf $ len a
+carrSize a = max size_len align_ptr + max size_ptr align_len
+    where align_ptr = alignment $ ptr a
+          align_len = alignment $ len a
+          size_ptr  = sizeOf $ ptr a
+          size_len  = sizeOf $ len a
 
 carrAlignment :: (Storable a) => CArrayStruct a -> Int
-carrAlignment a =  lenConstraint + ptrConstraint
+carrAlignment a =  max lenConstraint ptrConstraint
     where ptrConstraint = alignment $ ptr a
           lenConstraint = alignment $ len a
 
@@ -43,7 +45,7 @@ instance (Storable a) => Storable (CArrayStruct a) where
 newArray :: (Storable a) => [a] -> IO (CArray a)
 newArray xs = do
     p    <- malloc
-    arr <- ARR.newArray xs
+    arr  <- ARR.newArray xs
     poke p $ CArrayStruct (fromIntegral $ length xs) arr
     return p
 

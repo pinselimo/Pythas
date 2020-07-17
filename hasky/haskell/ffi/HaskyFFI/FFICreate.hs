@@ -11,9 +11,13 @@ imports = map ("import "++)
           ["Foreign.C.Types"
           ,"Foreign.Marshal.Utils (fromBool, toBool)"
           ,"Foreign.Marshal.Alloc (free)"
-          ,"HaskyList"
-          ,"HaskyArray"
-          ,"HaskyString"]
+          ,"Foreign.Storable (peek)"
+          ,"Control.Monad (liftM2, liftM3)"
+          ,"Foreign.C.Structs"
+          ,"Foreign.HaskyList"
+          ,"Foreign.HaskyArray"
+          ,"Foreign.HaskyTuple"
+          ,"Foreign.HaskyString"]
 
 createFFI :: FilePath -> String -> [String] -> [TypeDef] -> (FilePath, String)
 createFFI fn modname exports typeDefs =
@@ -34,9 +38,9 @@ makeFFIExport modname typedef = let
      functype = createFFIType $ funcT typedef
      ffitypedef = makeFFIType (funcN typedef) functype
      ffifunc    = wrap modname (funcN typedef) (funcT typedef)
-     finalizerF = maybeFinalizerFunc (funcN typedef) (last $ funcT typedef)
+     maybeFinal = maybeFinalizerFunc (funcN typedef) (last $ funcT typedef)
      finalizerT = finalizerExport (funcN typedef) (last functype)
-  in case finalizerF of
+  in case maybeFinal of
      Just finalizer -> ["",ffitypedef, ffifunc, "", finalizerT, finalizer]
      Nothing        -> ["",ffitypedef, ffifunc]
 

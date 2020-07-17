@@ -14,7 +14,7 @@ if not os.path.exists( lib ):
         lib += '.so'
     elif platform.startswith('win32'):
         lib += '.dll'
-    cmd = ghc_compile_cmd(src,lib,dir,platform)
+    cmd = ghc_compile_cmd(src,lib,dir,platform,redirect=True)
     run(cmd)
 
 hsparser = cdll.LoadLibrary( lib )
@@ -22,3 +22,4 @@ hsparser.createFileBindings.argtypes = [c_wchar_p]
 hsparser.createFileBindings.restype = c_wchar_p
 hsparser.freeReturnedString.argtypes = [c_wchar_p]
 hsparser.freeReturnedString.restype = c_voidp
+

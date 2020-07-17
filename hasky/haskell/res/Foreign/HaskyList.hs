@@ -1,4 +1,4 @@
-module HaskyList (CList, newList, peekList, withList, freeList, fromList) where
+module Foreign.HaskyList (CList, newList, peekList, withList, freeList, fromList) where
 
 import Foreign.Ptr
 import Foreign.Storable

@@ -1,7 +1,7 @@
 module HaskyFFI.FFIType where
 
-import HaskyFFI.HTypes (HType(..))
-import HaskyFFI.Utils
+import HaskyFFI.HTypes (HType(..), stripIO, isIO)
+import HaskyFFI.Utils (finalizerName, toFFIType', toFFIType, fromFFIType)
 
 typeDef = " :: "
 fec = ("foreign export ccall "++)
@@ -52,5 +52,10 @@ ffiType ht = case ht of
     HIO ht'  -> "IO " ++ further ht'
     HCArray ht' -> "CArray " ++ further ht'
     HCList ht'  -> "CList " ++ further ht'
+    HTuple hts -> case length hts of
+                    2 -> "CTuple2 " ++ furthers hts
+                    3 -> "CTuple3 " ++ furthers hts
     _ -> fail ("Non C-compatible type \"" ++ show ht ++ "\" in export")
-    where further = (\s -> "(" ++ s ++ ")") . ffiType
+    where further  = (\s -> "(" ++ s ++ ")") . ffiType
+          furthers = concat . map ((' ':) . further)
+
