@@ -13,7 +13,7 @@ imports = map ("import "++)
           ,"Control.Monad (liftM2, liftM3)"
           ,"Foreign.C.Structs"
           ,"Foreign.HaskyList"
-          ,"Foreign,HaskyArray"
+          ,"Foreign.HaskyArray"
           ,"Foreign.HaskyTuple"
           ,"Foreign.HaskyString"]
 
