@@ -11,10 +11,11 @@ imports = map ("import "++)
           ,"Foreign.Marshal.Alloc (free)"
           ,"Foreign.Storable (peek)"
           ,"Control.Monad (liftM2, liftM3)"
-          ,"HaskyList"
-          ,"HaskyArray"
-          ,"HaskyTuple"
-          ,"HaskyString"]
+          ,"Foreign.C.Structs"
+          ,"Foreign.HaskyList"
+          ,"Foreign.HaskyArray"
+          ,"Foreign.HaskyTuple"
+          ,"Foreign.HaskyString"]
 
 createFFI :: FilePath -> String -> [String] -> [TypeDef] -> (FilePath, String)
 createFFI fn modname exports typeDefs =

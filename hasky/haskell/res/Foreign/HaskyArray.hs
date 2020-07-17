@@ -1,4 +1,4 @@
-module HaskyArray (CArray, newArray, peekArray, withArray, freeArray, fromArray) where
+module Foreign.HaskyArray (CArray, newArray, peekArray, withArray, freeArray, fromArray) where
 
 import Foreign.Ptr
 import Foreign.C.Types (CInt)

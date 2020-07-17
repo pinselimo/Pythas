@@ -2,7 +2,6 @@ module Test where
 
 import Foreign.C.Types
 import Foreign.C.String
-import HaskyList
 
 constantInt :: Int
 constantInt = 63
