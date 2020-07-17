@@ -1,0 +1,3 @@
+[submodule "hasky/haskell/res/cstructs-in-haskell"]
+	path = hasky/haskell/res/cstructs-in-haskell
+	url = git://github.com/pinselimo/cstructs-in-haskell

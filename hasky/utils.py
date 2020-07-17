@@ -57,8 +57,9 @@ def custom_attr_getter(obj, name):
             func_infos = info.func_infos[name]
             if is_constant(func_infos):
                 return f()
-            if func_infos.destroy:
-                destrPtr = getattr(lib,name + 'Finalizer')
+            finalizerName = name + 'Finalizer'
+            if finalizerName in info.exported_ffi:
+                destrPtr = getattr(lib,finalizerName)
             else:
                 destrPtr = None
             return HaskyFunc(name, func_infos, f, destrPtr)

@@ -39,3 +39,4 @@ createFileBindings cfn = do
 
 freeReturnedString :: CWString -> IO ()
 freeReturnedString = free
+

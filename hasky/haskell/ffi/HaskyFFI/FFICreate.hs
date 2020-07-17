@@ -1,5 +1,7 @@
 module HaskyFFI.FFICreate (createFFI) where
 
+import System.FilePath.Posix (dropExtension)
+
 import HaskyFFI.ParseTypes (TypeDef(funcN, funcT))
 import HaskyFFI.FFIType (createFFIType, makeFFIType, finalizerExport)
 import HaskyFFI.Wrapper (wrap)
@@ -9,13 +11,17 @@ imports = map ("import "++)
           ["Foreign.C.Types"
           ,"Foreign.Marshal.Utils (fromBool, toBool)"
           ,"Foreign.Marshal.Alloc (free)"
-          ,"HaskyList"
-          ,"HaskyArray"
-          ,"HaskyString"]
+          ,"Foreign.Storable (peek)"
+          ,"Control.Monad (liftM2, liftM3)"
+          ,"Foreign.C.Structs"
+          ,"Foreign.HaskyList"
+          ,"Foreign.HaskyArray"
+          ,"Foreign.HaskyTuple"
+          ,"Foreign.HaskyString"]
 
 createFFI :: FilePath -> String -> [String] -> [TypeDef] -> (FilePath, String)
 createFFI fn modname exports typeDefs =
- let ffiFilename = takeWhile (/='.') fn ++ "_hasky_ffi.hs"
+ let ffiFilename = dropExtension fn ++ "_hasky_ffi.hs"
      ffiModname = modname ++ "_hasky_ffi"
      exportedFuncTypes = filter ((`elem` exports) . funcN) typeDefs
      ffiFunctions = concat $ map (makeFFIExport modname) exportedFuncTypes
@@ -32,8 +38,9 @@ makeFFIExport modname typedef = let
      functype = createFFIType $ funcT typedef
      ffitypedef = makeFFIType (funcN typedef) functype
      ffifunc    = wrap modname (funcN typedef) (funcT typedef)
-     finalizerF = maybeFinalizerFunc (funcN typedef) (last $ funcT typedef)
+     maybeFinal = maybeFinalizerFunc (funcN typedef) (last $ funcT typedef)
      finalizerT = finalizerExport (funcN typedef) (last functype)
-  in case finalizerF of
+  in case maybeFinal of
      Just finalizer -> ["",ffitypedef, ffifunc, "", finalizerT, finalizer]
      Nothing        -> ["",ffitypedef, ffifunc]
+
