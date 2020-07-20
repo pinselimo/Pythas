@@ -6,8 +6,8 @@ from sys import platform
 from .ghc import ghc_compile_cmd
 
 dir = os.path.dirname(os.path.realpath(__file__))
-dir = os.path.join( dir, "ffi" )
-src = os.path.join( dir, "HaskyFFI.hs")
+dir = os.path.join( dir, "ffi", "src" )
+src = os.path.join( dir, "Exports.hs")
 lib = os.path.join( dir, "libhaskyffi")
 if not os.path.exists( lib ):
     if platform.startswith('linux'):

@@ -49,8 +49,9 @@ def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2, redire
     GHC_OPT_OPTIMISATION = ["","-O","-O2","-optc-O3"]
     GHC_OUT = "-o"
     PATH_CSTRUCTS = ('cstructs-in-haskell','src','Foreign','C')
-    HASKY_TYPES = [os.path.join(RESOURCES,'Foreign',t)
-            for t in ['HaskyArray.hs','HaskyList.hs','HaskyString.hs','HaskyTuple.hs',]] \
+    PATH_HASKYFFI = (fdir,'ffi','src','Foreign','Hasky')
+    HASKY_TYPES = [os.path.join(*PATH_HASKYFFI,t)
+            for t in ['Array.hs','List.hs','String.hs','Tuples.hs',]] \
             + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs.hs')] \
             + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Types.hs')] \
             + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Utils.hs')]
