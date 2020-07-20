@@ -48,11 +48,12 @@ def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2, redire
     HS_BRACKET_C = os.path.join(RESOURCES,"hswrap.c")
     GHC_OPT_OPTIMISATION = ["","-O","-O2","-optc-O3"]
     GHC_OUT = "-o"
+    PATH_CSTRUCTS = ('cstructs-in-haskell','src','Foreign','C')
     HASKY_TYPES = [os.path.join(RESOURCES,'Foreign',t)
             for t in ['HaskyArray.hs','HaskyList.hs','HaskyString.hs','HaskyTuple.hs',]] \
-            + [os.path.join(RESOURCES,'cstructs-in-haskell','Foreign','C','Structs')] \
-            + [os.path.join(RESOURCES,'cstructs-in-haskell','Foreign','C','Structs','Types.hs')] \
-            + [os.path.join(RESOURCES,'cstructs-in-haskell','Foreign','C','Structs','Utils.hs')]
+            + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs.hs')] \
+            + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Types.hs')] \
+            + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Utils.hs')]
     cmd = []
     if redirect:
         OUTP = ["-hidir",BIN,"-odir",BIN]
