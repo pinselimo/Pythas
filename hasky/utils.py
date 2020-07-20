@@ -2,6 +2,7 @@ import os
 import sys
 from ctypes import _SimpleCData, _Pointer
 from collections import abc
+from shutil import which
 
 DOT = '.'
 
@@ -76,3 +77,8 @@ def check_ctype_seq(seq):
 
 def is_constant(func_infos):
     return not (func_infos.argtypes or 'IO' in func_infos.htype)
+
+def check_has_ghc():
+    if not (which('ghc') or which('stack')):
+        raise ImportError('No GHC found. Please install either Stack or GHC and make sure that either is in you $PATH.')
+
