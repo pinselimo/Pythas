@@ -4,3 +4,6 @@
 [submodule "hasky/haskell/ffi"]
 	path = pythas/haskell/ffi
 	url = https://github.com/pinselimo/Hasky-FFI
+[submodule "pythas/haskell/res/Pythas-Types"]
+	path = pythas/haskell/res/Pythas-Types
+	url = https://github.com/pinselimo/Pythas-Types

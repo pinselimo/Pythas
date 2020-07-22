@@ -49,8 +49,8 @@ def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2, redire
     GHC_OPT_OPTIMISATION = ["","-O","-O2","-optc-O3"]
     GHC_OUT = "-o"
     PATH_CSTRUCTS = ('cstructs-in-haskell','src','Foreign','C')
-    PATH_pythasFFI = (fdir,'ffi','src','Foreign','Pythas')
-    pythas_TYPES = [os.path.join(*PATH_pythasFFI,t)
+    PATH_PYTHASTYPES = (RESOURCES,'Pythas-Types','src','Foreign','Pythas')
+    pythas_TYPES = [os.path.join(*PATH_PYTHASTYPES,t)
             for t in ['Array.hs','List.hs','String.hs','Tuples.hs',]] \
             + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs.hs')] \
             + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Types.hs')] \
