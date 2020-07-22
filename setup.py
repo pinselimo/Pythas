@@ -8,7 +8,7 @@ with open('requirements.txt') as f:
 install_requires = [r.strip() for r in requirements_lines]
 
 setup(
-   name='Hasky',
+   name='Pythas',
    version='0.01dev',
    description='Import Haskell modules as if they were Python modules',
    license='LGPLv3',
@@ -17,13 +17,13 @@ setup(
    author='Simon Plakolb',
    author_email='s.plakolb@gmail.com',
    url="https://www.behaviour.space/",
-   packages=['hasky','hasky.haskell'],
-   package_dir={'hasky':'hasky','hasky.haskell':'hasky/haskell'},
-   package_data={'hasky.haskell': ['res/*.c','res/Foreign/*.hs'
+   packages=['pythas','pythas.haskell'],
+   package_dir={'pythas':'pythas','pythas.haskell':'pythas/haskell'},
+   package_data={'pythas.haskell': ['res/*.c','res/Foreign/*.hs'
                                   ,'res/cstructs-in-haskell/Foreign/C/*.hs'
                                   ,'res/cstructs-in-haskell/Foreign/C/Structs/*.hs'
-                                  ,'ffi/*.hs','ffi/HaskyFFI/*.hs'
-                                  ,'bin/*.hi','bin/HaskyFFI/*.hi'
-                                  ,'bin/*.o','bin/HaskyFFI/*.o']},
+                                  ,'ffi/*.hs','ffi/PythasFFI/*.hs'
+                                  ,'bin/*.hi','bin/PythasFFI/*.hi'
+                                  ,'bin/*.o','bin/PythasFFI/*.o']},
    install_requires=install_requires,
 )

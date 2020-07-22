@@ -49,8 +49,8 @@ def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2, redire
     GHC_OPT_OPTIMISATION = ["","-O","-O2","-optc-O3"]
     GHC_OUT = "-o"
     PATH_CSTRUCTS = ('cstructs-in-haskell','src','Foreign','C')
-    PATH_HASKYFFI = (fdir,'ffi','src','Foreign','Hasky')
-    HASKY_TYPES = [os.path.join(*PATH_HASKYFFI,t)
+    PATH_pythasFFI = (fdir,'ffi','src','Foreign','Pythas')
+    pythas_TYPES = [os.path.join(*PATH_pythasFFI,t)
             for t in ['Array.hs','List.hs','String.hs','Tuples.hs',]] \
             + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs.hs')] \
             + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Types.hs')] \
@@ -68,14 +68,14 @@ def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2, redire
         LIB_HS_RTS = "-lHSrts-ghc" + GHC_VERSION
         cmd = [
             GHC_CMD, GHC_OPT_OPTIMISATION[optimisation], *GHC_OPTIONS,
-            GHC_OUT, libname, filename, *HASKY_TYPES, HS_BRACKET_C, LIB_HS_RTS
+            GHC_OUT, libname, filename, *pythas_TYPES, HS_BRACKET_C, LIB_HS_RTS
             ]
     elif platform.startswith('win32'):
         # https://downloads.haskell.org/~ghc/7.6.3/docs/html/users_guide/win32-dlls.html
         GHC_CMD = "ghc"
         cmd = [
             GHC_CMD, GHC_OPT_OPTIMISATION[optimisation], *GHC_OPTIONS,
-            GHC_OUT, libname, filename, *HASKY_TYPES, HS_BRACKET_C
+            GHC_OUT, libname, filename, *pythas_TYPES, HS_BRACKET_C
             ]
     return cmd
 

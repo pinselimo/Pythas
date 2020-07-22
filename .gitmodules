@@ -1,6 +1,6 @@
 [submodule "hasky/haskell/res/cstructs-in-haskell"]
-	path = hasky/haskell/res/cstructs-in-haskell
+	path = pythas/haskell/res/cstructs-in-haskell
 	url = git://github.com/pinselimo/cstructs-in-haskell
 [submodule "hasky/haskell/ffi"]
-	path = hasky/haskell/ffi
+	path = pythas/haskell/ffi
 	url = https://github.com/pinselimo/Hasky-FFI

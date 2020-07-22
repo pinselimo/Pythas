@@ -45,7 +45,7 @@ def simple_hs_2_py(hs_type):
     if hs_type in HS2PY:
         return HS2PY[hs_type]
     else:
-        raise TypeError('Non-simple type "{}" cannot be used with Hasky'.format(hs_type))
+        raise TypeError('Non-simple type "{}" cannot be used with Pythas'.format(hs_type))
 
 def hs2py(hs_type):
     '''

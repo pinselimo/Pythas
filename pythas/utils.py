@@ -18,7 +18,7 @@ def flatten(seq):
             yield ts
     return list(flat(seq))
 
-class HaskyFunc:
+class pythasFunc:
     def __init__(self, name, func_info, funcPtr, destructorPtr):
         self.__name__ = name
         self._funcPtr = funcPtr
@@ -61,7 +61,7 @@ def custom_attr_getter(obj, name):
                 destrPtr = getattr(lib,finalizerName)
             else:
                 destrPtr = None
-            return HaskyFunc(name, func_infos, f, destrPtr)
+            return pythasFunc(name, func_infos, f, destrPtr)
     else:
         raise not_found
 

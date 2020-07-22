@@ -2,9 +2,6 @@ module Example where
 
 import Foreign.C.Types (CInt)
 import Foreign.C.String
-import HaskyList
-
---(HASKY-EXCLUDE someComplicatedFunc
 
 someConstant :: Int
 someConstant = 63
@@ -18,8 +15,8 @@ square i = i * i
 multisin :: Int -> Double -> Double
 multisin x y = (fromIntegral x) * (sin y)
 
-haskyLen :: [Integer] -> Int
-haskyLen = length
+pythasLen :: [Integer] -> Int
+pythasLen = length
 
 someComplicatedFunc :: [a] -> IO a
 someComplicatedFunc = undefined
