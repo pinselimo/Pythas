@@ -27,3 +27,4 @@ setup(
                                   ,'bin/*.o','bin/PythasFFI/*.o']},
    install_requires=install_requires,
 )
+
