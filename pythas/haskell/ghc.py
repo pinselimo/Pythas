@@ -15,7 +15,11 @@ class GHC_Exception(Exception):
     pass
 
 def get_ghc_version_from_cmdln():
-    stdout = subprocess.run(['ghc','--version'],capture_output=True).stdout
+    if has_stack():
+        cmd = ('stack','ghc','--','--version')
+    else:
+        cmd = ('ghc','--version')
+    stdout = subprocess.run(cmd,capture_output=True).stdout
     version = re.search(REGEX_HS_VERSION, stdout )
     return version.group(0).decode('utf-8')
 
@@ -72,7 +76,7 @@ def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2, redire
     GHC_CMD = 'ghc'
 
     if platform.startswith('linux'):
-        GHC_OPTIONS = ('-dynamic') + GHC_OPTIONS
+        GHC_OPTIONS = ('-dynamic',) + GHC_OPTIONS
         LIB_HS_RTS = '-lHSrts-ghc' + GHC_VERSION
         flags = (
             GHC_OPT_OPTIMISATION[optimisation], *GHC_OPTIONS,
