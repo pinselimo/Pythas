@@ -19,7 +19,7 @@ def flatten(seq):
             yield ts
     return list(flat(seq))
 
-class HaskyFunc:
+class PythasFunc:
     def __init__(self, name, func_info, funcPtr, destructorPtr):
         self.__name__ = name
         self._funcPtr = funcPtr
@@ -40,10 +40,10 @@ class HaskyFunc:
             self.destructor(retVal)
         return res
 
-def find_source(name, path, extension='.hs', transform=lambda s:s.capitalize()):
-    hsName = transform(name) + extension
+def find_source(name, path, extension='.hs'):
+    hsName = name + extension
     for file in os.listdir(path):
-        if file == hsName:
+        if file.lower() == hsName:
             return [os.path.join(path,file)]
     else:
         return []
@@ -62,7 +62,7 @@ def custom_attr_getter(obj, name):
                 destrPtr = getattr(lib,finalizerName)
             else:
                 destrPtr = None
-            return HaskyFunc(name, func_infos, f, destrPtr)
+            return PythasFunc(name, func_infos, f, destrPtr)
     else:
         raise not_found
 
@@ -80,5 +80,5 @@ def is_constant(func_infos):
 
 def check_has_ghc():
     if not (which('ghc') or which('stack')):
-        raise ImportError('No GHC found. Please install either Stack or GHC and make sure that either is in you $PATH.')
+        raise ImportError('No GHC found. Please install either Stack or GHC and make sure that either is in your $PATH.')
 

@@ -13,7 +13,7 @@ from .utils import custom_attr_getter, find_source, DOT
 
 from importlib.abc import MetaPathFinder
 
-class HaskyMetaFinder(MetaPathFinder):
+class PythasMetaFinder(MetaPathFinder):
     def find_spec(self, fullname, path, target=None):
         if path is None:
             path = [os.getcwd()]
@@ -34,13 +34,17 @@ class HaskyMetaFinder(MetaPathFinder):
             if not os.path.exists(filename):
                 # in case it doesn't look for a haskell file of that name
                 for haskellfile in find_source(name, p):
-                    return spec_from_file_location(fullname, p, loader=HaskyLoader(haskellfile),
-                        submodule_search_locations=None)
+                    return spec_from_file_location(
+                            fullname,
+                            p,
+                            loader=PythasLoader(haskellfile),
+                            submodule_search_locations=None
+                            )
 
         # Let the other finders handle this
         return None
 
-class HaskyLoader(Loader):
+class PythasLoader(Loader):
     def __init__(self, filename):
         self.filename = filename
 
@@ -75,5 +79,5 @@ def ghc_compile(filename, parse_info):
     return libname, parse_info
 
 def install():
-    meta_path.insert(0, HaskyMetaFinder())
+    meta_path.insert(0, PythasMetaFinder())
 

@@ -2,17 +2,9 @@ def lmap(f,xs):
     '''Like map but returns a list instead of a generator'''
     return [f(x) for x in xs]
 
-def applyT2(fs,t):
-    '''Like haskells ap for tuples of 2'''
-    fa,fb = fs
-    x,y = t
-    return (fa[1](x), fb[1](y))
-
-def applyT3(fs,t):
-    '''Like haskells ap for tuples of 3'''
-    fa,fb,fc = fs
-    x,y,z = t
-    return (fa[1](x), fb[1](y), fc[1](z))
+def apply(fs,t):
+    '''Like haskells ap'''
+    return tuple(f[1](x) for f,x in zip(fs,t))
 
 def strip_io(tp):
     '''
@@ -62,25 +54,29 @@ def match_parens(s, i):
     else:
         return len(s)
 
-def parse_generator(f_llist, f_carray, f_tuple2, f_tuple3, f_string, f_default):
+def parse_generator(f_llist, f_carray, f_tuple2, f_tuple3, f_tuple4, f_string, f_default):
     def parser(hs_type):
         ll = hs_type.find('CList ')
         arr = hs_type.find('CArray ')
         t2 = hs_type.find('CTuple2 ')
         t3 = hs_type.find('CTuple3 ')
+        t4 = hs_type.find('CTuple4 ')
         st = hs_type.find('CWString')
         ## Linked List first
-        if ll+1 and (ll < arr or arr < 0) and (ll < t2 or t2 < 0) and (ll < t3 or t3 < 0):
+        if ll+1 and (ll < arr or arr < 0) and (ll < t2 or t2 < 0) and (ll < t3 or t3 < 0) and (ll < t4 or t4 < 0):
             return f_llist(hs_type[ll+len('CList '):])
         ## Array first
-        elif arr+1 and (arr < t2 or t2 < 0) and (arr < t3 or t3 < 0):
+        elif arr+1 and (arr < t2 or t2 < 0) and (arr < t3 or t3 < 0) and (arr < t4 or t4 < 0):
             return f_carray(hs_type[arr+len('CArray '):])
         ## Tuple of 2 first
-        elif t2+1 and (t2 < t3 or t3 < 0):
+        elif t2+1 and (t2 < t3 or t3 < 0) and (t2 < t4 or t4 < 0):
             return f_tuple2(hs_type[t2+len('CTuple2 '):])
         ## Tuple of 3 first
-        elif t3+1:
+        elif t3+1 and (t3 < t4 or t4 < 0):
             return f_tuple3(hs_type[t3+len('CTuple3 '):])
+        ## Tuple of 4 first
+        elif t4+1:
+            return f_tuple4(hs_type[t4+len('CTuple4 '):])
         ## String first
         elif st+1:
             return f_string(hs_type[st+len('CWString '):])
