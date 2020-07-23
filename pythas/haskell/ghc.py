@@ -1,4 +1,5 @@
 import subprocess
+import sys
 import re
 import os.path
 from shutil import which
@@ -19,7 +20,11 @@ def get_ghc_version_from_cmdln():
         cmd = ('stack','ghc','--','--version')
     else:
         cmd = ('ghc','--version')
-    stdout = subprocess.run(cmd,capture_output=True).stdout
+    py_vn = sys.version_info
+    if py_vn == 3 and py_vn.minor > 6:
+        stdout = subprocess.run(cmd,capture_output=True).stdout
+    else:
+        stdout = subprocess.run(cmd,stdout=subprocess.PIPE).stdout
     version = re.search(REGEX_HS_VERSION, stdout )
     return version.group(0).decode('utf-8')
 
