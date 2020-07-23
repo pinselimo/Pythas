@@ -49,8 +49,12 @@ def find_source(name, path, extension='.hs'):
         return []
 
 def custom_attr_getter(obj, name):
-    ffi_libs = obj.ffi_libs
-    not_found = AttributeError("{} object has no attribute {} and no Haskell module containing it.".format(obj.__name__,repr(name)))
+    ffi_libs = obj._ffi_libs
+    not_found = AttributeError(
+            "{} object has no attribute {}"
+            "and no Haskell module containing it."
+            "".format(obj.__name__,repr(name))
+            )
     for lib, info in ffi_libs:
         if name in info.exported_ffi:
             f = getattr(lib,name)
