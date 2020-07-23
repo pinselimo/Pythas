@@ -61,6 +61,8 @@ $ pip install .
 
 ## Constraints
 
+Only Python versions 3.7 and up are supported. Unfortunately, only [PEP 562] introduced ```__getattr__``` for modules. This renders level of abstraction ```Pythas``` aims for impossible on lower Python versions.
+
 Only functions having their type declared will be imported. You can handle the export of the function yourself by adding a ```foreign export ccall``` for the function, otherwise ```Pythas``` will do that for you. To exclude a function just omit the functions type. Functions of types that are not supported won't get exported either.
 
 All Haskell constants in the IO monad are imported as functions. Due to lists being turned into ```CArray```s or ```CTuple{x}```s, also constant lists must be called like a function without arguments:
@@ -92,3 +94,4 @@ See COPYING.LESSER file for details.
     This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
     This is free software, and you are welcome to redistribute it
     under certain conditions; see COPYING and COPYING.LESSER.
+
