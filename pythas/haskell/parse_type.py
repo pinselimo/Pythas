@@ -12,6 +12,7 @@ HS2PY = {
         ### INTEGRAL ####
         'CInt':cl.c_int32,
         'CBool':cl.c_bool,
+        'Char':cl.c_char,
         'CChar':cl.c_char,
         'CSChar':cl.c_byte,
         'CUChar':cl.c_ubyte,
