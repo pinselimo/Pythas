@@ -36,8 +36,8 @@ pureOperationInt i = i * i
 pureOperationFloat :: Float -> Float -> Float
 pureOperationFloat a b = a ** b
 
-pureOperationStrings :: String -> String
-pureOperationStrings = filter (/= 'a')
+pureOperationString :: String -> String
+pureOperationString = filter (/= 'a')
 
 pureOperationMixed :: Int -> Double -> Double
 pureOperationMixed x y = (fromIntegral x) * (sin y)
@@ -48,9 +48,11 @@ listOfInteger = length
 listMixed :: [Integer] -> [Double]
 listMixed = map ((*0.25) . fromIntegral)
 
-listNested :: [[[String]]] -> [[[String]]]
-listNested ((s:_):_) = [[[head s]]]
-listNested [] = [[[""]]]
+listNested :: [[[String]]] -> String
+listNested ((s:_):_) = case s of
+                        (x:_) -> x
+                        _     -> ""
+listNested _ = ""
 
 listOfTuples :: String -> CInt-> [(String, CInt)]
 listOfTuples a b = [(a,b)]
@@ -67,16 +69,6 @@ tupleWithList l = (take l $ repeat "Haskell", take l $ repeat 63)
 tupleWithNestedList :: Integer -> String -> ([[String]],[[Integer]])
 tupleWithNestedList i s = ([take (fromIntegral i) $ repeat s], [[i]])
 
--- TODO: Python error:
-{-  File "/home/pinselimo/Python/Hasky/hasky/haskell/parse_type.py", line 70, in hs2py
- -    hs_type_a, hs_type_b = hs_type.split(') (')
- -  ValueError: too many values to unpack (expected 2)
- -}
--- Resulting from FFI Type:
-{-
- - CWString -> CWString -> IO (CTuple2  (CArray (CTuple2  (CWString) (CWString))) (CArray (CInt)))
- -}
--- Possible solution: Implement parsing directed at CTuple2
 tupleWithListOfTuples :: String -> String -> ([(String, String)],[Int])
 tupleWithListOfTuples a b = (take 63 $ repeat (a,b), [63])
 
