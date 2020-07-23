@@ -1,6 +1,5 @@
 from hypothesis import given
 from hypothesis.strategies import integers, floats, binary, text, characters, tuples, lists
-from numpy import sin
 
 from .context import pythas
 
