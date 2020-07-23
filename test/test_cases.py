@@ -18,9 +18,7 @@ list_integers = strat.lists(c_integers)
 list_strings  = strat.lists(c_strings)
 list_str_nst3 = strat.lists(strat.lists(list_strings))
 
-
-
-import test.hs.test as t
+import test.hs.testcases as t
 
 def test_constantInt():
     assert t.constantInt == 63

@@ -1,4 +1,4 @@
-module Test where
+module Testcases where
 
 import Foreign.C.Types
 import Foreign.C.String
