@@ -39,10 +39,10 @@ class pythasFunc:
             self.destructor(retVal)
         return res
 
-def find_source(name, path, extension='.hs', transform=lambda s:s.capitalize()):
-    hsName = transform(name) + extension
+def find_source(name, path, extension='.hs'):
+    hsName = name + extension
     for file in os.listdir(path):
-        if file == hsName:
+        if file.lower() == hsName:
             return [os.path.join(path,file)]
     else:
         return []
