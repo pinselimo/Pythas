@@ -2,7 +2,7 @@ from importlib.abc import Loader, MetaPathFinder
 from importlib.util import spec_from_file_location
 from subprocess import run
 from ctypes import cdll
-from functools import partial
+from functools import partial, reduce
 from sys import meta_path, platform
 import os.path
 
@@ -57,10 +57,15 @@ class PythasLoader(Loader):
         for f in ffi_files:
             print("Got File: " +f)
         ffi_pinfos = map(parse_haskell,ffi_files)
-        libs = [(cdll.LoadLibrary(libname),info)
-            for libname,info in create_shared_libs(ffi_files, ffi_pinfos)]
-        setattr(module, 'ffi_libs', libs)
+        shared_libs = create_shared_libs(ffi_files, ffi_pinfos)
+        exported = [list(info.exported_ffi) for _,info in shared_libs]
+        new_dir = dir(module) + reduce(lambda a,b:a+b, exported)
+
+        libs = [(cdll.LoadLibrary(libname),info) for libname, info in shared_libs]
+
+        module._ffi_libs = libs
         module.__getattr__ = partial(custom_attr_getter, module)
+        module.__dir__ = lambda: new_dir
 
 def create_shared_libs(ffi_files, ffi_pinfos):
     yield from (ghc_compile(fn, info) for fn,info in zip(ffi_files, ffi_pinfos))
@@ -79,3 +84,4 @@ def ghc_compile(filename, parse_info):
 
 def install():
     meta_path.insert(0, PythasMetaFinder())
+
