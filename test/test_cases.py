@@ -1,6 +1,6 @@
 from hypothesis import given
 import hypothesis.strategies as strat
-from numpy import sin
+from math import sin
 
 from .context import pythas
 
