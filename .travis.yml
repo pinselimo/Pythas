@@ -14,7 +14,7 @@ install:
     - sudo curl -sSL https://get.haskellstack.org/ | sh
     - stack --version
     - pip install -r requirements.txt
-    - pip install -r requirements-dev.txt
+    - python -m pip install --ignore-installed -r requirements-dev.txt
 script:
     pytest
 
