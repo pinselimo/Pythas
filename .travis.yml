@@ -3,6 +3,9 @@ os: linux
 dist: xenial
 git:
     submodules: true
+cache:
+    directories:
+        - $HOME/.local/bin
 python:
     - "3.5"
     - "3.6"
@@ -11,7 +14,7 @@ python:
     - "3.8-dev"
     - "nightly"
 install:
-    - sudo curl -sSL https://get.haskellstack.org/ | sh
+    - if [ ! -f .local/bin/stack ]; then sudo curl -sSL https://get.haskellstack.org/ | sh; fi
     - stack --version
     - pip install -r requirements.txt
     - python -m pip install --ignore-installed -r requirements-dev.txt
