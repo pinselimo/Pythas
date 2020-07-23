@@ -51,7 +51,7 @@ def find_source(name, path, extension='.hs'):
 def custom_attr_getter(obj, name):
     ffi_libs = obj._ffi_libs
     not_found = AttributeError(
-            "{} object has no attribute {}"
+            "{} object has no attribute {} "
             "and no Haskell module containing it."
             "".format(obj.__name__,repr(name))
             )
@@ -72,10 +72,12 @@ def custom_attr_getter(obj, name):
 
 def check_ctype_seq(seq):
     def _check(seq):
-        return any(not isinstance(e, _SimpleCData) if not isinstance(e,abc.Iterable) else _check(e) for e in seq)
+        return any(not isinstance(e, _SimpleCData)
+                if not isinstance(e,abc.Iterable) else _check(e)
+                for e in seq)
 
     if not _check(seq):
-        raise TypeError('Only sequences of <ctypes._SimpleCData allowed.')
+        raise TypeError('Only sequences of <ctypes._SimpleCData> allowed.')
     else:
         return seq
 
@@ -84,5 +86,8 @@ def is_constant(func_infos):
 
 def check_has_ghc():
     if not (which('ghc') or which('stack')):
-        raise ImportError('No GHC found. Please install either Stack or GHC and make sure that either is in your $PATH.')
+        raise ImportError('No GHC found. '
+        'Please install either Stack or GHC '
+        'and make sure that either is in your $PATH.'
+        )
 

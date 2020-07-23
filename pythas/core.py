@@ -58,10 +58,9 @@ class PythasLoader(Loader):
             print("Got File: " +f)
         ffi_pinfos = map(parse_haskell,ffi_files)
         shared_libs = create_shared_libs(ffi_files, ffi_pinfos)
-        exported = [list(info.exported_ffi) for _,info in shared_libs]
-        new_dir = dir(module) + reduce(lambda a,b:a+b, exported)
-
         libs = [(cdll.LoadLibrary(libname),info) for libname, info in shared_libs]
+        exported = [list(info.exported_ffi) for _,info in libs]
+        new_dir = dir(module) + reduce(lambda a,b:a+b, exported)
 
         module._ffi_libs = libs
         module.__getattr__ = partial(custom_attr_getter, module)
