@@ -74,7 +74,7 @@ def ghc_compile(filename, parse_info):
     elif platform.startswith('win32'):
         libname += '.dll'
     cmd = ghc_compile_cmd(filename, libname, filedir, platform)
-    print('Compiling with: {}'.format(cmd))
+    print('Compiling with: {}'.format(cmd[0]))
     run(cmd)
     return libname, parse_info
 
