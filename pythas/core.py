@@ -60,11 +60,11 @@ class PythasLoader(Loader):
         shared_libs = create_shared_libs(ffi_files, ffi_pinfos)
         libs = [(cdll.LoadLibrary(libname),info) for libname, info in shared_libs]
         exported = [list(info.exported_ffi) for _,info in libs]
-        new_dir = dir(module) + reduce(lambda a,b:a+b, exported)
 
         module._ffi_libs = libs
         module.__getattr__ = partial(custom_attr_getter, module)
-        module.__dir__ = lambda: new_dir
+
+        module.__dir__ = lambda: list(module.__dict__.keys()) + reduce(lambda a,b:a+b, exported)
 
 def create_shared_libs(ffi_files, ffi_pinfos):
     yield from (ghc_compile(fn, info) for fn,info in zip(ffi_files, ffi_pinfos))
