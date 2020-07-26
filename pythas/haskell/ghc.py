@@ -67,6 +67,7 @@ def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2, redire
             for t in ['Array.hs','List.hs','String.hs','Tuples.hs',]] \
             + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs.hs')] \
             + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Types.hs')] \
+            + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Templates.hs')] \
             + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Utils.hs')]
 
     # We redirect our own binaries into the 'bin' dir to not pollute everything
