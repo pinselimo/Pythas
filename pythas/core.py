@@ -64,7 +64,7 @@ class PythasLoader(Loader):
         module._ffi_libs = libs
         module.__getattr__ = partial(custom_attr_getter, module)
 
-        module.__dir__ = lambda: list(module.__dict__.keys()) + reduce(lambda a,b:a+b, exported)
+        module.__dir__ = lambda: list(module.__dict__) + reduce(lambda a,b:a+b, exported)
 
 def create_shared_libs(ffi_files, ffi_pinfos):
     yield from (ghc_compile(fn, info) for fn,info in zip(ffi_files, ffi_pinfos))
