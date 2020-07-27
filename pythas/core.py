@@ -2,7 +2,7 @@ from importlib.abc import Loader, MetaPathFinder
 from importlib.util import spec_from_file_location
 from subprocess import run
 from ctypes import cdll
-from functools import partial
+from functools import partial, reduce
 from sys import meta_path, platform
 import os.path
 
@@ -57,10 +57,14 @@ class PythasLoader(Loader):
         for f in ffi_files:
             print("Got File: " +f)
         ffi_pinfos = map(parse_haskell,ffi_files)
-        libs = [(cdll.LoadLibrary(libname),info)
-            for libname,info in create_shared_libs(ffi_files, ffi_pinfos)]
-        setattr(module, 'ffi_libs', libs)
+        shared_libs = create_shared_libs(ffi_files, ffi_pinfos)
+        libs = [(cdll.LoadLibrary(libname),info) for libname, info in shared_libs]
+        exported = [list(info.exported_ffi) for _,info in libs]
+
+        module._ffi_libs = libs
         module.__getattr__ = partial(custom_attr_getter, module)
+
+        module.__dir__ = lambda: list(module.__dict__) + reduce(lambda a,b:a+b, exported)
 
 def create_shared_libs(ffi_files, ffi_pinfos):
     yield from (ghc_compile(fn, info) for fn,info in zip(ffi_files, ffi_pinfos))
@@ -74,7 +78,7 @@ def ghc_compile(filename, parse_info):
     elif platform.startswith('win32'):
         libname += '.dll'
     cmd = ghc_compile_cmd(filename, libname, filedir, platform)
-    print('Compiling with: {}'.format(cmd))
+    print('Compiling with: {}'.format(cmd[0]))
     run(cmd)
     return libname, parse_info
 
