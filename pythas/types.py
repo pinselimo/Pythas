@@ -1,6 +1,24 @@
 import ctypes as cl
 from functools import partial
 
+def get_constructor(ctype):
+    if issubclass(ctype, cl._Pointer):
+        subtype = ctype._type_
+        if issubclass(subtype, Array):
+            constr = lambda x: cl.pointer(to_c_array(subtype,x))
+        elif issubclass(subtype, Tuple):
+            constr = lambda x: cl.pointer(to_tuple(subtype,x))
+        elif issubclass(subtype, LinkedList):
+            constr = lambda x: cl.pointer(to_linked_list(subtype,x))
+        else:
+            # For any pointer the value needs to be
+            # packed first in the subtype and then
+            # in the actual type
+            constr = lambda x: ctype(subtype(x))
+    else:
+        constr = ctype
+    return constr
+
 class LinkedList:
     pass
 
@@ -45,22 +63,7 @@ def to_c_array(cls, seq):
     arr = cls()
     arr.len = cl.c_int(len(seq))
     ctype = cls._fields_[1][1]._type_
-    if issubclass(ctype, cl._Pointer):
-        subtype = ctype._type_
-        if issubclass(subtype, Array):
-            subconstr = lambda x: cl.pointer(to_c_array(subtype,x))
-            content = map(subconstr,seq)
-        elif issubclass(subtype, LinkedList):
-            subconstr = lambda x: cl.pointer(to_linked_list(subtype,x))
-            content = map(subconstr, seq)
-        else:
-            # For any pointer the value needs to be 
-            # packed first in the subtype and then
-            # in the actual type
-            subconstr = lambda x: ctype(subtype(x))
-            content = map(subconstr,seq)
-    else:
-        content = map(ctype,seq)
+    content = map(get_constructor(ctype), seq)
     a = (ctype * len(seq))(*content)
     arr.ptr = cl.cast(a,cl.POINTER(ctype))
     return arr
@@ -69,39 +72,19 @@ def from_c_array(cp_array):
     c_arr = cp_array.contents
     return [c_arr.ptr[i] for i in range(c_arr.len)]
 
-class Tuple2:
+class Tuple:
     pass
 
-def new_tuple2(atype, btype):
-    class c_tuple2(Tuple2, cl.Structure):
-        _fields_ = [('a',atype),('b',btype)]
-    return c_tuple2
+def new_tuple(*subtypes):
+    class c_tuple(Tuple, cl.Structure):
+        _fields_ = list(zip("abcd",subtypes))
+    return c_tuple
 
-def from_tuple2(cpt):
+def to_tuple(cls, tup):
+    types = [cls._fields_[n][1] for n in range(len(cls._fields_))]
+    return cls(*[get_constructor(t)(v) for t,v in zip(types,tup)])
+
+def from_tuple(cpt):
     ct = cpt.contents
-    return (ct.a, ct.b)
-
-class Tuple3:
-    pass
-
-def new_tuple3(atype, btype, ctype):
-    class c_tuple3(Tuple3, cl.Structure):
-        _fields_ = [('a',atype),('b',btype),('c',ctype)]
-    return c_tuple3
-
-def from_tuple3(cpt):
-    ct = cpt.contents
-    return (ct.a, ct.b, ct.c)
-
-class Tuple4:
-    pass
-
-def new_tuple4(atype, btype, ctype, dtype):
-    class c_tuple4(Tuple4, cl.Structure):
-        _fields_ = [('a',atype),('b',btype),('c',ctype),('d',dtype)]
-    return c_tuple4
-
-def from_tuple4(cpt):
-    ct = cpt.contents
-    return (ct.a, ct.b, ct.c, ct.d)
+    return tuple(getattr(ct,a) for a in "abcd" if hasattr(ct, a))
 

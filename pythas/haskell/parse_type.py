@@ -60,12 +60,10 @@ def hs2py(hs_type):
     if hs_type == '':
         hs_type = '()'
     default = lambda _:simple_hs_2_py(hs_type)
-    def hs_tuple(f):
-        return lambda hs_inner:cl.POINTER(f(*map(hs2py,tuple_types(hs_inner))))
     parse = parse_generator(
             lambda hs_inner:cl.POINTER(new_linked_list(hs2py(hs_inner))),
             lambda hs_inner:cl.POINTER(new_c_array(hs2py(hs_inner))),
-            hs_tuple(new_tuple2), hs_tuple(new_tuple3), hs_tuple(new_tuple4),
+            lambda hs_inner:cl.POINTER(new_tuple(*map(hs2py,tuple_types(hs_inner)))),
             default,default)
     return parse(hs_type)
 
@@ -78,7 +76,7 @@ def argtype(hs_type):
     parse = parse_generator(
             lambda _: partial(to_linked_list, argt._type_),
             lambda _: partial(to_c_array, argt._type_),
-            default, default, default, # Tuples
+            lambda _: partial(to_tuple, argt._type_),
             lambda _: lambda x: cl.pointer(cl.c_wchar_p(x)), # Strings
             default
             )
@@ -89,12 +87,10 @@ def restype(hs_type):
     returns: tuple : (type of result, reconstructor)
     '''
     rtype = hs2py(hs_type)
-    def restup(f):
-        return lambda hs_inner:lambda x:apply(lmap(restype,tuple_types(hs_inner)), f(x))
     parse = parse_generator(
         lambda hs_inner:lambda x:lmap(restype(hs_inner)[1],from_linked_list(x)),
         lambda hs_inner:lambda x:lmap(restype(hs_inner)[1],from_c_array(x)),
-        restup(from_tuple2), restup(from_tuple3), restup(from_tuple4),
+        lambda hs_inner:lambda x:apply(lmap(restype,tuple_types(hs_inner)), from_tuple(x)),
         lambda _:lambda x:x.contents.value,
         lambda _:lambda x:x)
     return rtype,parse(hs_type)
