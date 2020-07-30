@@ -33,5 +33,6 @@ strings = filter (/= 'a')
 nested :: [[String]] -> [[String]]
 nested = id
 
-tuple :: (CInt, String)
-tuple = (1 :: CInt, "a")
+tuple :: (CInt, String) -> (CInt, String)
+tuple = id -- (1 :: CInt, "a")
+
