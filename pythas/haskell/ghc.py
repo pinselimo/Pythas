@@ -64,7 +64,7 @@ def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2, redire
     PATH_CSTRUCTS = ('cstructs-in-haskell','src','Foreign','C')
     PATH_PYTHASTYPES = (RESOURCES,'Pythas-Types','src','Foreign','Pythas')
     PYTHAS_TYPES = [os.path.join(*PATH_PYTHASTYPES,t)
-            for t in ['Array.hs','List.hs','String.hs','Tuples.hs',]] \
+            for t in ['Array.hs','List.hs','String.hs','Tuples.hs','Templates.hs']] \
             + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs.hs')] \
             + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Types.hs')] \
             + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Templates.hs')] \
