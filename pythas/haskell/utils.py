@@ -23,25 +23,24 @@ def tuple_types(hs_type):
     Nested tuples cannot just be .split(') ('), the
     inner tuples have to be preserved for further processing.
     '''
-    subtuples = [hs_type.find('CTuple')]
-    while subtuples[-1]+1:
-        subtuples.append(hs_type.find('CTuple',subtuples[-1]+1))
-    if len(subtuples) == 1:
-        return hs_type.split(') (')
-    else:
-        splits = [hs_type.find(') (',i)+1 if i != len(hs_type) else i
-                for i in map(lambda i: match_parens(hs_type,i-1), subtuples) if i
-            ]
-        res = [hs_type[a:b] for a,b in zip([0]+splits,splits+[len(hs_type)])]
-        return res
+    match = lambda x: match_parens(hs_type,x)
+    openp = hs_type.find('(')
+    closep = match(openp)
+    parens = [(openp, closep)]
+    while 1:
+        openp = hs_type.find('(',parens[-1][-1])
+        if openp == -1:
+            break
+        closep = match(openp)
+        parens.append((openp, closep))
+
+    return [hs_type[start:end] for start,end in parens]
 
 def match_parens(s, i):
     '''
     Given a string and the index of the opening
     parenthesis returns the index of the closing one.
     '''
-    if i < 0:
-        return 0
     x = 0
     for it in range(i,len(s)):
         c = s[it]
