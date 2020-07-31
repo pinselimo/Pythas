@@ -41,9 +41,9 @@ def test_listListInt(l):
 def test_listListString(l):
     assert hst.listListString(l) == l
 
-# @given(lists(lists(tuples(c_strings,c_strings))))
-# def test_listListTupleStringString(l):
-#     assert hst.listListTupleStringString(l) == l
+@given(lists(lists(tuples(c_strings,c_strings))))
+def test_listListTupleStringString(l):
+    assert hst.listListTupleStringString(l) == l
 
 @given(lists(lists(lists(c_strings))))
 def test_listListListString(l):
