@@ -20,8 +20,8 @@ listListInt = id
 listListString :: [[String]] -> [[String]]
 listListString = id
 
--- listListTupleStringString :: [[(String,String)]] -> [[(String, String)]]
--- listListTUpleStringString = id
+listListTupleStringString :: [[(String,String)]] -> [[(String, String)]]
+listListTupleStringString = id
 
 listListListString :: [[[String]]] -> [[[String]]]
 listListListString = id
