@@ -75,7 +75,7 @@ def from_c_array(cp_array):
 class Tuple:
     pass
 
-def new_tuple(*subtypes):
+def new_tuple(subtypes):
     class c_tuple(Tuple, cl.Structure):
         _fields_ = list(zip("abcd",subtypes))
     return c_tuple

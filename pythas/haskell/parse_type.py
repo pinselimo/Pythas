@@ -63,9 +63,10 @@ def hs2py(hs_type):
     parse = parse_generator(
             lambda hs_inner:cl.POINTER(new_linked_list(hs2py(hs_inner))),
             lambda hs_inner:cl.POINTER(new_c_array(hs2py(hs_inner))),
-            lambda hs_inner:cl.POINTER(new_tuple(*map(hs2py,tuple_types(hs_inner)))),
+            lambda hs_inner:cl.POINTER(new_tuple(list(map(hs2py, tuple_types(hs_inner))))),
             default,default)
-    return parse(hs_type)
+    p = parse(hs_type)
+    return p
 
 def argtype(hs_type):
     '''
