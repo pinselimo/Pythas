@@ -1,33 +1,43 @@
 from subprocess import run
+from abc import ABCMeta, abstractmethod, abstractproperty
 
-class Context:
-    def __init__(self, cmd : tuple, base_args : tuple, more_args : tuple):
-        self._cmd = cmd
-        self._base_args = base_args
-        self._more_args = more_args
+from .utils import flatten
 
-    def add_arg(self, arg: str):
-        self._more_args.append(arg)
-
-    def remove_arg(self, arg : str):
-        self._more_args = tuple(a for a in self._more_args if a not arg)
+class Compiler(metaclass=ABCMeta):
+    def __init__(self):
+        self._custom_flags = Flags()
 
     @property
-    def args(self) -> tuple:
-        return self._base_args + self._more_args
+    def custom_flags(self):
+        return self._custom_flags
 
-    def build_cmd(self, filename : str, libname : str, filedir : str, platform : str) -> tuple:
-        return self._cmd + self._base_args + self._more_args
+    @abstractmethod
+    def compile(self, filename, libname, redirect=False):
+        pass
 
-    def compile(self, filename : str, info : ParseInfo):
-        filedir = parse_info.dir
-        name = parse_info.name.lower()
-        libname = os.path.join(filedir,'lib'+name)
-        if platform.startswith('linux'):
-            libname += '.so'
-        elif platform.startswith('win32'):
-            libname += '.dll'
-        cmd = ghc_compile_cmd(filename, libname, filedir, platform)
-        print('Compiling with: {}'.format(cmd[0]))
-        run(cmd)
-        return libname
+class Context:
+    def __init__(self, compiler):
+        self.__compiler = compiler
+
+    @property
+    def compiler(self):
+        return self.__compiler
+
+    def compile(self, filename, libname, redirect=False):
+        self.__compiler.compile(filename, libname, redirect)
+
+class Flags:
+    def __init__(self):
+        self._flags = list()
+
+    def __call__(self):
+        return tuple(flatten(self._flags))
+
+    def add_flag(self, flag):
+        if flag not in self._flags:
+            self._flags.append(flag)
+
+    def remove_flag(self, flag):
+        if flag in self._flags:
+            self._flags.remove(flag)
+
