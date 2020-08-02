@@ -91,3 +91,11 @@ def check_has_ghc():
         'and make sure that either is in your $PATH.'
         )
 
+def get_shared_library_suffix():
+    if platform.startswith('linux'):
+        return '.so'
+    elif platform.startswith('win32'):
+        return '.dll'
+    elif platform.startswith('darwin'):
+        return '.dylib'
+
