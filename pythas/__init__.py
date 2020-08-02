@@ -3,8 +3,10 @@ check_has_ghc()
 
 from .core import install
 from .context import Context
+from .haskell import GHC, ffi_creator
 
-context = Context()
+ghc = GHC()
+context = Context(ffi_creator, ghc)
 
 install(context)
 
