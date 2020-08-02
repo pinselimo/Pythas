@@ -1,19 +1,18 @@
 from importlib.abc import Loader, MetaPathFinder
 from importlib.util import spec_from_file_location
 from subprocess import run
-from ctypes import cdll
 from functools import partial, reduce
 from sys import meta_path, platform
 import os.path
 
-from .haskell.ghc import GHC_VERSION, ghc_compile_cmd
-from .haskell import hsparser
-from .haskell.parse_file import parse_haskell
 from .utils import custom_attr_getter, find_source, DOT
 
 from importlib.abc import MetaPathFinder
 
 class PythasMetaFinder(MetaPathFinder):
+    def __init__(self, context):
+        self.context = context
+
     def find_spec(self, fullname, path, target=None):
         if path is None:
             path = [os.getcwd()]
@@ -37,7 +36,7 @@ class PythasMetaFinder(MetaPathFinder):
                     return spec_from_file_location(
                             fullname,
                             p,
-                            loader=PythasLoader(haskellfile),
+                            loader=PythasLoader(self.context, haskellfile),
                             submodule_search_locations=None
                             )
 
@@ -45,43 +44,22 @@ class PythasMetaFinder(MetaPathFinder):
         return None
 
 class PythasLoader(Loader):
-    def __init__(self, filename):
+    def __init__(self, context, filename):
+        self.context = context
         self.filename = filename
 
     def create_module(self, spec):
         return None
 
     def exec_module(self, module):
-        ffi_filename = hsparser.createFileBindings(self.filename)
-        ffi_files = [ffi_filename]
-        for f in ffi_files:
-            print("Got File: " +f)
-        ffi_pinfos = map(parse_haskell,ffi_files)
-        shared_libs = create_shared_libs(ffi_files, ffi_pinfos)
-        libs = [(cdll.LoadLibrary(libname),info) for libname, info in shared_libs]
-        exported = [list(info.exported_ffi) for _,info in libs]
+        lib, ffi_pinfos = self.context.compile(self.filename)
+        exported = list(ffi_pinfos.exported_ffi)
 
-        module._ffi_libs = libs
+        module._ffi_libs = [(lib, ffi_pinfos)]
         module.__getattr__ = partial(custom_attr_getter, module)
 
-        module.__dir__ = lambda: list(module.__dict__) + reduce(lambda a,b:a+b, exported)
+        module.__dir__ = lambda: list(module.__dict__) + exported
 
-def create_shared_libs(ffi_files, ffi_pinfos):
-    yield from (ghc_compile(fn, info) for fn,info in zip(ffi_files, ffi_pinfos))
-
-def ghc_compile(filename, parse_info):
-    filedir = parse_info.dir
-    name = parse_info.name.lower()
-    libname = os.path.join(filedir,'lib'+name)
-    if platform.startswith('linux'):
-        libname += '.so'
-    elif platform.startswith('win32'):
-        libname += '.dll'
-    cmd = ghc_compile_cmd(filename, libname, filedir, platform)
-    print('Compiling with: {}'.format(cmd[0]))
-    run(cmd)
-    return libname, parse_info
-
-def install():
-    meta_path.insert(0, PythasMetaFinder())
+def install(context):
+    meta_path.insert(0, PythasMetaFinder(context))
 

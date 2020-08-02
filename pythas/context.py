@@ -1,3 +1,7 @@
+import tempfile
+from ctypes import cdll
+
+from .utils import get_shared_library_suffix, remove_created_files
 from .haskell.parse_file import parse_haskell
 
 class Context:
