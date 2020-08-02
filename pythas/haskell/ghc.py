@@ -77,6 +77,8 @@ class GHC(Compiler):
             self._optimisation = level
 
     def compile(self, filepath, libpath, redirect=False):
+        cwd = os.getcwd()
+        os.chdir( os.path.dirname(filepath) )
         flags = self.flags(filepath, libpath, redirect)
         flags += self.custom_flags()
         cmd = self.ghc_compile_cmd(flags)
@@ -84,6 +86,7 @@ class GHC(Compiler):
         print('Compiling with: {}'.format(cmd[0]))
         subprocess.run(cmd)
 
+        os.chdir(cwd)
         return libpath
 
     def flags(self, filename, libname, redirect=False):
