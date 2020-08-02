@@ -1,11 +1,11 @@
 from setuptools import setup
 
-cstructs = ['res/cstructs-in-haskell/src/Foreign/C/'+s for s in ['*.hs','Structs/*.hs']]
-pythastypes = ['res/Pythas-Types/src/Foreign/Pythas/*.hs']
-pythasffi = ['ffi/src/*.hs'] + ['ffi/src/Foreign/'+s for s in ['*.hs','Pythas/*.hs']]
-outputs = ['bin/'] + ['bin/Foreign/'+s for s in ['','C/','Pythas/','C/Structs/']]
-os = [s+'*.o' for s in outputs]
-his = [s+'*.hi' for s in outputs]
+dirs = ['res/cstructs-in-haskell/src/Foreign/C/'+s for s in ['','Structs/']] \
+     + ['res/Pythas-Types/src/Foreign/Pythas/', 'res/', 'ffi/src/', 'bin/']  \
+     + ['ffi/src/Foreign/'+s for s in ['','Pythas/']]                        \
+     + ['bin/Foreign/'+s for s in ['','C/','Pythas/','C/Structs/']]
+
+suffices = ['.hs','.hi','.o','.so','.c','.h']
 
 with open("README.md",'r') as f:
     long_description = f.read()
@@ -26,7 +26,7 @@ setup(
    url="https://www.behaviour.space/",
    packages=['pythas','pythas.haskell'],
    package_dir={'pythas':'pythas','pythas.haskell':'pythas/haskell'},
-   package_data={'pythas.haskell': ['res/*.c']+cstructs+pythastypes+pythasffi+os+his},
+   package_data={'pythas.haskell': [d+'*'+s for d in dirs for s in suffices]},
    install_requires=install_requires,
 )
 
