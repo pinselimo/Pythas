@@ -18,8 +18,6 @@ if not os.path.exists( lib ):
 ghc.compile(src, lib, redirect=True)
 
 ffi_creator = cdll.LoadLibrary( lib )
-ffi_creator.newFileBindings.argtypes = [c_wchar_p, c_wchar_p]
-ffi_creator.newFileBindings.argtypes = [c_wchar_p, c_wchar_p]
 ffi_creator.createFileBindings.argtype = [c_wchar_p]
 ffi_creator.createFileBindings.restype = c_wchar_p
 ffi_creator.freeReturnedString.argtypes = [c_wchar_p]
