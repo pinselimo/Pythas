@@ -12,7 +12,7 @@ thd = lambda x:x[2]
 
 def flatten(seq):
     def flat(ts):
-        if isinstance(ts, abc.Iterable):
+        if isinstance(ts, abc.Iterable) and not isinstance(ts, str):
             for t in ts:
                 yield from flat(t)
         else:
