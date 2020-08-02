@@ -4,6 +4,8 @@ import re
 import os.path
 from shutil import which
 
+from ..context import Compiler
+
 REGEX_HS_VERSION = b'(?<=[a-z A-Z])[0-9.]{5}'
 REGEX_C_CONSTANTS = '#define[ \t\n\r\f\v]+([a-zA-Z0-9_]+)[ \t\n\r\f\v]+([0-9]+)'
 
@@ -12,11 +14,8 @@ GHC_VERSION_H = '/usr/lib/ghc/include/ghcversion.h'
 __GLASGOW_HASKELL__ = '__GLASGOW_HASKELL__'
 __GLASGOW_HASKELL_PATCHLEVEL1__ = '__GLASGOW_HASKELL_PATCHLEVEL1__'
 
-class GHC_Exception(Exception):
-    pass
-
-def get_ghc_version_from_cmdln():
-    if has_stack():
+def get_ghc_version_from_cmdln(stack_ghc):
+    if stack_ghc:
         cmd = ('stack','ghc','--','--version')
     else:
         cmd = ('ghc','--version')
@@ -43,61 +42,100 @@ def get_ghc_version_from_header():
                 n = str(int(vn)%100)
                 return v+'.'+n+'.'+pl
             except KeyError:
-                raise GHC_Exception('Version-Number of GHC could not be found')
+                raise ImportError('Version-Number of GHC could not be found')
 
-def get_ghc_version():
+def get_ghc_version(stack_ghc):
     try:
-        return get_ghc_version_from_cmdln()
+        return get_ghc_version_from_cmdln(stack_ghc)
     except AttributeError: # Regex didn't match, fallback
         return get_ghc_version_from_header()
 
 def has_stack():
     return which('stack') is not None
 
-def ghc_compile_cmd(filename, libname, filedir, platform, optimisation=2, redirect=False):
-    fdir = os.path.dirname(os.path.abspath(__file__))
-    RESOURCES = os.path.join(fdir, 'res')
-    BIN = os.path.join(fdir, 'bin')
-    HS_BRACKET_C = os.path.join(RESOURCES,'hswrap.c')
-    GHC_OPT_OPTIMISATION = ['','-O','-O2','-optc-O3']
-    GHC_OUT = '-o'
-    PATH_CSTRUCTS = ('cstructs-in-haskell','src','Foreign','C')
-    PATH_PYTHASTYPES = (RESOURCES,'Pythas-Types','src','Foreign','Pythas')
-    PYTHAS_TYPES = [os.path.join(*PATH_PYTHASTYPES,t)
-            for t in ['Array.hs','List.hs','String.hs','Tuples.hs',]] \
-            + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs.hs')] \
-            + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Types.hs')] \
-            + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Utils.hs')]
+class GHC(Compiler):
+    def __init__(self):
+        super().__init__()
+        self._stack = has_stack()
+        self._optimisation = 2
 
-    # We redirect our own binaries into the 'bin' dir to not pollute everything
-    if redirect:
-        OUTP = ('-hidir',BIN,'-odir',BIN)
-    else:
-        OUTP = ()
-    GHC_OPTIONS = ('-shared','-fPIC','-i:'+filedir) + OUTP # '-fexternal-dynamic-refs'
+    @property
+    def VERSION(self):
+        return get_ghc_version(self._stack)
 
-    STACK_CMD = 'stack'
-    WITH = '--'
-    GHC_CMD = 'ghc'
+    @property
+    def optimisation(self):
+        return self._optimisation
 
-    if platform.startswith('linux'):
-        GHC_OPTIONS = ('-dynamic',) + GHC_OPTIONS
-        LIB_HS_RTS = '-lHSrts-ghc' + GHC_VERSION
-        flags = (
-            GHC_OPT_OPTIMISATION[optimisation], *GHC_OPTIONS,
-            GHC_OUT, libname, filename, *PYTHAS_TYPES, HS_BRACKET_C, LIB_HS_RTS
-            )
-    elif platform.startswith('win32'):
-        # https://downloads.haskell.org/~ghc/7.6.3/docs/html/users_guide/win32-dlls.html
-        flags = (
-            GHC_OPT_OPTIMISATION[optimisation], *GHC_OPTIONS,
-            GHC_OUT, libname, filename, *PYTHAS_TYPES, HS_BRACKET_C
-            )
+    @optimisation.setter
+    def optimisation(self, level):
+        if level < 0:
+            self._optimisation = 0
+        elif level > 2:
+            self._optimisation = 2
+        else:
+            self._optimisation = level
 
-    if has_stack():
-        return (STACK_CMD, GHC_CMD, WITH) + flags
-    else:
-        return (GHC_CMD,) + flags
+    def compile(self, filepath, libpath, redirect=False):
+        flags = self.flags(filepath, libpath, redirect)
+        flags += self.custom_flags()
+        cmd = self.ghc_compile_cmd(flags)
 
-GHC_VERSION = get_ghc_version()
+        print('Compiling with: {}'.format(cmd))
+        subprocess.run(cmd)
+
+        return libpath
+
+    def flags(self, filename, libname, redirect=False):
+        fdir = os.path.dirname(os.path.abspath(__file__))
+        RESOURCES = os.path.join(fdir, 'res')
+        BIN = os.path.join(fdir, 'bin')
+        HS_BRACKET_C = os.path.join(RESOURCES,'hswrap.c')
+        GHC_OUT = '-o'
+        PATH_CSTRUCTS = ('cstructs-in-haskell','src','Foreign','C')
+        PATH_PYTHASTYPES = (RESOURCES,'Pythas-Types','src','Foreign','Pythas')
+        PYTHAS_TYPES = [os.path.join(*PATH_PYTHASTYPES,t)
+                for t in ['Array.hs','List.hs','String.hs','Tuples.hs','Templates.hs']] \
+                + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs.hs')] \
+                + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Types.hs')] \
+                + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Templates.hs')] \
+                + [os.path.join(RESOURCES,*PATH_CSTRUCTS,'Structs','Utils.hs')]
+        # We redirect our own binaries into the 'bin' dir to not pollute everything
+        if redirect:
+            OUTP = ('-hidir',BIN,'-odir',BIN)
+        else:
+            OUTP = ()
+        GHC_OPTIONS = ('-shared','-fPIC','-i:'+os.path.dirname(filename)) + OUTP # '-fexternal-dynamic-refs'
+        GHC_OPT_OPTIMISATION = ['','-O','-O2','-optc-O3']
+        if sys.platform.startswith('linux'):
+            GHC_OPTIONS = ('-dynamic',) + GHC_OPTIONS
+            LIB_HS_RTS = '-lHSrts-ghc' + self.VERSION
+            flags = (
+                GHC_OPT_OPTIMISATION[self.optimisation], *GHC_OPTIONS,
+                GHC_OUT, libname, filename, *PYTHAS_TYPES, HS_BRACKET_C, LIB_HS_RTS
+                )
+        elif platform.startswith('win32'):
+            # https://downloads.haskell.org/~ghc/7.6.3/docs/html/users_guide/win32-dlls.html
+            flags = (
+                GHC_OPT_OPTIMISATION[self.optimisation], *GHC_OPTIONS,
+                GHC_OUT, libname, filename, *PYTHAS_TYPES, HS_BRACKET_C
+                )
+        elif platform.startswith('darwin'):
+            GHC_OPTIONS = ('-dynamic',) + GHC_OPTIONS
+            LIB_HS_RTS = '-lHSrts-ghc' + self.VERSION
+            flags = (
+                GHC_OPT_OPTIMISATION[self.optimisation], *GHC_OPTIONS,
+                GHC_OUT, libname, filename, *PYTHAS_TYPES, HS_BRACKET_C, LIB_HS_RTS
+                )
+
+        return flags
+
+    def ghc_compile_cmd(self, options):
+        STACK_CMD = 'stack'
+        WITH = '--'
+        GHC_CMD = 'ghc'
+        if self._stack:
+            return (STACK_CMD, GHC_CMD, WITH) + options
+        else:
+            return (GHC_CMD,) + flags
 
