@@ -4,7 +4,7 @@ import re
 import os.path
 from shutil import which
 
-from ..context import Compiler
+from ..compiler import Compiler
 
 REGEX_HS_VERSION = b'(?<=[a-z A-Z])[0-9.]{5}'
 REGEX_C_CONSTANTS = '#define[ \t\n\r\f\v]+([a-zA-Z0-9_]+)[ \t\n\r\f\v]+([0-9]+)'

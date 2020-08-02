@@ -1,43 +1,22 @@
-from subprocess import run
-from abc import ABCMeta, abstractmethod, abstractproperty
-
-from .utils import flatten
-
-class Compiler(metaclass=ABCMeta):
-    def __init__(self):
-        self._custom_flags = Flags()
-
-    @property
-    def custom_flags(self):
-        return self._custom_flags
-
-    @abstractmethod
-    def compile(self, filename, libname, redirect=False):
-        pass
+from .haskell.parse_file import parse_haskell
 
 class Context:
-    def __init__(self, compiler):
+    def __init__(self, ffi_creator, compiler):
+        self.__fficreator = ffi_creator
         self.__compiler = compiler
 
     @property
     def compiler(self):
         return self.__compiler
 
-    def compile(self, filename, libname, redirect=False):
-        self.__compiler.compile(filename, libname, redirect)
+    def compile(self, filename):
+        ffi_filename = self.__fficreator.createFileBindings(filename)
+        ffi_pinfos = parse_haskell(ffi_filename)
 
-class Flags:
-    def __init__(self):
-        self._flags = list()
+        with tempfile.NamedTemporaryFile(suffix=get_shared_library_suffix()) as lib_file:
+            self.__compiler.compile(ffi_filename, lib_file.name)
+            lib = cdll.LoadLibrary(lib_file.name)
+            remove_created_files(ffi_filename)
 
-    def __call__(self):
-        return tuple(flatten(self._flags))
-
-    def add_flag(self, flag):
-        if flag not in self._flags:
-            self._flags.append(flag)
-
-    def remove_flag(self, flag):
-        if flag in self._flags:
-            self._flags.remove(flag)
+        return lib, ffi_pinfos
 
