@@ -81,7 +81,7 @@ class GHC(Compiler):
         flags += self.custom_flags()
         cmd = self.ghc_compile_cmd(flags)
 
-        print('Compiling with: {}'.format(cmd))
+        print('Compiling with: {}'.format(cmd[0]))
         subprocess.run(cmd)
 
         return libpath
