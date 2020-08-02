@@ -92,10 +92,16 @@ def check_has_ghc():
         )
 
 def get_shared_library_suffix():
-    if platform.startswith('linux'):
+    if sys.platform.startswith('linux'):
         return '.so'
-    elif platform.startswith('win32'):
+    elif sys.platform.startswith('win32'):
         return '.dll'
-    elif platform.startswith('darwin'):
+    elif sys.platform.startswith('darwin'):
         return '.dylib'
+
+def remove_created_files(filename):
+    path,fname = os.path.split(filename)
+    basename,_ = os.path.splitext(fname)
+    for ext in ('.hs','.hi','.o','_stub.h'):
+        os.remove(os.path.join(path,basename+ext))
 
