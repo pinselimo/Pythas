@@ -91,7 +91,7 @@ def check_has_ghc():
         'and make sure that either is in your $PATH.'
         )
 
-def get_shared_library_suffix():
+def shared_library_suffix():
     if sys.platform.startswith('linux'):
         return '.so'
     elif sys.platform.startswith('win32'):
