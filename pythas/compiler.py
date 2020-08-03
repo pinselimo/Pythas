@@ -2,6 +2,7 @@ from ctypes import cdll
 from functools import partial
 import os.path
 import tempfile
+import re
 
 from .haskell import GHC, ffi_creator
 from .utils import shared_library_suffix, remove_created_files, flatten, custom_attr_getter
@@ -55,8 +56,10 @@ class Flags:
 
 class SourceModule:
     def __init__(self, code):
+        code = re.sub('\n[ \t]+','\n',code)
         haskell = 'module Temp where\n'+code
         compiler = Compiler()
+        print(haskell)
         with tempfile.TemporaryDirectory() as dir:
             temp = os.path.join(dir,"Temp.hs")
             with open(temp,'w') as f:
