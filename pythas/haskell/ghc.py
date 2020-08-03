@@ -4,8 +4,6 @@ import re
 import os.path
 from shutil import which
 
-from ..compiler import Compiler
-
 REGEX_HS_VERSION = b'(?<=[a-z A-Z])[0-9.]{5}'
 REGEX_C_CONSTANTS = '#define[ \t\n\r\f\v]+([a-zA-Z0-9_]+)[ \t\n\r\f\v]+([0-9]+)'
 
@@ -53,9 +51,8 @@ def get_ghc_version(stack_ghc):
 def has_stack():
     return which('stack') is not None
 
-class GHC(Compiler):
+class GHC:
     def __init__(self):
-        super().__init__()
         self._stack = has_stack()
         self._optimisation = 2
 
@@ -76,11 +73,11 @@ class GHC(Compiler):
         else:
             self._optimisation = level
 
-    def compile(self, filepath, libpath, redirect=False):
+    def compile(self, filepath, libpath, more_options=tuple(), redirect=False):
         cwd = os.getcwd()
         os.chdir( os.path.dirname(filepath) )
         flags = self.flags(filepath, libpath, redirect)
-        flags += self.custom_flags()
+        flags += more_options
         cmd = self.ghc_compile_cmd(flags)
 
         print('Compiling with: {}'.format(cmd[0]))
