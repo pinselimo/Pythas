@@ -10,8 +10,8 @@ from .utils import custom_attr_getter, find_source, DOT
 from importlib.abc import MetaPathFinder
 
 class PythasMetaFinder(MetaPathFinder):
-    def __init__(self, context):
-        self.context = context
+    def __init__(self, compiler):
+        self.compiler = compiler
 
     def find_spec(self, fullname, path, target=None):
         if path is None:
@@ -36,7 +36,7 @@ class PythasMetaFinder(MetaPathFinder):
                     return spec_from_file_location(
                             fullname,
                             p,
-                            loader=PythasLoader(self.context, haskellfile),
+                            loader=PythasLoader(self.compiler, haskellfile),
                             submodule_search_locations=None
                             )
 
@@ -44,15 +44,15 @@ class PythasMetaFinder(MetaPathFinder):
         return None
 
 class PythasLoader(Loader):
-    def __init__(self, context, filename):
-        self.context = context
+    def __init__(self, compiler, filename):
+        self.compiler = compiler
         self.filename = filename
 
     def create_module(self, spec):
         return None
 
     def exec_module(self, module):
-        lib, ffi_pinfos = self.context.compile(self.filename)
+        lib, ffi_pinfos = self.compiler.compile(self.filename)
         exported = list(ffi_pinfos.exported_ffi)
 
         module._ffi_libs = [(lib, ffi_pinfos)]
@@ -60,6 +60,6 @@ class PythasLoader(Loader):
 
         module.__dir__ = lambda: list(module.__dict__) + exported
 
-def install(context):
-    meta_path.insert(0, PythasMetaFinder(context))
+def install(compiler):
+    meta_path.insert(0, PythasMetaFinder(compiler))
 
