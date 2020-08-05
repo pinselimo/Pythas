@@ -5,7 +5,7 @@ from functools import partial, reduce
 from sys import meta_path, platform
 import os.path
 
-from .utils import custom_attr_getter, find_source, DOT
+from .utils import custom_attr_getter, find_source
 
 from importlib.abc import MetaPathFinder
 
@@ -17,8 +17,8 @@ class PythasMetaFinder(MetaPathFinder):
         if path is None:
             path = [os.getcwd()]
 
-        if DOT in fullname:
-            *_,name = fullname.split(DOT)
+        if '.' in fullname:
+            *_,name = fullname.split('.')
         else:
             name = fullname
 
@@ -48,17 +48,14 @@ class PythasLoader(Loader):
         self.compiler = compiler
         self.filename = filename
 
-    def create_module(self, spec):
-        return None
-
     def exec_module(self, module):
         lib, ffi_pinfos = self.compiler.compile(self.filename)
-        exported = list(ffi_pinfos.exported_ffi)
 
+        # Duck typing for custom_attr_getter
         module._ffi_libs = [(lib, ffi_pinfos)]
-        module.__getattr__ = partial(custom_attr_getter, module)
 
-        module.__dir__ = lambda: list(module.__dict__) + exported
+        module.__getattr__ = partial(custom_attr_getter, module)
+        module.__dir__ = lambda: list(module.__dict__) + list(ffi_pinfos.exported_ffi)
 
 def install(compiler):
     meta_path.insert(0, PythasMetaFinder(compiler))
