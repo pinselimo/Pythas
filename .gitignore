@@ -6,3 +6,4 @@
 *.pyc
 *.dll
 *.dll.a
+*.hypothesis
