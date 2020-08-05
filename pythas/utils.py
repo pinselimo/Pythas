@@ -12,7 +12,7 @@ thd = lambda x:x[2]
 
 def flatten(seq):
     def flat(ts):
-        if isinstance(ts, abc.Iterable):
+        if isinstance(ts, abc.Iterable) and not isinstance(ts, str):
             for t in ts:
                 yield from flat(t)
         else:
@@ -90,4 +90,18 @@ def check_has_ghc():
         'Please install either Stack or GHC '
         'and make sure that either is in your $PATH.'
         )
+
+def shared_library_suffix():
+    if sys.platform.startswith('linux'):
+        return '.so'
+    elif sys.platform.startswith('win32'):
+        return '.dll'
+    elif sys.platform.startswith('darwin'):
+        return '.dylib'
+
+def remove_created_files(filename):
+    path,fname = os.path.split(filename)
+    basename,_ = os.path.splitext(fname)
+    for ext in ('.hs','.hi','.o','_stub.h'):
+        os.remove(os.path.join(path,basename+ext))
 

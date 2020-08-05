@@ -7,3 +7,14 @@ def test_dynamic_dir():
     new_dir  = set(dir(t))
     assert new_dir - init_dir == {'something'}
 
+def test_sourcemodules():
+    m = pythas.SourceModule('''
+            i :: Int
+            i = 63
+
+            f :: [(String, String)] -> Int
+            f = length
+            ''')
+    assert m.i == 63
+    assert m.f([('a','b'),('c','d')]) == 2
+
