@@ -1,8 +1,9 @@
-import os
-import sys
 from ctypes import _SimpleCData, _Pointer
 from collections import abc
 from shutil import which
+from functools import reduce
+import os
+import sys
 
 fst = lambda x:x[0]
 snd = lambda x:x[1]
@@ -18,24 +19,27 @@ def flatten(seq):
     return list(flat(seq))
 
 class PythasFunc:
-    def __init__(self, name, func_info, funcPtr, destructorPtr):
+    def __init__(self, name, func_info, funcPtr, destructorPtr=None):
         self.__name__ = name
-        self._funcPtr = funcPtr
+
         self.argtypes = func_info.argtypes
         self.constructors = func_info.constructors
         self.reconstructor = func_info.reconstructor
         self.restype = func_info.restype
-        self.destructor = destructorPtr
 
+        self._funcPtr = funcPtr
         self._funcPtr.argtypes = list(func_info.argtypes)
         self._funcPtr.restype = func_info.restype
 
+        self.destructor = destructorPtr
+
     def __call__(self, *args):
         args = flatten([constr(a) for constr,a in zip(self.constructors, args)])
-        retVal = self._funcPtr(*args)
-        res = self.reconstructor(retVal)
+        val = self._funcPtr(*args)
+        res = self.reconstructor(val)
+
         if self.destructor:
-            self.destructor(retVal)
+            self.destructor(val)
         return res
 
 def find_source(name, path, extension='.hs'):
@@ -49,30 +53,36 @@ def find_source(name, path, extension='.hs'):
 def custom_attr_getter(obj, name):
     ffi_libs = obj._ffi_libs
     not_found = AttributeError(
-            "{} object has no attribute {} "
-            "and no Haskell module containing it."
-            "".format(obj.__name__,repr(name))
+            '{} object has no attribute {} '
+            'and no Haskell module containing it.'
+            ''.format(obj.__name__,repr(name))
             )
     for lib, info in ffi_libs:
         if name in info.exported_ffi:
-            f = getattr(lib,name)
+            func = getattr(lib,name)
             func_infos = info.func_infos[name]
+
             if is_constant(func_infos):
-                return f()
-            finalizerName = name + 'Finalizer'
-            if finalizerName in info.exported_ffi:
-                destrPtr = getattr(lib,finalizerName)
+                res = func()
             else:
-                destrPtr = None
-            return PythasFunc(name, func_infos, f, destrPtr)
+                finalizerName = name + 'Finalizer'
+                if finalizerName in info.exported_ffi:
+                    destrPtr = getattr(lib, finalizerName)
+                else:
+                    destrPtr = None
+                res = PythasFunc(name, func_infos, func, destrPtr)
+
+            return res
     else:
         raise not_found
 
 def check_ctype_seq(seq):
     def _check(seq):
-        return any(not isinstance(e, _SimpleCData)
+        return any(
+                not isinstance(e, _SimpleCData)
                 if not isinstance(e,abc.Iterable) else _check(e)
-                for e in seq)
+                for e in seq
+                )
 
     if not _check(seq):
         raise TypeError('Only sequences of <ctypes._SimpleCData> allowed.')
@@ -84,10 +94,10 @@ def is_constant(func_infos):
 
 def check_has_ghc():
     if not (which('ghc') or which('stack')):
-        raise ImportError('No GHC found. '
-        'Please install either Stack or GHC '
-        'and make sure that either is in your $PATH.'
-        )
+        raise ImportError(
+                'No GHC found. Please install either Stack or GHC '
+                'and make sure that either is in your $PATH.'
+                )
 
 def shared_library_suffix():
     if sys.platform.startswith('linux'):
@@ -102,4 +112,7 @@ def remove_created_files(filename):
     basename,_ = os.path.splitext(fname)
     for ext in ('.hs','.hi','.o','_stub.h'):
         os.remove(os.path.join(path,basename+ext))
+
+def ffi_libs_exports(ffi_libs):
+    return reduce(lambda a,b: a | b[1].exported_ffi, ffi_libs, set())
 

@@ -5,7 +5,8 @@ import tempfile
 import re
 
 from .haskell import GHC, ffi_creator
-from .utils import shared_library_suffix, remove_created_files, flatten, custom_attr_getter
+from .utils import shared_library_suffix, remove_created_files, \
+                   flatten, custom_attr_getter, ffi_libs_exports
 from .parser import parse_haskell
 
 class Compiler:
@@ -30,14 +31,18 @@ class Compiler:
 
     def compile(self, filename):
         ffi_filename = self.__fficreator.createFileBindings(filename)
-        ffi_pinfos = parse_haskell(ffi_filename)
 
+        ffi_libs = [self._compile(name) for name in [filename, ffi_filename]]
+
+        remove_created_files(ffi_filename)
+        return ffi_libs
+
+    def _compile(self, name):
+        parse_infos = parse_haskell(name)
         with tempfile.NamedTemporaryFile(suffix=shared_library_suffix()) as lib_file:
-            self.__compiler.compile(ffi_filename, lib_file.name, self.flags)
+            self.__compiler.compile(name, lib_file.name, self.flags)
             lib = cdll.LoadLibrary(lib_file.name)
-            remove_created_files(ffi_filename)
-
-        return lib, ffi_pinfos
+        return lib, parse_infos
 
 class Flags:
     def __init__(self):
@@ -64,10 +69,10 @@ class SourceModule:
             temp = os.path.join(dir,"Temp.hs")
             with open(temp,'w') as f:
                 f.write(haskell)
-            lib, ffi_pinfos = compiler.compile(temp)
+            ffi_libs = compiler.compile(temp)
 
-        self._ffi_libs = [(lib, ffi_pinfos)]
-        self._exported = list(ffi_pinfos.exported_ffi)
+        self._ffi_libs = ffi_libs
+        self._exported = ffi_libs_exports(ffi_libs)
         self.__name__ = 'SourceModule'
 
     def __getattr__(self, name):
