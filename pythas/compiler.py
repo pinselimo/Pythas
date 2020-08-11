@@ -6,7 +6,7 @@ import re
 
 from .haskell import GHC, ffi_creator
 from .utils import shared_library_suffix, remove_created_files, flatten, custom_attr_getter
-from .haskell.parse_file import parse_haskell
+from .parser import parse_haskell
 
 class Compiler:
     def __init__(self):
