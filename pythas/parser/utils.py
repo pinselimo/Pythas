@@ -24,15 +24,19 @@ def tuple_types(hs_type):
     inner tuples have to be preserved for further processing.
     '''
     match = lambda x: match_parens(hs_type,x)
+
     openp = hs_type.find('(')
     closep = match(openp)
     parens = [(openp, closep)]
+
     while 1:
         openp = hs_type.find('(',parens[-1][-1])
+
         if openp == -1:
             break
-        closep = match(openp)
-        parens.append((openp, closep))
+        else:
+            closep = match(openp)
+            parens.append((openp, closep))
 
     return [hs_type[start:end] for start,end in parens]
 
@@ -46,14 +50,17 @@ def match_parens(s, i):
         c = s[it]
         if c == '(':
             x += 1
+
         elif c == ')':
             x -= 1
+
         if x == 0:
             return it
     else:
         return len(s)
 
 def parse_generator(f_llist, f_carray, f_tuple, f_string, f_default):
+
     def parser(hs_type):
         ll = hs_type.find('CList ')
         arr = hs_type.find('CArray ')
@@ -73,5 +80,6 @@ def parse_generator(f_llist, f_carray, f_tuple, f_string, f_default):
             return f_string(hs_type[st+len('CWString '):])
         else:
             return f_default(hs_type)
+
     return parser
 
