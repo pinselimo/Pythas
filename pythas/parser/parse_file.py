@@ -1,6 +1,6 @@
 import os.path
 
-from ..parser import ParseInfo, FuncInfo
+from .data import ParseInfo, FuncInfo
 from .parse_type import parse_type
 
 def parse_haskell(hs_file):

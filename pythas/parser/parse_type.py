@@ -2,7 +2,7 @@ import ctypes as cl
 from functools import partial
 
 from ..types import *
-from ..parser import FuncInfo
+from .data import FuncInfo
 from .utils import lmap, apply, strip_io, tuple_types, parse_generator
 
 HS2PY = {
