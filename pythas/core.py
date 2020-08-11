@@ -1,13 +1,10 @@
-from importlib.abc import Loader, MetaPathFinder
+from importlib.abc  import Loader, MetaPathFinder
 from importlib.util import spec_from_file_location
-from subprocess import run
-from functools import partial, reduce
-from sys import meta_path, platform
+from functools  import partial
 import os.path
+import sys
 
-from .utils import custom_attr_getter, find_source
-
-from importlib.abc import MetaPathFinder
+from .utils import custom_attr_getter, find_source, ffi_libs_exports
 
 class PythasMetaFinder(MetaPathFinder):
     def __init__(self, compiler):
@@ -23,24 +20,23 @@ class PythasMetaFinder(MetaPathFinder):
             name = fullname
 
         for p in path:
-            # let's assume it's a python module
             subname = os.path.join(p, name)
             if os.path.isdir(subname):
-                filename = os.path.join(subname,'__init__.py')
+                filename = os.path.join(subname, '__init__.py')
             else:
                 filename = subname + '.py'
-            # and check if this module exists
+
             if not os.path.exists(filename):
-                # in case it doesn't look for a haskell file of that name
                 for haskellfile in find_source(name, p):
+                    # Catch and handle Haskell modules
                     return spec_from_file_location(
-                            fullname,
-                            p,
-                            loader=PythasLoader(self.compiler, haskellfile),
-                            submodule_search_locations=None
+                              fullname
+                            , p
+                            , loader=PythasLoader(self.compiler, haskellfile)
+                            , submodule_search_locations=None
                             )
 
-        # Let the other finders handle this
+        # Let other finders handle the request
         return None
 
 class PythasLoader(Loader):
@@ -49,14 +45,12 @@ class PythasLoader(Loader):
         self.filename = filename
 
     def exec_module(self, module):
-        lib, ffi_pinfos = self.compiler.compile(self.filename)
-
-        # Duck typing for custom_attr_getter
-        module._ffi_libs = [(lib, ffi_pinfos)]
+        ffi_libs = self.compiler.compile(self.filename)
+        module._ffi_libs = ffi_libs
 
         module.__getattr__ = partial(custom_attr_getter, module)
-        module.__dir__ = lambda: list(module.__dict__) + list(ffi_pinfos.exported_ffi)
+        module.__dir__ = lambda: list(module.__dict__) + list(ffi_libs_exports(ffi_libs))
 
 def install(compiler):
-    meta_path.insert(0, PythasMetaFinder(compiler))
+    sys.meta_path.insert(0, PythasMetaFinder(compiler))
 
