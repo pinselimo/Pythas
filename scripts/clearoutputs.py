@@ -12,11 +12,15 @@ SUFFICES = ('.hi','.o','.h','.so')
 def clear_files():
     files = []
     for dirpath, dirnames, filenames in os.walk(os.getcwd()):
-        for filename in [f for f in filenames
-                if any(f.endswith(s) for s in SUFFICES)]:
+        for filename in [
+                f
+                for f in filenames
+                if any(f.endswith(s) for s in SUFFICES)
+                ]:
             fullname = os.path.join(dirpath, filename)
             open(fullname, 'w').close()
             files.append(fullname)
+
     return files
 
 if __name__ == '__main__':
