@@ -1,18 +1,13 @@
 from hypothesis import given
-from hypothesis.strategies import integers, floats, binary, text, characters, tuples, lists
+from hypothesis.strategies import tuples, lists
 
 from .context import pythas
+from .t_types import *
 
 types = pythas.types
 utils = pythas.utils
 
-c_ints = integers(min_value=-46340,max_value=46340)
-c_floats = floats(allow_nan=False, width=32, allow_infinity=False)
-c_doubles = floats(allow_nan=False, allow_infinity=False)
-c_chars = binary(min_size=1,max_size=1)
-# ctypes stopped supporting embedded NULL characters
-c_strings = text(alphabet=characters(blacklist_characters='\0'))
-
+# Haskell import
 import test.hs.testlists as hst
 
 @given(lists(c_ints))

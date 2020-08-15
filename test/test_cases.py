@@ -3,16 +3,10 @@ import hypothesis.strategies as strat
 from math import sin
 
 from .context import pythas
+from .t_types import *
 
 types = pythas.types
 utils = pythas.utils
-
-c_ints = strat.integers(min_value=-46340,max_value=46340)
-c_integers = strat.integers()
-c_floats = strat.floats(allow_nan=False, width=32, allow_infinity=False)
-c_doubles = strat.floats(allow_nan=False, allow_infinity=False)
-# ctypes stopped supporting embedded NULL characters
-c_strings = strat.text(alphabet=strat.characters(blacklist_characters='\0'))
 
 list_integers = strat.lists(c_integers)
 list_strings  = strat.lists(c_strings)
@@ -53,7 +47,7 @@ def test_pureOperationInt(i):
     assert t.pureOperationInt(i) == i*i
 
 '''
-The inaccuracy of floats can hardly be asserted in Python
+The inaccuracy of floats can hardly be checked in Python
 @given(c_floats, c_floats)
 def test_pureOperationFloat(a,b):
     if a <= 0:
@@ -113,3 +107,4 @@ def test_tupleWithNestedList(i,s):
 @given(c_strings, c_strings)
 def test_tupleWithListOfTuples(a,b):
     assert t.tupleWithListOfTuples(a,b) == (63*[(a,b)], [63])
+
