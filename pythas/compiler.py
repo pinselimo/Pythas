@@ -10,6 +10,15 @@ from .utils import shared_library_suffix, remove_created_files, \
 from .parser import parse_haskell
 
 class Compiler:
+    """Interface for the compiler used to create shared libraries.
+
+    Attributes
+    ----------
+    compiler : GHC
+        More concrete implementation of the actual compiler used
+    flags : tuple(str)
+        Flags for ``compiler``
+    """
     def __init__(self):
         self.__fficreator = ffi_creator
         self.__compiler = GHC()
@@ -24,12 +33,39 @@ class Compiler:
         return self._custom_flags()
 
     def add_flag(self, flag):
+        """Adds a flag to ``flags``
+
+        Parameters
+        ----------
+        flag : str
+            A valid flag
+        """
         self._custom_flags.add_flag(flag)
 
     def remove_flag(self, flag):
+        """Removes a flag to ``flags``
+
+        Parameters
+        ----------
+        flag : str
+            A valid flag
+        """
         self._custom_flags.remove_flag(flag)
 
     def compile(self, filename):
+        """Creates an FFI file, compiles and links it against the
+        Python runtime.
+
+        Parameters
+        ----------
+        filename : str
+            Pathlike object to a Haskell source file
+
+        Returns
+        -------
+        ffi_libs : [(ctypes.CDLL, pythas.parser.data.ParseInfo)]
+            List of tuples of linked libraries and their respective parsed infos
+        """
         ffi_filename = self.__fficreator.createFileBindings(filename)
 
         ffi_libs = [self._compile(name) for name in [filename, ffi_filename]]
@@ -38,6 +74,17 @@ class Compiler:
         return ffi_libs
 
     def _compile(self, name):
+        """Compiles an FFI file, links its library and parses for infos.
+
+        Parameters
+        ----------
+        name : str
+            Pathlike object to a Haskell file containing FFI exports
+
+        Returns
+        -------
+        (lib, parse_infos) : The linked library and its parsed infos
+        """
         parse_infos = parse_haskell(name)
         with tempfile.NamedTemporaryFile(suffix=shared_library_suffix()) as lib_file:
             self.__compiler.compile(name, lib_file.name, self.flags)
@@ -45,6 +92,12 @@ class Compiler:
         return lib, parse_infos
 
 class Flags:
+    """Container type for compile time flags. Callable.
+
+    Returns
+    -------
+    flags : tuple(str)
+    """
     def __init__(self):
         self._flags = list()
 
@@ -52,19 +105,38 @@ class Flags:
         return tuple(flatten(self._flags))
 
     def add_flag(self, flag):
+        """Add a flag to the collection
+
+        Parameters
+        ----------
+        flag : str
+        """
         if flag not in self._flags:
             self._flags.append(flag)
 
     def remove_flag(self, flag):
+        """Remove a flag from the collection
+
+        Parameters
+        ----------
+        flag : str
+        """
         if flag in self._flags:
             self._flags.remove(flag)
 
 class SourceModule:
+    """Wrapper for runtime created Haskell source.
+
+    Parameters
+    ----------
+    code : str
+        The Haskell source code to wrap
+    """
     def __init__(self, code):
         code = re.sub('\n[ \t]+','\n',code)
         haskell = 'module Temp where\n'+code
         compiler = Compiler()
-        print(haskell)
+
         with tempfile.TemporaryDirectory() as dir:
             temp = os.path.join(dir,"Temp.hs")
             with open(temp,'w') as f:
