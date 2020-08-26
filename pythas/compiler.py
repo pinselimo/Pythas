@@ -40,14 +40,15 @@ class Compiler:
 
     def _compile(self, name):
         parse_infos = parse_haskell(name)
+        windows = sys.platform.startswith('win32')
         with tempfile.NamedTemporaryFile(
                 suffix = shared_library_suffix(),
-                delete = not sys.platform.startswith('win32')
+                # Deleting on windows causes access denied
+                delete = not windows
                 ) as lib_file:
 
             self.__compiler.compile(name, lib_file.name, self.flags)
-            if sys.platform.startswith('win32'):
-                lib_file.close()
+            if windows: lib_file.close()
             lib = cdll.LoadLibrary(lib_file.name)
 
         return lib, parse_infos
