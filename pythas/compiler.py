@@ -46,7 +46,8 @@ class Compiler:
                 ) as lib_file:
 
             self.__compiler.compile(name, lib_file.name, self.flags)
-            lib_file.close()
+            if sys.platform.startswith('win32'):
+                lib_file.close()
             lib = cdll.LoadLibrary(lib_file.name)
 
         return lib, parse_infos
