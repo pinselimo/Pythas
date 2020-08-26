@@ -3,6 +3,7 @@ from functools import partial
 import os.path
 import tempfile
 import re
+import sys
 
 from .haskell import GHC, ffi_creator
 from .utils import shared_library_suffix, remove_created_files, \
@@ -39,9 +40,15 @@ class Compiler:
 
     def _compile(self, name):
         parse_infos = parse_haskell(name)
-        with tempfile.NamedTemporaryFile(suffix=shared_library_suffix()) as lib_file:
+        with tempfile.NamedTemporaryFile(
+                suffix = shared_library_suffix(),
+                delete = not sys.platform.startswith('win32')
+                ) as lib_file:
+
             self.__compiler.compile(name, lib_file.name, self.flags)
+            lib_file.close()
             lib = cdll.LoadLibrary(lib_file.name)
+
         return lib, parse_infos
 
 class Flags:
@@ -82,4 +89,3 @@ class SourceModule:
         return list(self.__dict__) + self._exported
 
 compiler = Compiler()
-
