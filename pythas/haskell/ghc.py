@@ -86,7 +86,7 @@ class GHC:
                 f.write(proc.stdout)
                 f.write(proc.stderr)
     
-            raise ImportError(
+            raise CompileError(
                         "Stack failed with exit code {} \n"
                         "The log has been written to {}"
                         "".format(proc.returncode, logfile)
@@ -145,3 +145,5 @@ class GHC:
         else:
             return (GHC_CMD,) + options
 
+class CompileError(ImportError):
+    pass
