@@ -129,7 +129,9 @@ class GHC:
     def ghc_compile_cmd(self, options):
         GHC_CMD = 'ghc'
         if self._stack:
-            return ('stack', GHC_CMD, '--') + options
+            # https://gitlab.haskell.org/ghc/ghc/-/issues/17926
+            STACK_OPTIONS = ('--resolver=lts-14.27',) if sys.platform.startswith('win32') else ()
+
+            return ('stack',) + STACK_OPTIONS + (GHC_CMD, '--') + options
         else:
             return (GHC_CMD,) + options
-
