@@ -43,6 +43,22 @@ HS2PY = {
     }
 
 def simple_hs_2_py(hs_type):
+    """Converts simple Haskell types to their Python equivalent
+
+    Parameters
+    ----------
+    hs_type : str
+        The Haskell type
+
+    Returns
+    -------
+    pytype : type
+        The Python type
+
+    Raises
+    ------
+    TypeError
+    """
     if hs_type in HS2PY:
         return HS2PY[hs_type]
     else:
@@ -52,19 +68,28 @@ def simple_hs_2_py(hs_type):
                 )
 
 def hs2py(hs_type):
-    '''
-    HS2PY maps which Haskell type will end up as which
-    ctypes type at Python's side
+    """Maps Haskell to Python types.
 
-    ctypes is strictly typed to a point where you cannot use
-    two seperately created linked list classes with the same type -.-
-    '''
+    Parameters
+    ----------
+    hs_type : str
+        The Haskell type
+
+    Returns
+    -------
+    pytype : type
+        The Python type
+    """
     hs_type = hs_type.strip('( )')
     if hs_type == '':
         hs_type = '()'
 
     default = lambda _:simple_hs_2_py(hs_type)
     parse = parse_generator(
+            # new_* functions are used because ctypes is strictly typed
+            # to the point where two separately created linked_list
+            # classes through a TypeError. So one instance has to be used
+            # throughout the function usage.
               lambda hs_inner:cl.POINTER(new_linked_list(hs2py(hs_inner)))
             , lambda hs_inner:cl.POINTER(new_c_array(hs2py(hs_inner)))
             , lambda hs_inner:cl.POINTER(new_tuple(list(map(hs2py, tuple_types(hs_inner)))))
@@ -75,9 +100,18 @@ def hs2py(hs_type):
     return parse(hs_type)
 
 def argtype(hs_type):
-    '''
-    returns: tuple : (type of argument, constructor)
-    '''
+    """Parser for the argument side types of a Haskell function.
+
+    Parameters
+    ----------
+    hs_type : str
+        Argument side Haskell type
+
+    Returns
+    -------
+    arg : (type, callable)
+        Tuple with the argument type and a callable that converts a conventional Python instance to an instance of the required type.
+    """
     argt = hs2py(hs_type)
 
     default = lambda _: argt
@@ -92,9 +126,18 @@ def argtype(hs_type):
     return argt, parse(hs_type)
 
 def restype(hs_type):
-    '''
-    returns: tuple : (type of result, reconstructor)
-    '''
+    """Parser for the result side type of a Haskell function.
+
+    Parameters
+    ----------
+    hs_type : str
+        Result side Haskell type
+
+    Returns
+    -------
+    res : (type, callable)
+        Tuple with the result type and a callable that converts the type to a conventional Python type.
+    """
     rtype = hs2py(hs_type)
 
     parse = parse_generator(
@@ -108,6 +151,24 @@ def restype(hs_type):
     return rtype, parse(hs_type)
 
 def parse_type(name, hs_type):
+    """Parses the type of an FFI exported Haskell function or constant.
+
+    Parameters
+    ----------
+    name : str
+        Name of the function or constant
+    hs_type : str
+        Type declaration of the Haskell entity
+
+    Returns
+    -------
+    func_info : FuncInfo
+        Parsed information about the function
+
+    Raises
+    ------
+    TypeError
+    """
     types = [t.strip() for t in hs_type.split('->')]
     if any(t.count('(') != t.count(')') for t in types):
         raise TypeError(
