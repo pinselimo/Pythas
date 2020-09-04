@@ -5,6 +5,18 @@ import os.path
 from shutil import which
 
 def get_ghc_version_from_cmdln(stack_ghc):
+    """Retrieves the GHC version number from the command line.
+
+    Parameters
+    ----------
+    stack_ghc : bool
+        True if stack's GHC is used
+
+    Returns
+    -------
+    version : str
+        Version number string
+    """
     REGEX_HS_VERSION = b'(?<=[a-z A-Z])[0-9.]{5}'
 
     if stack_ghc:
@@ -22,6 +34,17 @@ def get_ghc_version_from_cmdln(stack_ghc):
     return version.group(0).decode('utf-8')
 
 def get_ghc_version_from_header():
+    """Retrieves the GHC version number from the ``ghcversion.h`` header.
+
+    Returns
+    -------
+    version : str
+        Version number string
+
+    Raises
+    ------
+    ImportError
+    """
     GHC_VERSION_H = '/usr/lib/ghc/include/ghcversion.h'
     REGEX_C_CONSTANTS = '#define[ \t\n\r\f\v]+([a-zA-Z0-9_]+)[ \t\n\r\f\v]+([0-9]+)'
 
@@ -45,15 +68,54 @@ def get_ghc_version_from_header():
                 raise ImportError('Version-Number of GHC could not be found')
 
 def get_ghc_version(stack_ghc):
+    """Retrieves the GHC version number.
+    Defaults to getting it from the command line,
+    reverts to the ``ghcversion.h`` header.
+
+    Parameters
+    ----------
+    stack_ghc : bool
+        True if stack's GHC is used
+
+    Returns
+    -------
+    version : str
+        Version number string
+
+    See Also
+    --------
+    get_ghc_version_from_cmdln
+    get_ghc_version_from_header
+
+    Raises
+    ------
+    ImportError
+    """
     try:
         return get_ghc_version_from_cmdln(stack_ghc)
     except AttributeError: # Regex didn't match, fallback
         return get_ghc_version_from_header()
 
 def has_stack():
+    """Looks for stack on the ``$PATH``.
+
+    Returns
+    -------
+    has_stack : bool
+        True if stack is in ``$PATH``
+    """
     return which('stack') is not None
 
 class GHC:
+    """Pythas interface class for GHC
+
+    Attributes
+    ----------
+    VERSION : str
+        Version number string of the used GHC instance
+    optimisation : int
+        Optimisation level used for the ``-O`` flag. Default = 2
+    """
     def __init__(self):
         self._stack = has_stack()
         self._optimisation = 2
@@ -68,12 +130,37 @@ class GHC:
 
     @optimisation.setter
     def optimisation(self, level):
+        """Set the optimisation level.
+
+        Parameters
+        ----------
+        level : int
+            New optimisation level. Min = 0, Max = 2
+        """
         self._optimisation = min(2, max(0, level))
 
-    def compile(self, filepath, libpath, more_options=tuple(), redirect=False):
+    def compile(self, filepath, libpath, more_options=tuple(), _redirect=False):
+        """Compile a Haskell source file to a shared library.
+
+        Parameters
+        ----------
+        filepath : str
+            Pathlike object referencing the Haskell source file
+        libpath : str
+            Pathlike object referencing the shared library file
+        more_options : tuple(str) = ()
+            Additional flags handed to GHC
+        _redirect : bool = False
+            Internal binaries are redirect into Pythas' bin directory for clean pip uninstall
+
+        Returns
+        -------
+        libpath : str
+            Pathlike object referencing the shared library path
+        """
         cwd = os.getcwd()
         os.chdir( os.path.dirname(filepath) )
-        flags = self.flags(filepath, libpath, redirect)
+        flags = self.flags(filepath, libpath, _redirect)
         flags += more_options
         cmd = self.ghc_compile_cmd(flags)
 
@@ -83,7 +170,24 @@ class GHC:
         os.chdir(cwd)
         return libpath
 
-    def flags(self, filename, libname, redirect=False):
+    def flags(self, filename, libname, _redirect=False):
+        """Creates the flags needed for successful compilation of Haskell FFI files
+        using Pythas.
+
+        Parameters
+        ----------
+        filepath : str
+            Pathlike object referencing the Haskell source file
+        libpath : str
+            Pathlike object referencing the shared library file
+        _redirect : bool = False
+            Internal binaries are redirect into Pythas' bin directory for clean pip uninstall
+
+        Returns
+        -------
+        flags : tuple(str)
+            Flags for compilation of ``filepath`` to shared library in ``libpath``
+        """
         fdir = os.path.dirname(os.path.abspath(__file__))
 
         RESOURCES = os.path.join(fdir, 'res')
@@ -104,7 +208,7 @@ class GHC:
 
         GHC_OPTIONS = ('-shared', '-fPIC', '-i:'+os.path.dirname(filename)) + (
             # We redirect our own binaries into the 'bin' dir to not pollute everything
-            ('-hidir', BIN, '-odir', BIN) if redirect else ())
+            ('-hidir', BIN, '-odir', BIN) if _redirect else ())
             # Old options: '-fexternal-dynamic-refs'
 
         GHC_OPT_OPTIMISATION = ['', '-O', '-O2', '-optc-O3']
@@ -127,6 +231,18 @@ class GHC:
         return flags
 
     def ghc_compile_cmd(self, options):
+        """Generates the compile command to GHC
+
+        Parameters
+        ----------
+        options : tuple(str)
+            The flags handed to GHC
+
+        Returns
+        -------
+        command : tuple(str)
+            The entire command to initiate compilation
+        """
         GHC_CMD = 'ghc'
         if self._stack:
             return ('stack', GHC_CMD, '--') + options
