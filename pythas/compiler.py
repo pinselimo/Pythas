@@ -15,9 +15,9 @@ class Compiler:
     Attributes
     ----------
     compiler : GHC
-        More concrete implementation of the actual compiler used
+        More concrete implementation of the actual compiler.
     flags : tuple(str)
-        Flags for ``compiler``
+        Flags for ``compiler``.
     """
     def __init__(self):
         self.__fficreator = ffi_creator
@@ -33,22 +33,22 @@ class Compiler:
         return self._custom_flags()
 
     def add_flag(self, flag):
-        """Adds a flag to ``flags``
+        """Adds a flag to ``flags``.
 
         Parameters
         ----------
         flag : str
-            A valid flag
+            A valid compile time flag.
         """
         self._custom_flags.add_flag(flag)
 
     def remove_flag(self, flag):
-        """Removes a flag to ``flags``
+        """Removes a flag from ``flags``.
 
         Parameters
         ----------
         flag : str
-            A valid flag
+            A flag contained within ``flags``.
         """
         self._custom_flags.remove_flag(flag)
 
@@ -59,12 +59,12 @@ class Compiler:
         Parameters
         ----------
         filename : str
-            Pathlike object to a Haskell source file
+            Pathlike object to a Haskell source file.
 
         Returns
         -------
         ffi_libs : [(ctypes.CDLL, pythas.parser.data.ParseInfo)]
-            List of tuples of linked libraries and their respective parsed infos
+            List of tuples of linked libraries and their respective parsed infos.
         """
         ffi_filename = self.__fficreator.createFileBindings(filename)
 
@@ -79,7 +79,7 @@ class Compiler:
         Parameters
         ----------
         name : str
-            Pathlike object to a Haskell file containing FFI exports
+            Pathlike object to a Haskell file containing FFI exports.
 
         Returns
         -------
@@ -105,7 +105,7 @@ class Flags:
         return tuple(flatten(self._flags))
 
     def add_flag(self, flag):
-        """Add a flag to the collection
+        """Adds a flag to the collection.
 
         Parameters
         ----------
@@ -115,7 +115,7 @@ class Flags:
             self._flags.append(flag)
 
     def remove_flag(self, flag):
-        """Remove a flag from the collection
+        """Removes a flag from the collection.
 
         Parameters
         ----------
@@ -130,7 +130,7 @@ class SourceModule:
     Parameters
     ----------
     code : str
-        The Haskell source code to wrap
+        The Haskell source code to wrap.
     """
     def __init__(self, code):
         code = re.sub('\n[ \t]+','\n',code)
