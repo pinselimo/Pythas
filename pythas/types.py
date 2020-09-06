@@ -2,6 +2,25 @@ import ctypes as cl
 from functools import partial
 
 def get_constructor(ctype):
+    """Finds the constructor for a standard or custom ctypes type.
+    The custom types are checked against the marker classes.
+
+    See Also
+    --------
+    Array
+    Tuple
+    LinkedList
+
+    Parameters
+    ----------
+    ctype : ctype type
+        (Sub-)Class of ctypes._SimpleCData or ctypes.Structure.
+
+    Returns
+    -------
+    constructor : callable
+        Function creating an instance of ``ctype``.
+    """
     if issubclass(ctype, cl._Pointer):
         subtype = ctype._type_
 
