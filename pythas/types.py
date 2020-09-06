@@ -26,6 +26,7 @@ def get_constructor(ctype):
     return constr
 
 class LinkedList:
+    """Marker class for Pythas' linked lists"""
     pass
 
 def new_linked_list(ctype):
@@ -65,6 +66,7 @@ def from_linked_list(ll):
     return res
 
 class Array:
+    """Marker class for Pythas' array types"""
     pass
 
 def new_c_array(ctype):
@@ -88,6 +90,7 @@ def from_c_array(cp_array):
     return [c_arr.ptr[i] for i in range(c_arr.len)]
 
 class Tuple:
+    """Marker class for Pythas' tuples"""
     pass
 
 def new_tuple(subtypes):
