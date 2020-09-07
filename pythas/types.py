@@ -49,6 +49,18 @@ class LinkedList:
     pass
 
 def new_linked_list(ctype):
+    """Creates a constructor for a Pythas linked list from sequences of ``ctype``.
+
+    Parameters
+    ----------
+    ctype : ctype type
+        (Sub-)Class of ctypes._SimpleCData or ctypes.Structure.
+
+    Returns
+    -------
+    c_linked_list : callable
+        Function from any Sequence type to a ``LinkedList`` subclass of ``ctype``.
+    """
     class c_linked_list(LinkedList, cl.Structure):
         pass
     c_linked_list._fields_ = [('value',ctype),('next',cl.POINTER(c_linked_list))]
@@ -89,6 +101,18 @@ class Array:
     pass
 
 def new_c_array(ctype):
+    """Creates a constructor for a Pythas array from sequences of ``ctype``.
+
+    Parameters
+    ----------
+    ctype : ctype type
+        (Sub-)Class of ctypes._SimpleCData or ctypes.Structure.
+
+    Returns
+    -------
+    c_array : callable
+        Function from any Sequence type to a ``Array`` subclass of ``ctype``.
+    """
     class c_array(Array, cl.Structure):
         _fields_ = [('len',cl.c_int),('ptr',cl.POINTER(ctype))]
     return c_array
@@ -113,6 +137,18 @@ class Tuple:
     pass
 
 def new_tuple(subtypes):
+    """Creates a constructor for a Pythas tuple from Python tuples of ``subtypes``.
+
+    Parameters
+    ----------
+    subtypes : Sequence of ctype types
+        (Sub-)Class of ctypes._SimpleCData or ctypes.Structure.
+
+    Returns
+    -------
+    c_tuple : callable
+        Function from a tuple of ``subtypes`` to a ``Tuple`` subclass.
+    """
     class c_tuple(Tuple, cl.Structure):
         _fields_ = list(zip("abcd",subtypes))
     return c_tuple
