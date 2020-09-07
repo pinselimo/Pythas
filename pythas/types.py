@@ -3,13 +3,11 @@ from functools import partial
 
 def get_constructor(ctype):
     """Finds the constructor for a standard or custom ctypes type.
-    The custom types are checked against the marker classes.
+    The custom types are checked against the marker classes:
 
-    See Also
-    --------
-    Array
-    Tuple
-    LinkedList
+    - Array
+    - Tuple
+    - LinkedList
 
     Parameters
     ----------
