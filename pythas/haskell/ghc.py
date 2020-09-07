@@ -43,7 +43,7 @@ def get_ghc_version_from_header():
 
     Raises
     ------
-    ImportError
+    ImportError : Version-Number of GHC could not be found
     """
     GHC_VERSION_H = '/usr/lib/ghc/include/ghcversion.h'
     REGEX_C_CONSTANTS = '#define[ \t\n\r\f\v]+([a-zA-Z0-9_]+)[ \t\n\r\f\v]+([0-9]+)'
@@ -89,7 +89,7 @@ def get_ghc_version(stack_ghc):
 
     Raises
     ------
-    ImportError
+    ImportError : Version-Number of GHC could not be found
     """
     try:
         return get_ghc_version_from_cmdln(stack_ghc)
