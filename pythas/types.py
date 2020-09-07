@@ -67,6 +67,27 @@ def new_linked_list(ctype):
     return c_linked_list
 
 def to_linked_list(cls, seq):
+    """Constructor function for Pythas linked lists.
+
+    Any instance of LinkedList must always be associated
+    with its ``cls``.
+
+    Parameters
+    ----------
+    cls : LinkedList subclass
+        A linked list class created with ``new_linked_list``.
+    seq : Sequence
+        The sequence which needs to be converted to a linked list.
+
+    Returns
+    -------
+    linked_list : LinkedList instance
+        An instance of ``cls`` constructed from ``seq``.
+
+    See Also
+    --------
+    new_linked_list
+    """
     constructor = cls._fields_[0][1]
     *rest,last = map(constructor, seq)
 
@@ -118,6 +139,26 @@ def new_c_array(ctype):
     return c_array
 
 def to_c_array(cls, seq):
+    """Constructor function for Pythas array.
+
+    Any instance of Array  must always be associated with its ``cls``.
+
+    Parameters
+    ----------
+    cls : Array subclass
+        A array class created with ``new_c_array``.
+    seq : Sequence
+        The sequence which needs to be converted to a c_array.
+
+    Returns
+    -------
+    array : Array instance
+        An instance of ``cls`` constructed from ``seq``.
+
+    See Also
+    --------
+    new_c_array
+    """
     ctype = cls._fields_[1][1]._type_
 
     content = map(get_constructor(ctype), seq)
@@ -154,6 +195,26 @@ def new_tuple(subtypes):
     return c_tuple
 
 def to_tuple(cls, tup):
+    """Constructor function for Pythas tuples.
+
+    Any instance of LinkedList must always be associated with its ``cls``.
+
+    Parameters
+    ----------
+    cls : Tuple subclass
+        A tuple class created with ``new_tuple``.
+    tup : tuple
+        The tuple which needs to be converted to a Pythas Tuple.
+
+    Returns
+    -------
+    tuple : Tuple instance
+        An instance of ``cls`` constructed from ``tup``.
+
+    See Also
+    --------
+    new_tuple
+    """
     types = [cls._fields_[n][1] for n in range(len(cls._fields_))]
     return cls(*[get_constructor(t)(v) for t,v in zip(types,tup)])
 
