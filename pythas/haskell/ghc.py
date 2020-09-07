@@ -10,12 +10,12 @@ def get_ghc_version_from_cmdln(stack_ghc):
     Parameters
     ----------
     stack_ghc : bool
-        True if stack's GHC is used
+        True if stack's GHC is used.
 
     Returns
     -------
     version : str
-        Version number string
+        Version number string.
     """
     REGEX_HS_VERSION = b'(?<=[a-z A-Z])[0-9.]{5}'
 
@@ -39,7 +39,7 @@ def get_ghc_version_from_header():
     Returns
     -------
     version : str
-        Version number string
+        Version number string.
 
     Raises
     ------
@@ -75,12 +75,12 @@ def get_ghc_version(stack_ghc):
     Parameters
     ----------
     stack_ghc : bool
-        True if stack's GHC is used
+        True if stack's GHC is used.
 
     Returns
     -------
     version : str
-        Version number string
+        Version number string.
 
     See Also
     --------
@@ -102,19 +102,19 @@ def has_stack():
     Returns
     -------
     has_stack : bool
-        True if stack is in ``$PATH``
+        True if stack is in ``$PATH``.
     """
     return which('stack') is not None
 
 class GHC:
-    """Pythas interface class for GHC
+    """Pythas interface class for GHC.
 
     Attributes
     ----------
     VERSION : str
-        Version number string of the used GHC instance
+        Version number string of the used GHC instance.
     optimisation : int
-        Optimisation level used for the ``-O`` flag. Default = 2
+        Optimisation level used for the ``-O`` flag. Default = 2.
     """
     def __init__(self):
         self._stack = has_stack()
@@ -135,7 +135,7 @@ class GHC:
         Parameters
         ----------
         level : int
-            New optimisation level. Min = 0, Max = 2
+            New optimisation level. Min = 0, Max = 2.
         """
         self._optimisation = min(2, max(0, level))
 
@@ -145,18 +145,18 @@ class GHC:
         Parameters
         ----------
         filepath : str
-            Pathlike object referencing the Haskell source file
+            Pathlike object referencing the Haskell source file.
         libpath : str
-            Pathlike object referencing the shared library file
+            Pathlike object referencing the shared library file.
         more_options : tuple(str) = ()
-            Additional flags handed to GHC
+            Additional flags handed to GHC.
         _redirect : bool = False
-            Internal binaries are redirect into Pythas' bin directory for clean pip uninstall
+            Internal binaries are redirect into Pythas' bin directory for clean pip uninstall.
 
         Returns
         -------
         libpath : str
-            Pathlike object referencing the shared library path
+            Pathlike object referencing the shared library path.
         """
         cwd = os.getcwd()
         os.chdir( os.path.dirname(filepath) )
@@ -177,16 +177,16 @@ class GHC:
         Parameters
         ----------
         filepath : str
-            Pathlike object referencing the Haskell source file
+            Pathlike object referencing the Haskell source file.
         libpath : str
-            Pathlike object referencing the shared library file
+            Pathlike object referencing the shared library file.
         _redirect : bool = False
-            Internal binaries are redirect into Pythas' bin directory for clean pip uninstall
+            Internal binaries are redirect into Pythas' bin directory for clean pip uninstall.
 
         Returns
         -------
         flags : tuple(str)
-            Flags for compilation of ``filepath`` to shared library in ``libpath``
+            Flags for compilation of ``filepath`` to shared library in ``libpath``.
         """
         fdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -231,17 +231,17 @@ class GHC:
         return flags
 
     def ghc_compile_cmd(self, options):
-        """Generates the compile command to GHC
+        """Generates the compile command to GHC.
 
         Parameters
         ----------
         options : tuple(str)
-            The flags handed to GHC
+            The flags handed to GHC.
 
         Returns
         -------
         command : tuple(str)
-            The entire command to initiate compilation
+            The entire command to initiate compilation.
         """
         GHC_CMD = 'ghc'
         if self._stack:
