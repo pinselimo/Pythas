@@ -103,17 +103,29 @@ def to_linked_list(cls, seq):
     return cl.pointer(lel)
 
 def from_linked_list(ll):
+    """Reconstructor from Pythas linked lists.
+
+    Parameters
+    ----------
+    ll : LinkedList
+        Pointer to the first element of a LinkedList instance.
+
+    Returns
+    -------
+    seq : list
+        A list with the contents of ``ll``.
+    """
     val  = ll.contents.value
     next = ll.contents.next
 
-    res  = [val]
+    seq  = [val]
     while bool(next):
         val = next.contents.value
-        res.append(val)
+        seq.append(val)
 
         next = next.contents.next
 
-    return res
+    return seq
 
 class Array:
     """Marker class for Pythas' array types"""
@@ -168,6 +180,18 @@ def to_c_array(cls, seq):
     return arr
 
 def from_c_array(cp_array):
+    """Reconstructor from Pythas c_arrays.
+
+    Parameters
+    ----------
+    cp_array : cl.POINTER(Array)
+        Pointer to an instance of a subclass of Array.
+
+    Returns
+    -------
+    seq : list
+        A list with the contents of ``cp_array``'s array.
+    """
     c_arr = cp_array.contents
     return [c_arr.ptr[i] for i in range(c_arr.len)]
 
@@ -217,6 +241,18 @@ def to_tuple(cls, tup):
     return cls(*[get_constructor(t)(v) for t,v in zip(types,tup)])
 
 def from_tuple(cpt):
+    """Reconstructor from Pythas c_tuples.
+
+    Parameters
+    ----------
+    cpt : cl.POINTER(Tuple)
+        Pointer to an instance of a subclass of Tuple.
+
+    Returns
+    -------
+    tup : tuple
+        A tuple with the contents of ``cpt``.
+    """
     ct = cpt.contents
     return tuple(getattr(ct,a) for a in "abcd" if hasattr(ct, a))
 
