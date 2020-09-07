@@ -79,7 +79,7 @@ def to_linked_list(cls, seq):
 
     Returns
     -------
-    linked_list : LinkedList instance
+    linked_list : LinkedList
         An instance of ``cls`` constructed from ``seq``.
 
     See Also
@@ -162,7 +162,7 @@ def to_c_array(cls, seq):
 
     Returns
     -------
-    array : Array instance
+    array : Array
         An instance of ``cls`` constructed from ``seq``.
 
     See Also
@@ -230,7 +230,7 @@ def to_tuple(cls, tup):
 
     Returns
     -------
-    tuple : Tuple instance
+    tuple : Tuple
         An instance of ``cls`` constructed from ``tup``.
 
     See Also
