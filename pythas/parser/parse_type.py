@@ -43,17 +43,17 @@ HS2PY = {
     }
 
 def simple_hs_2_py(hs_type):
-    """Converts simple Haskell types to their Python equivalent
+    """Converts simple Haskell types to their Python equivalent.
 
     Parameters
     ----------
     hs_type : str
-        The Haskell type
+        The Haskell type.
 
     Returns
     -------
     pytype : type
-        The Python type
+        The Python type.
 
     Raises
     ------
@@ -73,12 +73,12 @@ def hs2py(hs_type):
     Parameters
     ----------
     hs_type : str
-        The Haskell type
+        The Haskell type.
 
     Returns
     -------
     pytype : type
-        The Python type
+        The Python type.
     """
     hs_type = hs_type.strip('( )')
     if hs_type == '':
@@ -105,12 +105,13 @@ def argtype(hs_type):
     Parameters
     ----------
     hs_type : str
-        Argument side Haskell type
+        Argument side Haskell type.
 
     Returns
     -------
     arg : (type, callable)
-        Tuple with the argument type and a callable that converts a conventional Python instance to an instance of the required type.
+        Tuple with the argument type and a callable that converts
+        a conventional Python instance to an instance of the required type.
     """
     argt = hs2py(hs_type)
 
@@ -131,12 +132,13 @@ def restype(hs_type):
     Parameters
     ----------
     hs_type : str
-        Result side Haskell type
+        Result side Haskell type.
 
     Returns
     -------
     res : (type, callable)
-        Tuple with the result type and a callable that converts the type to a conventional Python type.
+        Tuple with the result type and a callable
+        that converts the type to a conventional Python type.
     """
     rtype = hs2py(hs_type)
 
@@ -156,14 +158,14 @@ def parse_type(name, hs_type):
     Parameters
     ----------
     name : str
-        Name of the function or constant
+        Name of the function or constant.
     hs_type : str
-        Type declaration of the Haskell entity
+        Type declaration of the Haskell entity.
 
     Returns
     -------
     func_info : FuncInfo
-        Parsed information about the function
+        Parsed information about the function.
 
     Raises
     ------
