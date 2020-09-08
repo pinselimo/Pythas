@@ -12,13 +12,13 @@ class ParseInfo(_ParseInfo):
     name : str
         Module name
     dir : str
-        Pathlike object to the source file
+        Pathlike object to the source file.
     exported_mod : set(str)
-        Exported functions according to the module header
+        Exported functions according to the module header.
     exported_ffi : set(str)
-        Functions with an FFI export
+        Functions with an FFI export.
     func_infos : dict(str, FuncInfo)
-        Dictionary mapping function names to their respective FuncInfo instance
+        Dictionary mapping function names to their respective FuncInfo instance.
     """
     pass
 
@@ -32,17 +32,17 @@ class FuncInfo(_FuncInfo):
     Attributes
     ----------
     name : str
-        The name of the function
+        The name of the function.
     argtypes : list(ctype)
-        List with types of the function arguments
+        List with types of the function arguments.
     restype : ctype
-        Return type of the function
+        Return type of the function.
     constructors : list(callable)
-        List of functions converting Python types to their respective ``argtypes``
+        List of functions converting Python types to their respective ``argtypes``.
     reconstructor : callable
-        Callable converting the ``restype`` back to a native Python type and releasing any memory allocated in the transferring process
+        Callable converting the ``restype`` back to a native Python type and releasing any memory allocated in the transferring process.
     htype : str
-        Type as given by the Haskell FFI export
+        Type as given by the Haskell FFI export.
     """
     pass
 
