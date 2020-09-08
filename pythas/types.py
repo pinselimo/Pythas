@@ -17,7 +17,7 @@ def get_constructor(ctype):
     Returns
     -------
     constructor : callable
-        Function creating an instance of ``ctype``.
+        Function creating an instance of `ctype`.
     """
     if issubclass(ctype, cl._Pointer):
         subtype = ctype._type_
@@ -47,17 +47,17 @@ class LinkedList:
     pass
 
 def new_linked_list(ctype):
-    """Creates a Pythas linked list class of ``ctype``.
+    """Creates a Pythas linked list class of `ctype`.
 
     Parameters
     ----------
     ctype : ctypes type
-        (Sub-)Class of ``ctypes._SimpleCData`` or ``ctypes.Structure``.
+        (Sub-)Class of `ctypes._SimpleCData` or `ctypes.Structure`.
 
     Returns
     -------
     c_linked_list : ctypes type
-        Subclass of ``LinkedList`` and ``ctypes.Structure``.
+        Subclass of `LinkedList` and `ctypes.Structure`.
     """
     class c_linked_list(LinkedList, cl.Structure):
         pass
@@ -68,19 +68,19 @@ def to_linked_list(cls, seq):
     """Constructor function for Pythas linked lists.
 
     Any instance of LinkedList must always be associated
-    with its ``cls``.
+    with its `cls`.
 
     Parameters
     ----------
     cls : LinkedList subclass
-        A linked list class created with ``new_linked_list``.
+        A linked list class created with `new_linked_list`.
     seq : Sequence
         The sequence which needs to be converted to a linked list.
 
     Returns
     -------
     linked_list : LinkedList
-        An instance of ``cls`` constructed from ``seq``.
+        An instance of `cls` constructed from `seq`.
 
     See Also
     --------
@@ -113,7 +113,7 @@ def from_linked_list(ll):
     Returns
     -------
     seq : list
-        A list with the contents of ``ll``.
+        A list with the contents of `ll`.
     """
     val  = ll.contents.value
     next = ll.contents.next
@@ -132,17 +132,17 @@ class Array:
     pass
 
 def new_c_array(ctype):
-    """Creates a Pythas array class of ``ctype``.
+    """Creates a Pythas array class of `ctype`.
 
     Parameters
     ----------
     ctype : ctypes type
-        (Sub-)Class of ``ctypes._SimpleCData`` or ``ctypes.Structure``.
+        (Sub-)Class of `ctypes._SimpleCData` or `ctypes.Structure`.
 
     Returns
     -------
     c_array : ctypes type
-        Subclass of ``Array`` and ``ctypes.Structure``.
+        Subclass of `Array` and `ctypes.Structure`.
     """
     class c_array(Array, cl.Structure):
         _fields_ = [('len',cl.c_int),('ptr',cl.POINTER(ctype))]
@@ -151,19 +151,19 @@ def new_c_array(ctype):
 def to_c_array(cls, seq):
     """Constructor function for Pythas array.
 
-    Any instance of Array  must always be associated with its ``cls``.
+    Any instance of Array  must always be associated with its `cls`.
 
     Parameters
     ----------
     cls : Array subclass
-        A array class created with ``new_c_array``.
+        A array class created with `new_c_array`.
     seq : Sequence
         The sequence which needs to be converted to a c_array.
 
     Returns
     -------
     array : Array
-        An instance of ``cls`` constructed from ``seq``.
+        An instance of `cls` constructed from `seq`.
 
     See Also
     --------
@@ -190,7 +190,7 @@ def from_c_array(cp_array):
     Returns
     -------
     seq : list
-        A list with the contents of ``cp_array``'s array.
+        A list with the contents of `cp_array`'s array.
     """
     c_arr = cp_array.contents
     return [c_arr.ptr[i] for i in range(c_arr.len)]
@@ -200,17 +200,17 @@ class Tuple:
     pass
 
 def new_tuple(subtypes):
-    """Creates a constructor for a Pythas tuple from Python tuples of ``subtypes``.
+    """Creates a constructor for a Pythas tuple from Python tuples of `subtypes`.
 
     Parameters
     ----------
     subtypes : Sequence of ctypes types
-        (Sub-)Class of ``ctypes._SimpleCData`` or ``ctypes.Structure``.
+        (Sub-)Class of `ctypes._SimpleCData` or `ctypes.Structure`.
 
     Returns
     -------
     c_tuple : ctypes type
-        Subclass of ``Tuple`` and ``ctypes.Structure``.
+        Subclass of `Tuple` and `ctypes.Structure`.
     """
     class c_tuple(Tuple, cl.Structure):
         _fields_ = list(zip("abcd",subtypes))
@@ -219,19 +219,19 @@ def new_tuple(subtypes):
 def to_tuple(cls, tup):
     """Constructor function for Pythas tuples.
 
-    Any instance of LinkedList must always be associated with its ``cls``.
+    Any instance of LinkedList must always be associated with its `cls`.
 
     Parameters
     ----------
     cls : Tuple subclass
-        A tuple class created with ``new_tuple``.
+        A tuple class created with `new_tuple`.
     tup : tuple
         The tuple which needs to be converted to a Pythas Tuple.
 
     Returns
     -------
     tuple : Tuple
-        An instance of ``cls`` constructed from ``tup``.
+        An instance of `cls` constructed from `tup`.
 
     See Also
     --------
@@ -251,7 +251,7 @@ def from_tuple(cpt):
     Returns
     -------
     tup : tuple
-        A tuple with the contents of ``cpt``.
+        A tuple with the contents of `cpt`.
     """
     ct = cpt.contents
     return tuple(getattr(ct,a) for a in "abcd" if hasattr(ct, a))

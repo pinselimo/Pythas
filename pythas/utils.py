@@ -20,7 +20,7 @@ def flatten(seq):
     Returns
     -------
     flatseq : List
-        List of all basal elements of ``seq``.
+        List of all basal elements of `seq`.
     """
     def flat(ts):
         if isinstance(ts, abc.Iterable) and not isinstance(ts, str):
@@ -42,7 +42,7 @@ class PythasFunc:
     funcPtr : ctypes._FuncPtr
         The pointer to the function.
     destructorPtr : ctypes._FuncPtr
-        Pointer to the function releasing any memory allocated by the function in ``funcPtr``.
+        Pointer to the function releasing any memory allocated by the function in `funcPtr`.
         None if no destruction is required.
     """
     def __init__(self, name, func_info, funcPtr, destructorPtr=None):
@@ -83,7 +83,7 @@ def find_source(name, path, extension='.hs'):
     Returns
     -------
     source : List[str]
-        List containing the source file path for module ``name``.
+        List containing the source file path for module `name`.
         Empty list if it couldn't be discovered.
     """
     hsName = name + extension
@@ -96,7 +96,7 @@ def find_source(name, path, extension='.hs'):
 def custom_attr_getter(obj, name):
     """Pythas modules' __getattribute__ instance.
     Retrieves foreign functions imported from Haskell
-    modules by their name. Creates a ``PythasFunc``
+    modules by their name. Creates a `PythasFunc`
     instance and calls the finalizer function if given.
 
     Parameters
@@ -112,7 +112,7 @@ def custom_attr_getter(obj, name):
 
     Raises
     ------
-    AttributeError : No corresponding foreign import could be found for ``name``.
+    AttributeError : No corresponding foreign import could be found for `name`.
     """
     ffi_libs = obj._ffi_libs
     not_found = AttributeError(
@@ -201,7 +201,7 @@ def shared_library_suffix():
         return '.dylib'
 
 def remove_created_files(filename):
-    """Removes all files created by ``Pythas`` during
+    """Removes all files created by `Pythas` during
     the compilation process.
 
     Parameters

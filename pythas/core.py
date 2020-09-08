@@ -72,7 +72,7 @@ class PythasLoader(Loader):
         module.__dir__ = lambda: list(module.__dict__) + list(ffi_libs_exports(ffi_libs))
 
 def install(compiler):
-    """Installer for the ``PythasMetaFinder``.
+    """Installer for the `PythasMetaFinder`.
 
     Parameters
     ----------

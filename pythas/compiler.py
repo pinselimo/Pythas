@@ -17,7 +17,7 @@ class Compiler:
     compiler : GHC
         More concrete implementation of the actual compiler.
     flags : tuple(str)
-        Flags for ``compiler``.
+        Flags for `compiler`.
     """
     def __init__(self):
         self.__fficreator = ffi_creator
@@ -33,7 +33,7 @@ class Compiler:
         return self._custom_flags()
 
     def add_flag(self, flag):
-        """Adds a flag to ``flags``.
+        """Adds a flag to `flags`.
 
         Parameters
         ----------
@@ -43,12 +43,12 @@ class Compiler:
         self._custom_flags.add_flag(flag)
 
     def remove_flag(self, flag):
-        """Removes a flag from ``flags``.
+        """Removes a flag from `flags`.
 
         Parameters
         ----------
         flag : str
-            A flag contained within ``flags``.
+            A flag contained within `flags`.
         """
         self._custom_flags.remove_flag(flag)
 
