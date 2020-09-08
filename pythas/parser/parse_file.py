@@ -9,12 +9,12 @@ def parse_haskell(hs_file):
     Parameters
     ----------
     hs_file : str
-        Pathlike object referring to the Haskell source file
+        Pathlike object referring to the Haskell source file.
 
     Reuturns
     --------
     parse_info : ParseInfo
-        Informations parsed from ``hs_file``
+        Informations parsed from ``hs_file``.
     """
     # preprocessing of file
     *path, name = os.path.split(hs_file)
@@ -42,14 +42,14 @@ def _parse_haskell(hs_lines, parse_info):
     Parameters
     ----------
     hs_lines : list(str)
-        Lines of a Haskell source file
+        Lines of a Haskell source file.
     parse_info : ParseInfo
-        Container into which informations are to be stored
+        Container into which informations are to be stored.
 
     Returns
     -------
     parse_info : ParseInfo
-        Informations parsed from ``hs_lines``
+        Informations parsed from ``hs_lines``.
     """
     in_comment = False
     for hs_line in hs_lines:
@@ -75,14 +75,14 @@ def find_module_statement(hs_cont, name):
     Parameters
     ----------
     hs_cont : str
-        Content of a Haskell source file
+        Content of a Haskell source file.
     name : str
-        Name of the Haskell module as given by file name
+        Name of the Haskell module as given by file name.
 
     Returns
     -------
     posiiton : int
-        Index of the ``module`` statement in the ``hs_cont``
+        Index of the ``module`` statement in the ``hs_cont``.
 
     Raises
     ------
@@ -104,7 +104,7 @@ def parse_head(hs_lines, name):
     hs_lines : list(str)
         Lines of a Haskell source file
     name : str
-        Name of the Haskell module as given by file name
+        Name of the Haskell module as given by file name.
 
     Returns
     -------
@@ -132,9 +132,9 @@ def parse_line(hs_line, parse_info):
     Parameters
     ----------
     hs_line : str
-        Line of Haskell code
+        Line of Haskell code.
     parse_info : ParseInfo
-        Container into which informations are to be stored
+        Container into which informations are to be stored.
     """
     hs_line = hs_line.strip(' ;')
     if hs_line.startswith('foreign export ccall'):
