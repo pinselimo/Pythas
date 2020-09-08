@@ -34,7 +34,7 @@ def get_ghc_version_from_cmdln(stack_ghc):
     return version.group(0).decode('utf-8')
 
 def get_ghc_version_from_header():
-    """Retrieves the GHC version number from the ``ghcversion.h`` header.
+    """Retrieves the GHC version number from the `ghcversion.h` header.
 
     Returns
     -------
@@ -70,7 +70,7 @@ def get_ghc_version_from_header():
 def get_ghc_version(stack_ghc):
     """Retrieves the GHC version number.
     Defaults to getting it from the command line,
-    reverts to the ``ghcversion.h`` header.
+    reverts to the `ghcversion.h` header.
 
     Parameters
     ----------
@@ -97,12 +97,12 @@ def get_ghc_version(stack_ghc):
         return get_ghc_version_from_header()
 
 def has_stack():
-    """Looks for stack on the ``$PATH``.
+    """Looks for stack on the `$PATH`.
 
     Returns
     -------
     has_stack : bool
-        True if stack is in ``$PATH``.
+        True if stack is in `$PATH`.
     """
     return which('stack') is not None
 
@@ -114,7 +114,7 @@ class GHC:
     VERSION : str
         Version number string of the used GHC instance.
     optimisation : int
-        Optimisation level used for the ``-O`` flag. Default = 2.
+        Optimisation level used for the `-O` flag. Default = 2.
     """
     def __init__(self):
         self._stack = has_stack()
@@ -186,7 +186,7 @@ class GHC:
         Returns
         -------
         flags : tuple(str)
-            Flags for compilation of ``filepath`` to shared library in ``libpath``.
+            Flags for compilation of `filepath` to shared library in `libpath`.
         """
         fdir = os.path.dirname(os.path.abspath(__file__))
 
