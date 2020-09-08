@@ -38,9 +38,9 @@ class FuncInfo(_FuncInfo):
     restype : ctype
         Return type of the function.
     constructors : list(callable)
-        List of functions converting Python types to their respective ``argtypes``.
+        List of functions converting Python types to their respective `argtypes`.
     reconstructor : callable
-        Callable converting the ``restype`` back to a native Python type and releasing any memory allocated in the transferring process.
+        Callable converting the `restype` back to a native Python type and releasing any memory allocated in the transferring process.
     htype : str
         Type as given by the Haskell FFI export.
     """

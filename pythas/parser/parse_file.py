@@ -14,7 +14,7 @@ def parse_haskell(hs_file):
     Reuturns
     --------
     parse_info : ParseInfo
-        Informations parsed from ``hs_file``.
+        Informations parsed from `hs_file`.
     """
     # preprocessing of file
     *path, name = os.path.split(hs_file)
@@ -49,7 +49,7 @@ def _parse_haskell(hs_lines, parse_info):
     Returns
     -------
     parse_info : ParseInfo
-        Informations parsed from ``hs_lines``.
+        Informations parsed from `hs_lines`.
     """
     in_comment = False
     for hs_line in hs_lines:
@@ -70,7 +70,7 @@ def _parse_haskell(hs_lines, parse_info):
     return parse_info
 
 def find_module_statement(hs_cont, name):
-    """Locates the ``module`` statement in a Haskell source file.
+    """Locates the `module` statement in a Haskell source file.
 
     Parameters
     ----------
@@ -82,7 +82,7 @@ def find_module_statement(hs_cont, name):
     Returns
     -------
     posiiton : int
-        Index of the ``module`` statement in the ``hs_cont``.
+        Index of the `module` statement in the `hs_cont`.
 
     Raises
     ------
@@ -109,7 +109,7 @@ def parse_head(hs_lines, name):
     Returns
     -------
     exports : list(str)
-        List of exported names or ``None`` if no exports statement is given.
+        List of exported names or `None` if no exports statement is given.
     """
     hs_cont = ' '.join(hs_lines)
     name,*_ = name.split('.')

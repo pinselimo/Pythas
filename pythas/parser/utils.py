@@ -8,15 +8,15 @@ def apply(fs,t):
     Parameters
     ----------
     fs : iterable
-        List of tuples which have a ``callable`` as second member.
+        List of tuples which have a `callable` as second member.
     t : iterable
-        Arguments for the ``callable``.
+        Arguments for the `callable`.
 
     Returns
     -------
     applied : tuple
         Results of the application of the callables
-        to the arguments in ``t`` with the same index.
+        to the arguments in `t` with the same index.
     """
     return tuple(f[1](x) for f,x in zip(fs,t))
 
@@ -33,7 +33,7 @@ def strip_io(tp):
     Returns
     -------
     stripped : (str, str)
-        Tuple of ``'IO '`` if there was an IO statement or
+        Tuple of `'IO '` if there was an IO statement or
         the empty string if there was none and the rest of the type statement.
     """
     io = tp.find('IO ')
