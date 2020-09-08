@@ -1,21 +1,22 @@
 def lmap(f,xs):
-    """Like map but returns a list instead of a generator"""
+    """Like map but returns a list instead of a generator."""
     return [f(x) for x in xs]
 
 def apply(fs,t):
-    """Weirdly similar to Haskell's ap for subscriptable types
+    """Weirdly similar to Haskell's ap for subscriptable types.
 
     Parameters
     ----------
     fs : iterable
-        List of tuples which have a ``callable`` as second member
+        List of tuples which have a ``callable`` as second member.
     t : iterable
         Arguments for the ``callable``.
 
     Returns
     -------
     applied : tuple
-        Results of the application of the callables to the arguments in ``t`` with the same index
+        Results of the application of the callables
+        to the arguments in ``t`` with the same index.
     """
     return tuple(f[1](x) for f,x in zip(fs,t))
 
@@ -27,12 +28,13 @@ def strip_io(tp):
     Parameters
     ----------
     tp : str
-        Haskell type statement
+        Haskell type statement.
 
     Returns
     -------
     stripped : (str, str)
-        Tuple of ``'IO '`` if there was an IO statement or the empty string if there was none and the rest of the type statement
+        Tuple of ``'IO '`` if there was an IO statement or
+        the empty string if there was none and the rest of the type statement.
     """
     io = tp.find('IO ')
     if io < 0:
@@ -46,12 +48,12 @@ def tuple_types(hs_type):
     Parameters
     ----------
     hs_type : str
-        Haskell type statement for a tuple
+        Haskell type statement for a tuple.
 
     Returns
     -------
     types : list(str)
-        Haskell type statements inside the tuple
+        Haskell type statements inside the tuple.
     """
     match = lambda x: match_parens(hs_type,x)
 
@@ -77,14 +79,14 @@ def match_parens(s, i):
     Parameters
     ----------
     s : str
-        The string to match parentheses on
+        The string to match parentheses on.
     i : int
-        The initial index to start from
+        The initial index to start from.
 
     Returns
     -------
     closing : int
-        Index of the next matching closing paranthesis
+        Index of the next matching closing paranthesis.
     """
     x = 0
     for it in range(i,len(s)):
@@ -106,28 +108,29 @@ def parse_generator(f_llist, f_carray, f_tuple, f_string, f_default):
     Parameters
     ----------
     f_llist : callable
-        Function to call in case of linked lists
+        Function to call in case of linked lists.
     f_carray : callable
-        Function to call in case of arrays
+        Function to call in case of arrays.
     f_tuple : callable
-        Function to call in case of tuples
+        Function to call in case of tuples.
     f_string : callable
-        Function to call in case of string
+        Function to call in case of string.
     f_default : callable
-        Function to call in case of string
+        Function to call in case of string.
 
     Returns
     -------
     parser : callable
-        Function taking a string object with a Haskell type statement and parsing it using the appropriate function
+        Function taking a string object with a Haskell type statement
+        and parsing it using the appropriate function.
     """
     def parser(hs_type):
-        """Parser for Haskell type statements
+        """Parser for Haskell type statements.
 
         Parameters
         ----------
         hs_type : str
-            Haskell type statement
+            Haskell type statement.
 
         See also
         --------
