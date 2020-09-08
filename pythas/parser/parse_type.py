@@ -57,13 +57,13 @@ def simple_hs_2_py(hs_type):
 
     Raises
     ------
-    TypeError
+    TypeError : Type cannot be used with Pythas
     """
     if hs_type in HS2PY:
         return HS2PY[hs_type]
     else:
         raise TypeError(
-                'Non-simple type "{}" cannot'
+                'Non-simple type "{}" cannot '
                 'be used with Pythas'.format(hs_type)
                 )
 
@@ -167,13 +167,13 @@ def parse_type(name, hs_type):
 
     Raises
     ------
-    TypeError
+    TypeError : Functions as arguments are not supported
     """
     types = [t.strip() for t in hs_type.split('->')]
     if any(t.count('(') != t.count(')') for t in types):
         raise TypeError(
-            'Functions as arguments like "{}"'
-            'not supported'.format(hs_type)
+            'Functions as arguments like "{}" '
+            'are not supported'.format(hs_type)
             )
 
     *inp,out = types
