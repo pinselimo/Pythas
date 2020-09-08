@@ -86,7 +86,7 @@ def find_module_statement(hs_cont, name):
 
     Raises
     ------
-    SyntaxError
+    SyntaxError : Haskell file module statement malformed
     """
     module_name = 'module {}'.format(name)
     module_decl = hs_cont.find(module_name)
