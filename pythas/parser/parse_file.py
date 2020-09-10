@@ -1,3 +1,5 @@
+"""Parse Haskell modules/files."""
+
 import os.path
 
 from .data import ParseInfo, FuncInfo

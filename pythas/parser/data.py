@@ -1,3 +1,5 @@
+"""Data container classes for parsing."""
+
 from collections import namedtuple
 
 _ParseInfo = namedtuple('ParseInfo',[

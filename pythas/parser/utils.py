@@ -1,3 +1,5 @@
+"""Utility functions for parsing Haskell."""
+
 def lmap(f,xs):
     """Like map but returns a list instead of a generator."""
     return [f(x) for x in xs]

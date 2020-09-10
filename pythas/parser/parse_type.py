@@ -1,3 +1,5 @@
+"""Parse Haskell type declarations."""
+
 import ctypes as cl
 from functools import partial
 
