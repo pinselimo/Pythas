@@ -1,3 +1,5 @@
+"""Init file of Pythas' haskell package."""
+
 import os.path
 from ctypes import cdll, c_wchar_p, c_voidp
 from sys import platform

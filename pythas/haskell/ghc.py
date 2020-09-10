@@ -1,3 +1,5 @@
+"""Wrapping functionality for GHC and STACK."""
+
 import subprocess
 import sys
 import re
