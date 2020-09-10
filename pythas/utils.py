@@ -1,3 +1,5 @@
+"""Utility module for the Pythas API."""
+
 from ctypes import _SimpleCData, _Pointer
 from collections import abc
 from shutil import which

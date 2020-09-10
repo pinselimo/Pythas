@@ -1,3 +1,5 @@
+"""API for Haskell compilation and binding."""
+
 from ctypes import cdll
 from functools import partial
 import os.path

@@ -1,3 +1,5 @@
+"""Custom types defined for Haskell FFI interfacing of complex, nested data."""
+
 import ctypes as cl
 from functools import partial
 

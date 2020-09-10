@@ -1,3 +1,5 @@
+"""Core module containing the main metaprogramming."""
+
 from importlib.abc  import Loader, MetaPathFinder
 from importlib.util import spec_from_file_location
 from functools  import partial
