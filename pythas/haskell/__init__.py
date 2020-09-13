@@ -1,3 +1,5 @@
+"""Init file of Pythas' haskell package."""
+
 import os.path
 from ctypes import cdll, c_wchar_p, c_voidp
 from sys import platform
@@ -16,7 +18,7 @@ lib = os.path.join(dir, "libpythasffi")
 if not os.path.exists( lib ):
     lib += shared_library_suffix()
 
-GHC().compile(src, lib, redirect=True)
+GHC().compile(src, lib, _redirect=True)
 
 ffi_creator = cdll.LoadLibrary( lib )
 ffi_creator.createFileBindings.argtype = [c_wchar_p]
