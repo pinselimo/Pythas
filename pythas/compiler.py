@@ -24,7 +24,7 @@ class Compiler:
     def __init__(self):
         self.__fficreator = ffi_creator
         self.__compiler = GHC()
-        self._custom_flags = Flags()
+        self._flags = list()
 
     @property
     def compiler(self):
@@ -32,7 +32,7 @@ class Compiler:
 
     @property
     def flags(self):
-        return self._custom_flags()
+        return tuple(flatten(self._flags))
 
     def add_flag(self, flag):
         """Adds a flag to `flags`.
@@ -42,7 +42,8 @@ class Compiler:
         flag : str
             A valid compile time flag.
         """
-        self._custom_flags.add_flag(flag)
+        if flag not in self._flags:
+            self._flags.append(flag)
 
     def remove_flag(self, flag):
         """Removes a flag from `flags`.
@@ -52,7 +53,8 @@ class Compiler:
         flag : str
             A flag contained within `flags`.
         """
-        self._custom_flags.remove_flag(flag)
+        if flag in self._flags:
+            self._flags.remove(flag)
 
     def compile(self, filename):
         """Creates an FFI file, compiles and links it against the
@@ -92,39 +94,6 @@ class Compiler:
             self.__compiler.compile(name, lib_file.name, self.flags)
             lib = cdll.LoadLibrary(lib_file.name)
         return lib, parse_infos
-
-class Flags:
-    """Container type for compile time flags. Callable.
-
-    Returns
-    -------
-    flags : tuple(str)
-    """
-    def __init__(self):
-        self._flags = list()
-
-    def __call__(self):
-        return tuple(flatten(self._flags))
-
-    def add_flag(self, flag):
-        """Adds a flag to the collection.
-
-        Parameters
-        ----------
-        flag : str
-        """
-        if flag not in self._flags:
-            self._flags.append(flag)
-
-    def remove_flag(self, flag):
-        """Removes a flag from the collection.
-
-        Parameters
-        ----------
-        flag : str
-        """
-        if flag in self._flags:
-            self._flags.remove(flag)
 
 class SourceModule:
     """Wrapper for runtime created Haskell source.

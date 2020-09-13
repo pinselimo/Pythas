@@ -216,7 +216,7 @@ class GHC:
         GHC_OPT_OPTIMISATION = ['', '-O', '-O2', '-optc-O3']
         GHC_OUT = '-o'
 
-        if sys.platform.startswith('linux') or platform.startswith('darwin'):
+        if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
             GHC_OPTIONS = ('-dynamic',) + GHC_OPTIONS
             LIB_HS_RTS = '-lHSrts-ghc' + self.VERSION
             flags = (
@@ -224,7 +224,7 @@ class GHC:
                 GHC_OUT, libname, filename, *PYTHAS_TYPES, HS_BRACKET_C, LIB_HS_RTS
                 )
 
-        elif platform.startswith('win32'):
+        elif sys.platform.startswith('win32'):
             flags = (
                 GHC_OPT_OPTIMISATION[self.optimisation], *GHC_OPTIONS,
                 GHC_OUT, libname, filename, *PYTHAS_TYPES, HS_BRACKET_C
