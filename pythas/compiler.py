@@ -1,3 +1,5 @@
+"""API for Haskell compilation and binding."""
+
 from ctypes import cdll
 from functools import partial
 import os.path
@@ -11,10 +13,19 @@ from .utils import shared_library_suffix, remove_created_files, \
 from .parser import parse_haskell
 
 class Compiler:
+    """Interface for the compiler used to create shared libraries.
+
+    Attributes
+    ----------
+    compiler : GHC
+        More concrete implementation of the actual compiler.
+    flags : tuple(str)
+        Flags for `compiler`.
+    """
     def __init__(self):
         self.__fficreator = ffi_creator
         self.__compiler = GHC()
-        self._custom_flags = Flags()
+        self._flags = list()
 
     @property
     def compiler(self):
@@ -22,15 +33,44 @@ class Compiler:
 
     @property
     def flags(self):
-        return self._custom_flags()
+        return tuple(flatten(self._flags))
 
     def add_flag(self, flag):
-        self._custom_flags.add_flag(flag)
+        """Adds a flag to `flags`.
+
+        Parameters
+        ----------
+        flag : str
+            A valid compile time flag.
+        """
+        if flag not in self._flags:
+            self._flags.append(flag)
 
     def remove_flag(self, flag):
-        self._custom_flags.remove_flag(flag)
+        """Removes a flag from `flags`.
+
+        Parameters
+        ----------
+        flag : str
+            A flag contained within `flags`.
+        """
+        if flag in self._flags:
+            self._flags.remove(flag)
 
     def compile(self, filename):
+        """Creates an FFI file, compiles and links it against the
+        Python runtime.
+
+        Parameters
+        ----------
+        filename : str
+            Pathlike object to a Haskell source file.
+
+        Returns
+        -------
+        ffi_libs : [(ctypes.CDLL, pythas.parser.data.ParseInfo)]
+            List of tuples of linked libraries and their respective parsed infos.
+        """
         ffi_filename = self.__fficreator.createFileBindings(filename)
 
         ffi_libs = [self._compile(name) for name in [filename, ffi_filename]]
@@ -39,6 +79,17 @@ class Compiler:
         return ffi_libs
 
     def _compile(self, name):
+        """Compiles an FFI file, links its library and parses for infos.
+
+        Parameters
+        ----------
+        name : str
+            Pathlike object to a Haskell file containing FFI exports.
+
+        Returns
+        -------
+        (lib, parse_infos) : The linked library and its parsed infos
+        """
         parse_infos = parse_haskell(name)
         windows = sys.platform.startswith('win32')
         with tempfile.NamedTemporaryFile(
@@ -53,27 +104,19 @@ class Compiler:
 
         return lib, parse_infos
 
-class Flags:
-    def __init__(self):
-        self._flags = list()
-
-    def __call__(self):
-        return tuple(flatten(self._flags))
-
-    def add_flag(self, flag):
-        if flag not in self._flags:
-            self._flags.append(flag)
-
-    def remove_flag(self, flag):
-        if flag in self._flags:
-            self._flags.remove(flag)
-
 class SourceModule:
+    """Wrapper for runtime created Haskell source.
+
+    Parameters
+    ----------
+    code : str
+        The Haskell source code to wrap.
+    """
     def __init__(self, code):
         code = re.sub('\n[ \t]+','\n',code)
         haskell = 'module Temp where\n'+code
         compiler = Compiler()
-        print(haskell)
+
         with tempfile.TemporaryDirectory() as dir:
             temp = os.path.join(dir,"Temp.hs")
             with open(temp,'w') as f:
