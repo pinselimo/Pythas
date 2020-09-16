@@ -1,3 +1,5 @@
+"""Core module containing the main metaprogramming."""
+
 from importlib.abc  import Loader, MetaPathFinder
 from importlib.util import spec_from_file_location
 from functools  import partial
@@ -7,6 +9,17 @@ import sys
 from .utils import custom_attr_getter, find_source, ffi_libs_exports
 
 class PythasMetaFinder(MetaPathFinder):
+    """MetaPathFinder for Haskell source files.
+
+    Parameters
+    ----------
+    compiler : Compiler
+        The compiler used to create the linked library.
+
+    Methods
+    -------
+    find_spec : Entry point for path finding
+    """
     def __init__(self, compiler):
         self.compiler = compiler
 
@@ -40,6 +53,15 @@ class PythasMetaFinder(MetaPathFinder):
         return None
 
 class PythasLoader(Loader):
+    """Creates the FFI, compiles and links Haskell modules.
+
+    Parameters
+    ----------
+    compiler : Compiler
+        The compiler used to create the linked library.
+    filename : str
+        Pathlike object locating the Haskell source file.
+    """
     def __init__(self, compiler, filename):
         self.compiler = compiler
         self.filename = filename
@@ -52,5 +74,12 @@ class PythasLoader(Loader):
         module.__dir__ = lambda: list(module.__dict__) + list(ffi_libs_exports(ffi_libs))
 
 def install(compiler):
+    """Installer for the `PythasMetaFinder`.
+
+    Parameters
+    ----------
+    compiler : Compiler
+        The compiler used to create the linked library.
+    """
     sys.meta_path.insert(0, PythasMetaFinder(compiler))
 

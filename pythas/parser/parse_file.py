@@ -1,9 +1,23 @@
+"""Parse Haskell modules/files."""
+
 import os.path
 
 from .data import ParseInfo, FuncInfo
 from .parse_type import parse_type
 
 def parse_haskell(hs_file):
+    """Parses a Haskell file for exported functions and ffi exports.
+
+    Parameters
+    ----------
+    hs_file : str
+        Pathlike object referring to the Haskell source file.
+
+    Reuturns
+    --------
+    parse_info : ParseInfo
+        Informations parsed from `hs_file`.
+    """
     # preprocessing of file
     *path, name = os.path.split(hs_file)
     name = name[:name.find('.hs')]
@@ -25,6 +39,20 @@ def parse_haskell(hs_file):
     return parse_info
 
 def _parse_haskell(hs_lines, parse_info):
+    """Parses lines of a Haskell source file.
+
+    Parameters
+    ----------
+    hs_lines : list(str)
+        Lines of a Haskell source file.
+    parse_info : ParseInfo
+        Container into which informations are to be stored.
+
+    Returns
+    -------
+    parse_info : ParseInfo
+        Informations parsed from `hs_lines`.
+    """
     in_comment = False
     for hs_line in hs_lines:
         for hs_line in hs_line.split(';'):
@@ -44,6 +72,24 @@ def _parse_haskell(hs_lines, parse_info):
     return parse_info
 
 def find_module_statement(hs_cont, name):
+    """Locates the `module` statement in a Haskell source file.
+
+    Parameters
+    ----------
+    hs_cont : str
+        Content of a Haskell source file.
+    name : str
+        Name of the Haskell module as given by file name.
+
+    Returns
+    -------
+    posiiton : int
+        Index of the `module` statement in the `hs_cont`.
+
+    Raises
+    ------
+    SyntaxError : Haskell file module statement malformed
+    """
     module_name = 'module {}'.format(name)
     module_decl = hs_cont.find(module_name)
 
@@ -53,13 +99,20 @@ def find_module_statement(hs_cont, name):
         raise SyntaxError('Haskell file module statement malformed (Case sensitive!)')
 
 def parse_head(hs_lines, name):
-    '''
-    Finds all the names that are exported according to the module statement.
+    """Finds all the names that are exported according to the module statement.
 
-    Returns None if there is no Statement.
-    Returns an empty list if no names are exported.
-    Returns a list of names exported.
-    '''
+    Parameters
+    ----------
+    hs_lines : list(str)
+        Lines of a Haskell source file
+    name : str
+        Name of the Haskell module as given by file name.
+
+    Returns
+    -------
+    exports : list(str)
+        List of exported names or `None` if no exports statement is given.
+    """
     hs_cont = ' '.join(hs_lines)
     name,*_ = name.split('.')
     module_decl_end = find_module_statement(hs_cont, name)
@@ -76,6 +129,15 @@ def parse_head(hs_lines, name):
             }
 
 def parse_line(hs_line, parse_info):
+    """Parses a single line of Haskell source code.
+
+    Parameters
+    ----------
+    hs_line : str
+        Line of Haskell code.
+    parse_info : ParseInfo
+        Container into which informations are to be stored.
+    """
     hs_line = hs_line.strip(' ;')
     if hs_line.startswith('foreign export ccall'):
         func_export,type_def = hs_line.split('::')
