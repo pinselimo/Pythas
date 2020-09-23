@@ -49,7 +49,19 @@ You can use tuples to pack results of different types into a single one. It is n
 
 ## Requirements
 
-Only make sure that ```GHC``` is located in your ```$PATH```. ```Pythas``` is written with compatibility and ease of use in mind. All libraries used in the ```Haskell``` backend are contained in the standard installation of GHC. No requirements exist on the ```Python```ic side of life.
+Please make sure that ```GHC``` is located in your ```$PATH```. ```Pythas``` requires at least ```GHC``` version ```8.0.2```. It defaults to using ```stack ghc```. To check if your ```GHC``` version is compatible run:
+
+~~~bash
+$ stack ghc -- --version
+~~~
+
+or without ```stack``` installed:
+
+~~~bash
+$ ghc --version
+~~~
+
+```Pythas``` is written with compatibility and ease of use in mind. All libraries used in the ```Haskell``` backend are contained in the standard installation of GHC. No requirements exist on the ```Python```ic side of life.
 
 ## Install
 
