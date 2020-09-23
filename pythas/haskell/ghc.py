@@ -98,6 +98,29 @@ def get_ghc_version(stack_ghc):
     except AttributeError: # Regex didn't match, fallback
         return get_ghc_version_from_header()
 
+def check_ghc_version():
+    """Checks if the GHC version required is installed.
+
+    Raises
+    ------
+    ImportError : Version-Number of GHC is too low
+    """
+    stack = has_stack()
+    ghc_version = get_ghc_version(stack)
+
+    major,minor,micro = ghc_version.split('.')
+    if int(major) < 8:
+        if stack:
+            raise ImportError(
+                    'Stack GHC version {} too low.'.format(ghc_version) +
+                    'Update it to at least 8.0.2 by changing your global stack config'
+                    )
+        else:
+            raise ImportError(
+                    'GHC version {} too low.'.format(ghc_version +
+                    'Update it to at least 8.0.2 or install stack.'
+                    )
+
 def has_stack():
     """Looks for stack on the `$PATH`.
 
