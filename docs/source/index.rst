@@ -45,6 +45,8 @@ Most code of the ``Pythas`` package is licensed under the LGPLv3 license. This l
    :maxdepth: 2
    :caption: Contents:
 
+   reference
+
 Indices and tables
 ==================
 
