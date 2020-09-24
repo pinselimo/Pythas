@@ -167,10 +167,22 @@ class GHC:
         cmd = self.ghc_compile_cmd(flags)
 
         print('Compiling with: {}'.format(cmd[0]))
-        subprocess.run(cmd)
+        proc = subprocess.run(cmd, capture_output=True)
 
-        os.chdir(cwd)
-        return libpath
+        if proc.returncode > 0:
+            logfile = os.path.join(cwd, '.pythas.log')
+            with open(logfile, 'wb') as f:
+                f.write(proc.stdout)
+                f.write(proc.stderr)
+    
+            raise CompileError(
+                        "Stack failed with exit code {} \n"
+                        "The log has been written to {}"
+                        "".format(proc.returncode, logfile)
+                        )
+        else:
+            os.chdir(cwd)
+            return libpath
 
     def flags(self, filename, libname, _redirect=False):
         """Creates the flags needed for successful compilation of Haskell FFI files
@@ -251,3 +263,5 @@ class GHC:
         else:
             return (GHC_CMD,) + options
 
+class CompileError(ImportError):
+    pass
