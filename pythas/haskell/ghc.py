@@ -113,7 +113,7 @@ def check_ghc_version():
         if stack:
             raise ImportError(
                     'Stack GHC version {} too low.'.format(ghc_version) +
-                    'Update it to at least 8.0.2 by changing your global stack config'
+                    'Update it to at least 8.0.2 by changing the stack config file.'
                     )
         else:
             raise ImportError(
@@ -189,6 +189,7 @@ class GHC:
         flags += more_options
         cmd = self.ghc_compile_cmd(flags)
 
+        check_ghc_version()
         print('Compiling with: {}'.format(cmd[0]))
         subprocess.run(cmd)
 
