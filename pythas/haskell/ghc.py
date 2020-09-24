@@ -117,7 +117,7 @@ def check_ghc_version():
                     )
         else:
             raise ImportError(
-                    'GHC version {} too low.'.format(ghc_version +
+                    'GHC version {} too low.'.format(ghc_version) +
                     'Update it to at least 8.0.2 or install stack.'
                     )
 
