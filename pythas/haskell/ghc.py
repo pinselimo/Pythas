@@ -19,7 +19,7 @@ def get_ghc_version_from_cmdln(stack_ghc):
     version : str
         Version number string.
     """
-    REGEX_HS_VERSION = b'(?<=[a-z A-Z])[0-9.]{5}'
+    REGEX_HS_VERSION = b'(?<=[a-z A-Z])[0-9.]+'
 
     if stack_ghc:
         cmd = ('stack','ghc','--','--version')
