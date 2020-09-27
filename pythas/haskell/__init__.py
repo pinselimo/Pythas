@@ -25,4 +25,3 @@ ffi_creator.createFileBindings.argtype = [c_wchar_p]
 ffi_creator.createFileBindings.restype = c_wchar_p
 ffi_creator.freeReturnedString.argtypes = [c_wchar_p]
 ffi_creator.freeReturnedString.restype = c_voidp
-

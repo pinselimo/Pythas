@@ -19,7 +19,7 @@ def get_ghc_version_from_cmdln(stack_ghc):
     version : str
         Version number string.
     """
-    REGEX_HS_VERSION = b'(?<=[a-z A-Z])[0-9.]{5}'
+    REGEX_HS_VERSION = b'(?<=[a-z A-Z])[0-9.]+'
 
     if stack_ghc:
         cmd = ('stack','ghc','--','--version')
@@ -167,10 +167,22 @@ class GHC:
         cmd = self.ghc_compile_cmd(flags)
 
         print('Compiling with: {}'.format(cmd[0]))
-        subprocess.run(cmd)
+        proc = subprocess.run(cmd, capture_output=True)
 
-        os.chdir(cwd)
-        return libpath
+        if proc.returncode > 0:
+            logfile = os.path.join(cwd, '.pythas.log')
+            with open(logfile, 'wb') as f:
+                f.write(proc.stdout)
+                f.write(proc.stderr)
+
+            raise CompileError(
+                        "Stack failed with exit code {} \n"
+                        "The log has been written to {}"
+                        "".format(proc.returncode, logfile)
+                        )
+        else:
+            os.chdir(cwd)
+            return libpath
 
     def flags(self, filename, libname, _redirect=False):
         """Creates the flags needed for successful compilation of Haskell FFI files
@@ -253,3 +265,7 @@ class GHC:
             return ('stack',) + STACK_OPTIONS + (GHC_CMD, '--') + options
         else:
             return (GHC_CMD,) + options
+
+class CompileError(ImportError):
+    pass
+
