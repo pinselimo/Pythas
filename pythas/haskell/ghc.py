@@ -191,10 +191,22 @@ class GHC:
 
         check_ghc_version()
         print('Compiling with: {}'.format(cmd[0]))
-        subprocess.run(cmd)
+        proc = subprocess.run(cmd, capture_output=True)
 
-        os.chdir(cwd)
-        return libpath
+        if proc.returncode > 0:
+            logfile = os.path.join(cwd, '.pythas.log')
+            with open(logfile, 'wb') as f:
+                f.write(proc.stdout)
+                f.write(proc.stderr)
+
+            raise CompileError(
+                        "Stack failed with exit code {} \n"
+                        "The log has been written to {}"
+                        "".format(proc.returncode, logfile)
+                        )
+        else:
+            os.chdir(cwd)
+            return libpath
 
     def flags(self, filename, libname, _redirect=False):
         """Creates the flags needed for successful compilation of Haskell FFI files
@@ -271,7 +283,13 @@ class GHC:
         """
         GHC_CMD = 'ghc'
         if self._stack:
-            return ('stack', GHC_CMD, '--') + options
+            # https://gitlab.haskell.org/ghc/ghc/-/issues/17926
+            STACK_OPTIONS = ('--resolver=lts-14.27',) if sys.platform.startswith('win32') else ()
+
+            return ('stack',) + STACK_OPTIONS + (GHC_CMD, '--') + options
         else:
             return (GHC_CMD,) + options
+
+class CompileError(ImportError):
+    pass
 
