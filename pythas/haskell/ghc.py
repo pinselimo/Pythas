@@ -164,7 +164,7 @@ class GHC:
         """
         self._optimisation = min(2, max(0, level))
 
-    def stack_usage(enabled):
+    def stack_usage(self, enabled):
         """Enable the usage of stack for compilation.
         Will default to False if stack is not available.
 
