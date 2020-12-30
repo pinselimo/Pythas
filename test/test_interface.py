@@ -24,7 +24,7 @@ def test_sourcemodules():
     assert m.f([('a','b'),('c','d')]) == 2
 
 def test_stack_switch():
-    pythas.compiler.ghc.stack_usage(False)
+    pythas.compiler.stack_usage(False)
     import test.hs.testcases as t
     assert t.constantInt == 63
 
