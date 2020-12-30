@@ -164,6 +164,23 @@ class GHC:
         """
         self._optimisation = min(2, max(0, level))
 
+    def stack_usage(enabled):
+        """Enable the usage of stack for compilation.
+        Will default to False if stack is not available.
+
+        Parameters
+        ----------
+        enabled : bool
+            True if stack should be enabled.
+
+        Returns
+        -------
+        enabled : bool
+            True if stack is now enabled.
+        """
+        self._stack = enabled and has_stack()
+        return self._stack
+
     def compile(self, filepath, libpath, more_options=tuple(), _redirect=False):
         """Compile a Haskell source file to a shared library.
 
