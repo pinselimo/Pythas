@@ -1,5 +1,4 @@
 from .context import pythas
-import test.hs.testcases as t
 
 from hypothesis import strategies, given
 
@@ -7,6 +6,7 @@ strings = strategies.text()
 tuples  = strategies.tuples
 
 def test_dynamic_dir():
+    import test.hs.testcases as t
     init_dir = set(dir(t))
     t.something = 63
     new_dir  = set(dir(t))
@@ -22,6 +22,11 @@ def test_sourcemodules():
             ''')
     assert m.i == 63
     assert m.f([('a','b'),('c','d')]) == 2
+
+def test_stack_switch():
+    pythas.compiler.ghc.stack_usage(False)
+    import test.hs.testcases as t
+    assert t.constantInt == 63
 
 @given(tuples(strings,strings), strings)
 def test_compilerflags(t,s):
