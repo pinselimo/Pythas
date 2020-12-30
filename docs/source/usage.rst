@@ -60,3 +60,8 @@ In both cases there are some limitations upon the Haskell code which is compilab
 
 Invalid functions or constants will not be available from the Python context. However, they will not trigger any errors. Thus, they can be used within the Haskell context without risk.
 
+Speed
+-----
+
+Neither quick compilation nor execution are main objectives of ``Pythas`` development at this stage. Nonetheless, the optimization flag is set to its maximum level of 2. For more details refer to pythas_interface_.
+
