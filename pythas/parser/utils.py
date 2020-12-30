@@ -159,3 +159,6 @@ def parse_generator(f_llist, f_carray, f_tuple, f_string, f_default):
 
     return parser
 
+class TypeWarning(Warning):
+    pass
+
