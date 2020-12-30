@@ -32,9 +32,8 @@ This will use whichever ``ghc`` is in the path of the directory the source file 
 Pythas from source
 ------------------
 
-Once either ``stack`` and/or ``GHC`` are installed, you can install ``Pythas`` from source:
+Once either ``stack`` and/or ``GHC`` are installed, you can install ``Pythas`` from source::
 
-.. code-block:: bash
     $ git clone --recurse-submodules -j8 https://github.com/pinselimo/Pythas.git
     $ cd Pythas && pip install .
     $ cd ~
@@ -43,9 +42,8 @@ Once either ``stack`` and/or ``GHC`` are installed, you can install ``Pythas`` f
 Pythas from pip
 ---------------
 
-Pythas is also available for download from the Python Package Index ``pypi`` via ``pip``:
+Pythas is also available for download from the Python Package Index ``pypi`` via ``pip``::
 
-.. code-block:: bash
     $ pip install pythas
     $ python -c "import pythas" # Will compile the Haskell source
 
