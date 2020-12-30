@@ -17,7 +17,7 @@ class Compiler:
 
     Attributes
     ----------
-    compiler : GHC
+    ghc : GHC
         More concrete implementation of the actual compiler.
     flags : tuple(str)
         Flags for `compiler`.
@@ -28,7 +28,7 @@ class Compiler:
         self._flags = list()
 
     @property
-    def compiler(self):
+    def ghc(self):
         return self.__compiler
 
     @property
