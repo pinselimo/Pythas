@@ -19,7 +19,7 @@ def get_ghc_version_from_cmdln(stack_ghc):
     version : str
         Version number string.
     """
-    REGEX_HS_VERSION = b'(?<=[a-z A-Z])[0-9.]{5}'
+    REGEX_HS_VERSION = b'(?<=[a-z A-Z])[0-9.]+'
 
     if stack_ghc:
         cmd = ('stack','ghc','--','--version')
@@ -98,6 +98,29 @@ def get_ghc_version(stack_ghc):
     except AttributeError: # Regex didn't match, fallback
         return get_ghc_version_from_header()
 
+def check_ghc_version():
+    """Checks if the GHC version required is installed.
+
+    Raises
+    ------
+    ImportError : Version-Number of GHC is too low
+    """
+    stack = has_stack()
+    ghc_version = get_ghc_version(stack)
+
+    major,minor,micro = ghc_version.split('.')
+    if int(major) < 8:
+        if stack:
+            raise ImportError(
+                    'Stack GHC version {} too low.'.format(ghc_version) +
+                    'Update it to at least 8.0.2 by changing the stack config file.'
+                    )
+        else:
+            raise ImportError(
+                    'GHC version {} too low.'.format(ghc_version) +
+                    'Update it to at least 8.0.2 or install stack.'
+                    )
+
 def has_stack():
     """Looks for stack on the `$PATH`.
 
@@ -141,6 +164,23 @@ class GHC:
         """
         self._optimisation = min(2, max(0, level))
 
+    def stack_usage(self, enabled):
+        """Enable the usage of stack for compilation.
+        Will default to False if stack is not available.
+
+        Parameters
+        ----------
+        enabled : bool
+            True if stack should be enabled.
+
+        Returns
+        -------
+        enabled : bool
+            True if stack is now enabled.
+        """
+        self._stack = enabled and has_stack()
+        return self._stack
+
     def compile(self, filepath, libpath, more_options=tuple(), _redirect=False):
         """Compile a Haskell source file to a shared library.
 
@@ -166,11 +206,24 @@ class GHC:
         flags += more_options
         cmd = self.ghc_compile_cmd(flags)
 
+        check_ghc_version()
         print('Compiling with: {}'.format(cmd[0]))
-        subprocess.run(cmd)
+        proc = subprocess.run(cmd, capture_output=True)
 
-        os.chdir(cwd)
-        return libpath
+        if proc.returncode > 0:
+            logfile = os.path.join(cwd, '.pythas.log')
+            with open(logfile, 'wb') as f:
+                f.write(proc.stdout)
+                f.write(proc.stderr)
+
+            raise CompileError(
+                        "Stack failed with exit code {} \n"
+                        "The log has been written to {}"
+                        "".format(proc.returncode, logfile)
+                        )
+        else:
+            os.chdir(cwd)
+            return libpath
 
     def flags(self, filename, libname, _redirect=False):
         """Creates the flags needed for successful compilation of Haskell FFI files
@@ -247,7 +300,13 @@ class GHC:
         """
         GHC_CMD = 'ghc'
         if self._stack:
-            return ('stack', GHC_CMD, '--') + options
+            # https://gitlab.haskell.org/ghc/ghc/-/issues/17926
+            STACK_OPTIONS = ('--resolver=lts-14.27',) if sys.platform.startswith('win32') else ()
+
+            return ('stack',) + STACK_OPTIONS + (GHC_CMD, '--') + options
         else:
             return (GHC_CMD,) + options
+
+class CompileError(ImportError):
+    pass
 
