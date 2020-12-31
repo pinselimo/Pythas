@@ -1,5 +1,8 @@
 .. _pythas_details :
 
+Advanced Topics
+===============
+
 How does this magic work?
 -------------------------
 
