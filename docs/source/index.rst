@@ -13,7 +13,7 @@ Dependencies
 
 One development goal for ``Pythas`` was to keep users out of cabal hell. Thus, the pacakage includes all Haskell and C source files needed. To compile its own source and other Haskell modules ``Pythas`` needs either **Stack** or a plain **GHC** installation.
 If either of those is installed they can be detected automatically. If **Stack** is installed, it will always be used as default.
-A more detailed explanation can be found in pythas_installation_.
+A more detailed explanation can be found in chapter :ref:`pythas_installation`.
 
 Basic Usage
 -----------
@@ -24,7 +24,7 @@ With an ``example/Example.hs`` file containing a Hello World function ``hello ::
     >>> e.hello()
     Hello from Haskell!
 
-For further usage scenarios refer to pythas_usage_.
+For further usage scenarios refer to the :ref:`pythas_usage` chapter.
 
 Contents
 ========

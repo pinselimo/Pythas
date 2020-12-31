@@ -67,5 +67,5 @@ Invalid functions or constants will not be available from the Python context. Ho
 Speed
 -----
 
-Neither quick compilation nor execution are main objectives of ``Pythas`` development at this stage. Nonetheless, the optimization flag is set to its maximum level of 2. For more details refer to pythas_interface_.
+Neither quick compilation nor execution are main objectives of ``Pythas`` development at this stage. Nonetheless, the optimization flag is set to its maximum level of 2. For more details refer to :ref:`pythas_interface`.
 
