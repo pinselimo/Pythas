@@ -7,10 +7,10 @@ With *Pythas* installed you have multiple options of compiling and importing Has
 
 Note that the first time you use ``import pythas`` its parts implemented in Haskell are compiled, which impacts import time. Following usages will not show this behaviour anymore. Only updates of *Pythas* which alter parts of its Haskell source will trigger recompilation.
 
-Existing Haskell Modules
-------------------------
+Static Haskell Modules
+----------------------
 
-For existing Haskell source code *Pythas* aims to provide a pythonic import behaviour. Consider you execute ``python`` in a directory which contains a Haskell module ``Example.hs`` in a ``examples`` subdirectory::
+For static Haskell source files *Pythas* aims to provide a pythonic import behaviour. Consider you execute ``python`` in a directory which contains a Haskell module ``Example.hs`` in a ``examples`` subdirectory::
 
     .
     └─── examples
