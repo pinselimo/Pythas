@@ -8,17 +8,17 @@ While **Pythas** itself is a Python library, it contains a considerable amount o
 Install Haskell
 ---------------
 
-For compilation of Haskell source **Pythas** makes use of the Glasgow Haskell Compiler (GHC). This is the most commonly used compiler for the Haskell programming language. It comprises a multitude of extensions to the language which should therefore mostly be supported by **Pythas**. However, thorough support of all GHC language extensions cannot be guaranteed and is to be considered experimental at this stage (v0.01dev).
+For compilation of Haskell source **Pythas** makes use of the Glasgow Haskell Compiler (GHC). This is the most commonly used compiler for the Haskell programming language. It comprises a multitude of extensions to the language which should therefore mostly be supported by **Pythas**. However, thorough support of all GHC language extensions cannot be guaranteed and is to be considered experimental at this stage (|version|).
 
 Cabal/GHC vs Stack
 ^^^^^^^^^^^^^^^^^^
 
 The GHC compiler can be installed in various ways.
 
-  + As a bare bones compiler executable (`Link https://www.haskell.org/ghc/download.html`_)
-  + As a minimal package also including build tools *Cabal* and *Stack* (`Link https://www.haskell.org/downloads/#minimal`_)
-  + On top of the *Stack* build tool providing management of different GHC installs (`Link https://docs.haskellstack.org/en/stable/README/`_)
-  + With the full blown ``Haskell Platform`` installation providing the most common libraries and build tools altogether (`Link https://www.haskell.org/platform/`_)
+  + As a bare bones `compiler executable <https://www.haskell.org/ghc/download.html>`_.
+  + As a `minimal package <https://www.haskell.org/downloads/#minimal>`_ also including build tools *Cabal* and *Stack*.
+  + On top of the `Stack <https://docs.haskellstack.org/en/stable/README/>`_ build tool providing management of different GHC installs.
+  + With the full blown `Haskell Platform <https://www.haskell.org/platform/>`_ installation providing the most common libraries and build tools altogether.
 
 If a *Stack* install is available, **Pythas** will default to utilizing it. This means that available ``stack.yaml`` files are taken into consideration providing stable and consistent compilation results.
 
