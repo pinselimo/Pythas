@@ -1,5 +1,7 @@
+.. _pythas_installation:
+
 Installation
-------------
+============
 
 While ``Pythas`` itself is a Python library, it contains a considerable amount of Haskell source code. This part of the library is compiled once at the first import. Therefore, it is paramount to provide a ``GHC`` installation. Note that in subsequent usages this compilation is not necessary, reducing the import time significantly.
 
