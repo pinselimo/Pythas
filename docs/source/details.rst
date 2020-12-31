@@ -34,10 +34,13 @@ Code generation
 To provide ``GHC`` with some source to compile a temporary Haskell module is generated. All files additionally created will be removed directly after the compiled module is imported in Python.
 Exports contained in the original module will also be included in the final import and are not affected by the generated code.
 
+Additionally to the wrapped functions, ``Pythas`` will also add specific functions for freeing any memory allocated by the Haskell runtime.
+
 Compilation and import
 ^^^^^^^^^^^^^^^^^^^^^^
 
 The module is ultimately compiled into a shared library stored in a temporary file, This is the actual binary imported into Python. In Python it is again wrapped to provide a pythonic interface just as you would expect it from any other Python import.
+It will also add automatised calls to the functions freeing memory described above.
 
 Voilá, you can use Haskell source from Python!
 
@@ -57,4 +60,13 @@ Optimisation flag
 ^^^^^^^^^^^^^^^^^
 
 The default value for the Optimisation flag is already set to ``-O2``. However, if for some reason you want to change this value you can do using the ``GHC`` instance so e.g.: ``compiler.ghc.Optimisation = 1`` will set ``-O1`` at compile time.
+
+Notes on faster execution times
+-------------------------------
+
+Whenever the interface has to hand over a list, a new ``struct`` containing a C array and an integer with its length is created. This goes both in Haskell - Python as well as in Python - Haskell direction. Even in cases where a list is handed in both directions, the pointer/array will not be re-used!
+
+Thus, to save execution time, consider moving ``map``, ``foldr`` or similar calls into the Haskell source.
+
+Similarly, pointers to the structs created for the transfer of tuples are not reused.
 
