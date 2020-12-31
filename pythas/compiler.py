@@ -105,12 +105,12 @@ class Compiler:
         return lib, parse_infos
 
 class SourceModule:
-    """Wrapper for runtime created Haskell source.
+    """Module created from inline Haskell source code.
 
     Parameters
     ----------
     code : str
-        The Haskell source code to wrap.
+        The Haskell source code to construct the module from.
     """
     def __init__(self, code):
         code = re.sub('\n[ \t]+','\n',code)
