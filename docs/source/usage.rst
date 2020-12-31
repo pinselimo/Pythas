@@ -23,7 +23,7 @@ Then you can import this module simply by typing:
     >>> import pythas
     >>> import examples.example as example
 
- The ``example`` module and the function it contains can now be accessed from python just like any usual python package. Given the following code in ``Example.hs``:
+The ``example`` module and the function it contains can now be accessed from python just like any usual python package. Given the following code in ``Example.hs``:
 
 .. code-block:: haskell
 
