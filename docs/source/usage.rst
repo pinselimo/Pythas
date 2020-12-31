@@ -67,12 +67,14 @@ Constants vs IO Constants
 Consider two type annotations in Haskell:
 
 .. code-block:: haskell
+
     a :: Int
     b :: IO Int
 
 Interfacing from Python through *Pythas* these constants/variables (let's just not go down that rabbit hole right now) will be available like so:
 
 .. code-block:: python
+
     >>> m.a
     63
     >>> m.b
@@ -83,6 +85,7 @@ Interfacing from Python through *Pythas* these constants/variables (let's just n
 The second name ``b`` needs to be called in order to expose its value. This is actually somewhat convenient, as it exposes part of Haskells strict notion on purity in Python. However, it gets fuzzy when we try to use nested data types (i.e. anything that needs a pointer - Lists, Tuples, Strings & Custom Types). *Pythas* will need to wrap these using memory operations. Thus, even pure code is lifted into the IO monad for data transfer. So, if we take ``a`` and ``b`` instead to be:
 
 .. code-block:: haskell
+
     a :: [Int]
     b :: IO [Int]
 
@@ -90,6 +93,8 @@ We will end up with the following on Python's side:
 
 
 .. code-block:: python
+
+    <pythas.utils.PythasFunc object at 0x....>
     >>> m.a
     <pythas.utils.PythasFunc object at 0x....>
     >>> m.a()
