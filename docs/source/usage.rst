@@ -19,18 +19,21 @@ For existing Haskell source code ``Pythas`` aims to provide a pythonic import be
 Then you can import this module simply by typing:
 
 .. code-block:: python
+
     >>> import pythas
     >>> import examples.example as example
 
  The ``example`` module and the function it contains can now be accessed from python just like any usual python package. Given the following code in ``Example.hs``:
 
 .. code-block:: haskell
+
     increment :: Int -> Int
     increment = (1+)
 
 then this means you can call it from Python as you expect:
 
-..code-block:: python
+.. code-block:: python
+
     >>> example.increment(1)
     2
 
@@ -42,6 +45,7 @@ Inline Haskell Modules
 Inspired by ``pyCUDA`` the ``SourceModule`` - Object was added as another option for compiling Haskell source directly from a Python context.
 
 .. code-block:: python
+
     >>> from pythas import SourceModule
     >>> m = SourceModule('''
             increment :: Int -> Int

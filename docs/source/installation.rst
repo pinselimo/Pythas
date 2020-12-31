@@ -28,6 +28,7 @@ If a ``Stack`` install is available, ``Pythas`` will default to utilizing it. Th
 This choice implies that any other ``GHC`` installs are ignored if the ``stack`` command is found to be available. If you prefer to use ``ghc`` instead you can tell ``Pythas`` to disable ``stack``:
 
 .. code-block:: python
+
     from pythas import compiler
     uses_stack = compiler.ghc.stack_usage(False)
     print("Stack is used: {}".format(uses_stack))
