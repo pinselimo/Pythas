@@ -18,20 +18,22 @@ A more detailed explanation can be found in chapter :ref:`pythas_installation`.
 Basic Usage
 -----------
 
-With an ``example/Example.hs`` file containing a Hello World function ``hello :: IO ()``::
+With an ``example/Example.hs`` file containing a Hello World function ``hello :: IO ()``
+
+.. code-block:: python
+
     >>> import pythas
     >>> import example.example as e
     >>> e.hello()
     Hello from Haskell!
 
-For further usage scenarios refer to the :ref:`pythas_usage` chapter.
+In the :ref:`pythas_usage` chapter you can find more details on using *Pythas*. More practical examples are collected in a separate repository `Pythas-Examples <https://github.com/pinselimo/Pythas-Examples>`_.
 
 Contents
 ========
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
    installation
    usage
