@@ -69,8 +69,9 @@ The default value for the Optimisation flag is already set to ``-O2``. However, 
 Notes on faster execution times
 -------------------------------
 
-Whenever the interface has to hand over a list, a new ``struct`` containing a C array and an integer with its length is created. This goes both in Haskell - Python as well as in Python - Haskell direction. Even in cases where a list is handed in both directions, the pointer/array will not be re-used!
+Neither quick compilation nor execution are main objectives of *Pythas* development at this stage. In contrast, the aim is to emphasize Haskell's benefits and providing easier access to them for Python users. There are however, some tricks that can speed up your usage of Haskell code through *Pythas* significantly:
 
+Whenever the interface has to hand over a list, a new ``struct`` containing a C array and an integer with its length is created. This goes both in Haskell - Python as well as in Python - Haskell direction. Even in cases where a list is handed in both directions, the pointer/array will not be re-used!
 Thus, to save execution time, consider moving ``map``, ``foldr`` or similar calls into the Haskell source.
 
 Similarly, pointers to the structs created for the transfer of tuples are not reused.
