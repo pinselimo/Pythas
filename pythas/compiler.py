@@ -17,7 +17,7 @@ class Compiler:
 
     Attributes
     ----------
-    compiler : GHC
+    ghc : GHC
         More concrete implementation of the actual compiler.
     flags : tuple(str)
         Flags for `compiler`.
@@ -28,7 +28,7 @@ class Compiler:
         self._flags = list()
 
     @property
-    def compiler(self):
+    def ghc(self):
         return self.__compiler
 
     @property
@@ -56,6 +56,22 @@ class Compiler:
         """
         if flag in self._flags:
             self._flags.remove(flag)
+
+    def stack_usage(self, enabled):
+        """Enable the usage of stack for compilation.
+        Will default to False if stack is not available.
+
+        Parameters
+        ----------
+        enabled : bool
+            True if stack should be enabled.
+
+        Returns
+        -------
+        enabled : bool
+            True if stack is now enabled.
+        """
+        return self.__compiler.stack_usage(enabled)
 
     def compile(self, filename):
         """Creates an FFI file, compiles and links it against the
