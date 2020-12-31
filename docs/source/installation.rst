@@ -3,13 +3,13 @@
 Installation
 ============
 
-While **Pythas** itself is a Python library, it contains a considerable amount of Haskell source code. This part of the library is compiled once at the first import. Therefore, it is paramount to provide a *GHC* installation. Note that in subsequent usages this compilation is not necessary, reducing the import time significantly.
+While *Pythas* itself is a Python library, it contains a considerable amount of Haskell source code. This part of the library is compiled once at the first import. Therefore, it is paramount to provide a *GHC* installation. Note that in subsequent usages this compilation is not necessary, reducing the import time significantly.
 If you already have either *GHC* or *Stack* (or both) installed, skip ahead to :ref:`pythas_package_installation`.
 
 Install Haskell
 ---------------
 
-For compilation of Haskell source **Pythas** makes use of the Glasgow Haskell Compiler (GHC). This is the most commonly used compiler for the Haskell programming language. It comprises a multitude of extensions to the language which should therefore mostly be supported by **Pythas**. However, thorough support of all GHC language extensions cannot be guaranteed and is to be considered experimental at this stage (|version|).
+For compilation of Haskell source *Pythas* makes use of the *Glasgow Haskell Compiler (GHC)*. This is the most commonly used compiler for the Haskell programming language. It comprises a multitude of extensions to the language which should therefore mostly be supported by *Pythas*. However, thorough support of all GHC language extensions cannot be guaranteed and is to be considered experimental at this stage (|version|).
 
 Cabal/GHC vs Stack
 ^^^^^^^^^^^^^^^^^^
@@ -21,9 +21,9 @@ The GHC compiler can be installed in various ways.
   + On top of the `Stack <https://docs.haskellstack.org/en/stable/README/>`_ build tool providing management of different GHC installs.
   + With the full blown `Haskell Platform <https://www.haskell.org/platform/>`_ installation providing the most common libraries and build tools altogether.
 
-If a *Stack* install is available, **Pythas** will default to utilizing it. This means that available ``stack.yaml`` files are taken into consideration providing stable and consistent compilation results.
+If a *Stack* install is available, *Pythas* will default to utilizing it. This means that available ``stack.yaml`` files are taken into consideration providing stable and consistent compilation results.
 
-This choice implies that any other *GHC* installs are ignored if the ``stack`` command is found to be available. If you prefer to use ``ghc`` instead you can tell **Pythas** to disable ``stack``:
+This choice implies that any other *GHC* installs are ignored if the ``stack`` command is found to be available. If you prefer to use ``ghc`` instead you can tell *Pythas* to disable ``stack``:
 
 .. code-block:: python
 
@@ -38,7 +38,7 @@ This will use whichever ``ghc`` is in the path of the directory the source file 
 Install Pythas
 --------------
 
-Once either ``stack`` and/or *GHC* are installed, you can install **Pythas**.
+Once either ``stack`` and/or *GHC* are installed, you can install *Pythas*.
 
 From pip
 ^^^^^^^^

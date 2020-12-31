@@ -3,14 +3,14 @@
 Usage
 =====
 
-With ``Pythas`` installed you have multiple options of compiling and importing Haskell source code into Python. In all cases ``import pythas`` is the precondition to any consequent use of Haskell source.
+With *Pythas* installed you have multiple options of compiling and importing Haskell source code into Python. In all cases ``import pythas`` is the precondition to any consequent use of Haskell source.
 
-Note that the first time you use ``import pythas`` its parts implemented in Haskell are compiled, which impacts import time. Following usages will not show this behaviour anymore. Only updates of ``Pythas`` which alter parts of its Haskell source will trigger recompilation.
+Note that the first time you use ``import pythas`` its parts implemented in Haskell are compiled, which impacts import time. Following usages will not show this behaviour anymore. Only updates of *Pythas* which alter parts of its Haskell source will trigger recompilation.
 
 Existing Haskell Modules
 ------------------------
 
-For existing Haskell source code ``Pythas`` aims to provide a pythonic import behaviour. Consider you execute ``python`` in a directory which contains a Haskell module ``Example.hs`` in a ``examples`` subdirectory::
+For existing Haskell source code *Pythas* aims to provide a pythonic import behaviour. Consider you execute ``python`` in a directory which contains a Haskell module ``Example.hs`` in a ``examples`` subdirectory::
 
     .
     └─── examples
@@ -42,7 +42,7 @@ Some limitations exist on the
 Inline Haskell Modules
 ----------------------
 
-Inspired by ``pyCUDA`` the ``SourceModule`` - Object was added as another option for compiling Haskell source directly from a Python context.
+Inspired by *pyCUDA* the ``SourceModule`` - Object was added as another option for compiling Haskell source directly from a Python context.
 
 .. code-block:: python
 
@@ -67,5 +67,5 @@ Invalid functions or constants will not be available from the Python context. Ho
 Speed
 -----
 
-Neither quick compilation nor execution are main objectives of ``Pythas`` development at this stage. Nonetheless, the optimization flag is set to its maximum level of 2. For more details refer to :ref:`pythas_interface`.
+Neither quick compilation nor execution are main objectives of *Pythas* development at this stage. Nonetheless, the optimization flag is set to its maximum level of 2. For more details refer to :ref:`pythas_interface`.
 

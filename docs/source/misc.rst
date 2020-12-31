@@ -1,7 +1,7 @@
 Contributing
 ============
 
-The source code of **Pythas** is split among multiple repositories.
+The source code of *Pythas* is split among multiple repositories.
 
 * The `main repository <https://github.com/pinselimo/Pythas>`_ contains the Python source handling all the interaction with the Python runtime system.
 * `Pythas-FFI <https://github.com/pinselimo/Pythas-FFI>`_ contains the backend responsible for parsing Haskell modules and transpiling them into FFI exports. 
@@ -13,5 +13,5 @@ Contributions are welcome in all of these repositories. Please be advised to che
 License
 =======
 
-Most code of the **Pythas** package is licensed under the LGPLv3 license. This license is valid for all source code if not explicitly stated otherwise. Some parts are licensed under the MIT license, notably the *C-structs* Haskell package. Please refer to the respective *COPYING* and *COPYING.LESSER* or *LICENSE* files for details.
+Most code of the *Pythas* package is licensed under the LGPLv3 license. This license is valid for all source code if not explicitly stated otherwise. Some parts are licensed under the MIT license, notably the *C-structs* Haskell package. Please refer to the respective *COPYING* and *COPYING.LESSER* or *LICENSE* files for details.
 
