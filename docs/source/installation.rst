@@ -4,6 +4,7 @@ Installation
 ============
 
 While **Pythas** itself is a Python library, it contains a considerable amount of Haskell source code. This part of the library is compiled once at the first import. Therefore, it is paramount to provide a *GHC* installation. Note that in subsequent usages this compilation is not necessary, reducing the import time significantly.
+If you already have either *GHC* or *Stack* (or both) installed, skip ahead to :ref:`pythas_package_installation`.
 
 Install Haskell
 ---------------
@@ -31,6 +32,8 @@ This choice implies that any other *GHC* installs are ignored if the ``stack`` c
     print("Stack is used: {}".format(uses_stack))
 
 This will use whichever ``ghc`` is in the path of the directory the source file is located in. Using *Cabal* you can thus add the ``--write-ghc-environment-files=always`` option when using ``cabal build``. This will create a local ``.ghc.environment`` directory with its own *GHC* installation and link it to the local ``ghc`` command.
+
+.. _pythas_package_installation:
 
 Install Pythas
 --------------
