@@ -1,7 +1,7 @@
 .. _pythas_usage:
 
 Usage
------
+=====
 
 With ``Pythas`` installed you have multiple options of compiling and importing Haskell source code into Python. In all cases ``import pythas`` is the precondition to any consequent use of Haskell source.
 
@@ -55,8 +55,8 @@ Limitations
 
 In both cases there are some limitations upon the Haskell code which is compilable.
 
-  + Type annotations need to be supplied
-  + Only Haskell native types can be used
+  * Type annotations need to be supplied
+  * Only Haskell native types can be used
 
 Invalid functions or constants will not be available from the Python context. However, they will not trigger any errors. Thus, they can be used within the Haskell context without risk.
 
