@@ -37,15 +37,15 @@ While in Haskell lists **have** to be used, in Python any kind of sequence can b
 
 ## Tuples
 
-Tuples are only supported as result types of functions. Tuples as input arguments fall under sequences in Python and are not supported more directly. Try to ```curry``` your functions appropriately. 
+You can use tuples to pack results of different types into a single one. It is no problem to nest them and lists or vice versa. Checkout ```test.hs.Test.hs``` to see what Pythas is (successfully) tested for.
 
 ~~~python
->>>from example.example import tuple
+>>>from example.example import tuple, hsnd
 >>>tuple()
 (1,"a")
+>>>hsnd((1,2))
+2
 ~~~
-
-You can use tuples to pack results of different types into a single one. It is no problem to nest them and lists or vice versa. Checkout ```test.hs.Test.hs``` to see what Pythas is (successfully) tested for.
 
 ## Requirements
 
