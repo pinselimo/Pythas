@@ -5,11 +5,11 @@ from importlib.util import spec_from_file_location
 from functools  import partial
 import os.path
 import sys
-import logging
+from logging import getLogger
 
 from .utils import custom_attr_getter, find_source, ffi_libs_exports
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 class PythasMetaFinder(MetaPathFinder):
     """MetaPathFinder for Haskell source files.
