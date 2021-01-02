@@ -2,10 +2,13 @@
 
 import ctypes as cl
 from functools import partial
+from logging import getLogger
 
 from .data import FuncInfo
 from .utils import lmap, apply, strip_io, tuple_types, parse_generator
 from ..types import *
+
+logger = getLogger(__name__)
 
 HS2PY = {
         ### void ###
@@ -64,6 +67,7 @@ def simple_hs_2_py(hs_type):
     if hs_type in HS2PY:
         return HS2PY[hs_type]
     else:
+        logger.debug("Type {} not found within supported types".format(hs_type))
         raise TypeError(
                 'Non-simple type "{}" cannot '
                 'be used with Pythas'.format(hs_type)
@@ -90,7 +94,7 @@ def hs2py(hs_type):
     parse = parse_generator(
             # new_* functions are used because ctypes is strictly typed
             # to the point where two separately created linked_list
-            # classes through a TypeError. So one instance has to be used
+            # classes throw a TypeError. So one instance has to be used
             # throughout the function usage.
               lambda hs_inner:cl.POINTER(new_linked_list(hs2py(hs_inner)))
             , lambda hs_inner:cl.POINTER(new_c_array(hs2py(hs_inner)))
