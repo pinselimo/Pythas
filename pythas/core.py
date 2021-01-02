@@ -5,8 +5,11 @@ from importlib.util import spec_from_file_location
 from functools  import partial
 import os.path
 import sys
+import logging
 
 from .utils import custom_attr_getter, find_source, ffi_libs_exports
+
+logger = logging.getLogger(__name__)
 
 class PythasMetaFinder(MetaPathFinder):
     """MetaPathFinder for Haskell source files.
@@ -33,6 +36,7 @@ class PythasMetaFinder(MetaPathFinder):
             name = fullname
 
         for p in path:
+            logger.info("Looking up imports of {} in path: {}".format(fullname, p))
             subname = os.path.join(p, name)
             if os.path.isdir(subname):
                 filename = os.path.join(subname, '__init__.py')
@@ -40,7 +44,9 @@ class PythasMetaFinder(MetaPathFinder):
                 filename = subname + '.py'
 
             if not os.path.exists(filename):
+                logger.info("No Python module found, looking for Haskell")
                 for haskellfile in find_source(name, p):
+                    logger.info("Found Haskell module: {}".format(haskellfile))
                     # Catch and handle Haskell modules
                     return spec_from_file_location(
                               fullname
@@ -65,13 +71,16 @@ class PythasLoader(Loader):
     def __init__(self, compiler, filename):
         self.compiler = compiler
         self.filename = filename
+        logger.info("Loader for {} instantiated".format(filename))
 
     def exec_module(self, module):
+        logger.debug("Loading module: {}".format(module))
         ffi_libs = self.compiler.compile(self.filename)
         module._ffi_libs = ffi_libs
 
         module.__getattr__ = partial(custom_attr_getter, module)
         module.__dir__ = lambda: list(module.__dict__) + list(ffi_libs_exports(ffi_libs))
+        logger.debug("Successfully loaded module: {}".format(module))
 
 def install(compiler):
     """Installer for the `PythasMetaFinder`.
@@ -82,4 +91,5 @@ def install(compiler):
         The compiler used to create the linked library.
     """
     sys.meta_path.insert(0, PythasMetaFinder(compiler))
+    logger.info("Inserted Pythas' MetaFinder")
 
