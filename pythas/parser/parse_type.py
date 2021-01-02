@@ -154,11 +154,13 @@ def restype(hs_type):
 
     return rtype, parse(hs_type)
 
-def parse_type(name, hs_type):
+def parse_type(line_nr, name, hs_type):
     """Parses the type of an FFI exported Haskell function or constant.
 
     Parameters
     ----------
+    line_nr : int
+        Line number of the parsed line.
     name : str
         Name of the function or constant.
     hs_type : str
@@ -176,8 +178,8 @@ def parse_type(name, hs_type):
     types = [t.strip() for t in hs_type.split('->')]
     if any(t.count('(') != t.count(')') for t in types):
         raise TypeError(
-            'Functions as arguments like "{}" '
-            'are not supported'.format(hs_type)
+            'In Line Number {} - Functions as arguments like "{}" '
+            'are not supported'.format(line_nr, hs_type)
             )
 
     *inp,out = types
