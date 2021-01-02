@@ -6,6 +6,7 @@ import os.path
 import tempfile
 import re
 import sys
+from logging import getLogger
 
 from .haskell import GHC, ffi_creator
 from .utils import shared_library_suffix, remove_created_files, \
@@ -129,12 +130,13 @@ class SourceModule:
         The Haskell source code to wrap.
     """
     def __init__(self, code):
-        code = re.sub('\n[ \t]+','\n',code)
-        haskell = 'module Temp where\n'+code
+        code = re.sub('\n[ \t]+','\n', code)
+        haskell = 'module Temp where\n' + code
         compiler = Compiler()
 
         with tempfile.TemporaryDirectory() as dir:
             temp = os.path.join(dir,"Temp.hs")
+            getLogger(__name__).info("Created temporary module Temp")
             with open(temp,'w') as f:
                 f.write(haskell)
             ffi_libs = compiler.compile(temp)
