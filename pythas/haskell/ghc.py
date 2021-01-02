@@ -4,6 +4,7 @@ import subprocess
 import sys
 import re
 import os.path
+import logging
 from shutil import which
 
 def get_ghc_version_from_cmdln(stack_ghc):
@@ -207,20 +208,18 @@ class GHC:
         cmd = self.ghc_compile_cmd(flags)
 
         check_ghc_version()
-        print('Compiling with: {}'.format(cmd[0]))
+        logging.getLogger(__name__).info('Compiling with: {}'.format(cmd[0]))
         proc = subprocess.run(cmd, capture_output=True)
 
         if proc.returncode > 0:
-            logfile = os.path.join(cwd, '.pythas.log')
-            with open(logfile, 'wb') as f:
-                f.write(proc.stdout)
-                f.write(proc.stderr)
-
             raise CompileError(
-                        "Stack failed with exit code {} \n"
-                        "The log has been written to {}"
-                        "".format(proc.returncode, logfile)
-                        )
+                    "\n".join([
+                        "Failed with exit code {}".format(proc.returncode),
+                        "The following error message was retrieved:",
+                        str(proc.stdout, sys.stdout.encoding),
+                        str(proc.stderr, sys.stderr.encoding)
+                        ])
+                    )
         else:
             os.chdir(cwd)
             return libpath
