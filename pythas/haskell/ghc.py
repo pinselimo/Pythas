@@ -7,6 +7,8 @@ import os.path
 import logging
 from shutil import which
 
+logger = logging.getLogger(__name__)
+
 def get_ghc_version_from_cmdln(stack_ghc):
     """Retrieves the GHC version number from the command line.
 
@@ -95,16 +97,20 @@ def get_ghc_version(stack_ghc):
     ImportError : Version-Number of GHC could not be found
     """
     try:
-        return get_ghc_version_from_cmdln(stack_ghc)
+        version = get_ghc_version_from_cmdln(stack_ghc)
+        logger.info("Found GHC version from CMD: {}".format(version))
+        return version
     except AttributeError: # Regex didn't match, fallback
-        return get_ghc_version_from_header()
+        version = get_ghc_version_from_header()
+        logger.info("Found GHC version from HEADER: {}".format(version))
+        return version
 
 def check_ghc_version():
     """Checks if the GHC version required is installed.
 
     Raises
     ------
-    ImportError : Version-Number of GHC is too low
+    ImportError : Version-Number of GHC is too low.
     """
     stack = has_stack()
     ghc_version = get_ghc_version(stack)
@@ -201,6 +207,7 @@ class GHC:
         libpath : str
             Pathlike object referencing the shared library path.
         """
+        logger.debug("Received compile request for: {}".format(filepath))
         cwd = os.getcwd()
         os.chdir( os.path.dirname(filepath) )
         flags = self.flags(filepath, libpath, _redirect)
@@ -208,20 +215,20 @@ class GHC:
         cmd = self.ghc_compile_cmd(flags)
 
         check_ghc_version()
-        logging.getLogger(__name__).info('Compiling with: {}'.format(cmd[0]))
+        logger.debug('Compiling with: {}'.format(' '.join(cmd)))
         proc = subprocess.run(cmd, capture_output=True)
 
         if proc.returncode > 0:
-            raise CompileError(
-                    "\n".join([
-                        "Failed with exit code {}".format(proc.returncode),
-                        "The following error message was retrieved:",
-                        str(proc.stdout, sys.stdout.encoding),
-                        str(proc.stderr, sys.stderr.encoding)
-                        ])
-                    )
+            errormessage = "\n".join([
+                                "Failed with exit code {}".format(proc.returncode),
+                                "The following error message was retrieved:",
+                                str(proc.stdout, sys.stdout.encoding),
+                                str(proc.stderr, sys.stderr.encoding)
+                                ])
+            raise CompileError(errormessage)
         else:
             os.chdir(cwd)
+            logger.info("Successfully compiled into {}".format(libpath))
             return libpath
 
     def flags(self, filename, libname, _redirect=False):
