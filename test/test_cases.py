@@ -38,6 +38,11 @@ def test_constantTriple():
 def test_constantQuadruple():
     assert t.constantQuadruple() == (63, 0.1, b'?', b'a')
 
+def test_customType():
+    arg = (63,42)
+    custom = t.makesCustomType(*arg)
+    assert t.takesCustomType(custom) == arg
+
 ### SIDE EFFECTS CURRENTLY NOT TESTED ###
 
 # Testing of operations
