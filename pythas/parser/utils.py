@@ -159,5 +159,12 @@ def parse_generator(f_llist, f_carray, f_tuple, f_string, f_default):
     return parser
 
 class TypeWarning(Warning):
+    """Warning reminding the user that the types used by
+    them are currently only under experimental support.
+
+    See also
+    --------
+    Warning
+    """
     pass
 
