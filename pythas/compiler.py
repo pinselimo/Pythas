@@ -127,11 +127,22 @@ class SourceModule:
     ----------
     code : str
         The Haskell source code to wrap.
+    use_stack : bool
+        Use stack if available. Default value is True.
+    optimisation_level : int
+        The optimisation flag level to be used.
+        Maximum is 2, minimum is 0, default value is 2.
+    flags : Tuple[str]
+        Compile time flags to append. Default value is an empty tuple.
     """
-    def __init__(self, code):
+    def __init__(self, code, use_stack=True, optimisation_level=2, flags=tuple()):
         code = re.sub('\n[ \t]+','\n',code)
         haskell = 'module Temp where\n'+code
         compiler = Compiler()
+        compiler.stack_usage(use_stack)
+        compiler.ghc.optimisation(optimisation_level)
+        for flag in flags:
+            compiler.add_flag(flag)
 
         with tempfile.TemporaryDirectory() as dir:
             temp = os.path.join(dir,"Temp.hs")
@@ -150,3 +161,4 @@ class SourceModule:
         return list(self.__dict__) + self._exported
 
 compiler = Compiler()
+
