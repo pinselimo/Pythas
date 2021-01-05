@@ -3,6 +3,9 @@ module Testcases where
 import Foreign.C.Types
 import Foreign.C.String
 
+import Foreign.Ptr (castPtr)
+import Foreign.Pythas.Tuples (CTuple2, newTuple2)
+
 constantInt :: Int
 constantInt = 63
 
@@ -74,6 +77,17 @@ tupleWithListOfTuples a b = (take 63 $ repeat (a,b), [63])
 
 noiseFunc :: [a] -> IO a
 noiseFunc = undefined
+
+type CustomType = CTuple2 CInt CInt
+
+takesCustomType :: CustomType -> CTuple2 CInt CInt
+takesCustomType = id
+
+makesCustomType :: CInt -> CInt -> IO CustomType
+makesCustomType a b = newTuple2 (a, b)
+
+foreign export ccall takesCustomType :: CustomType -> CTuple2 CInt CInt
+foreign export ccall makesCustomType :: CInt -> CInt -> IO CustomType
 
 type NoiseType = String
 newtype NoiseNewType = NNT {

@@ -1,7 +1,17 @@
 module Example where
 
-import Foreign.C.Types (CInt)
+import Foreign.C.Types (CInt(..))
 import Foreign.C.String
+
+newtype Custom = Custom {
+    getCustom :: Int
+                        }
+
+toCustom = Custom
+fromCustom = getCustom
+
+foreign export ccall toCustom :: Int -> Custom
+foreign export ccall fromCustom :: Custom -> Int
 
 someConstant :: Int
 someConstant = 63
