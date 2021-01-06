@@ -137,8 +137,9 @@ def check_ghc_version(stack=has_stack()):
 
 class GHC:
     """Pythas interface class for GHC."""
-    def compile(self, filepath, libpath, use_stack=has_stack(), more_options=tuple(), _redirect=False):
-        """Compile a Haskell source file to a shared library.
+    @staticmethod
+    def compile(filepath, libpath, use_stack=has_stack(), more_options=tuple(), _redirect=False):
+        """Compiles a Haskell source file to a shared library.
 
         Parameters
         ----------
@@ -160,9 +161,9 @@ class GHC:
         """
         cwd = os.getcwd()
         os.chdir( os.path.dirname(filepath) )
-        flags = self.flags(filepath, libpath, use_stack, _redirect)
+        flags = GHC.flags(filepath, libpath, use_stack, _redirect)
         flags += more_options
-        cmd = self.ghc_compile_cmd(use_stack, flags)
+        cmd = GHC.ghc_compile_cmd(use_stack, flags)
 
         check_ghc_version()
         print('Compiling with: {}'.format(cmd[0]))
@@ -183,7 +184,8 @@ class GHC:
             os.chdir(cwd)
             return libpath
 
-    def flags(self, filename, libname, use_stack, _redirect=False):
+    @staticmethod
+    def flags(filename, libname, use_stack, _redirect=False):
         """Creates the flags needed for successful compilation of Haskell FFI files
         using Pythas.
 
@@ -244,7 +246,8 @@ class GHC:
 
         return flags
 
-    def ghc_compile_cmd(self, use_stack, options):
+    @staticmethod
+    def ghc_compile_cmd(use_stack, options):
         """Generates the compile command to GHC.
 
         Parameters
