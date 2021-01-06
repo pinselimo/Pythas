@@ -6,6 +6,16 @@ import re
 import os.path
 from shutil import which
 
+def has_stack():
+    """Looks for stack on the `$PATH`.
+
+    Returns
+    -------
+    has_stack : bool
+        True if stack is in `$PATH`.
+    """
+    return which('stack') is not None
+
 def get_ghc_version_from_cmdln(stack_ghc):
     """Retrieves the GHC version number from the command line.
 
@@ -98,14 +108,18 @@ def get_ghc_version(stack_ghc):
     except AttributeError: # Regex didn't match, fallback
         return get_ghc_version_from_header()
 
-def check_ghc_version():
+def check_ghc_version(stack=has_stack()):
     """Checks if the GHC version required is installed.
+
+    Parameters
+    ----------
+    stack : bool
+        If True check version of stack ghc.
 
     Raises
     ------
     ImportError : Version-Number of GHC is too low
     """
-    stack = has_stack()
     ghc_version = get_ghc_version(stack)
 
     major,minor,micro = ghc_version.split('.')
@@ -121,67 +135,9 @@ def check_ghc_version():
                     'Update it to at least 8.0.2 or install stack.'
                     )
 
-def has_stack():
-    """Looks for stack on the `$PATH`.
-
-    Returns
-    -------
-    has_stack : bool
-        True if stack is in `$PATH`.
-    """
-    return which('stack') is not None
-
 class GHC:
-    """Pythas interface class for GHC.
-
-    Attributes
-    ----------
-    VERSION : str
-        Version number string of the used GHC instance.
-    optimisation : int
-        Optimisation level used for the `-O` flag. Default = 2.
-    """
-    def __init__(self):
-        self._stack = has_stack()
-        self._optimisation = 2
-
-    @property
-    def VERSION(self):
-        return get_ghc_version(self._stack)
-
-    @property
-    def optimisation(self):
-        return self._optimisation
-
-    @optimisation.setter
-    def optimisation(self, level):
-        """Set the optimisation level.
-
-        Parameters
-        ----------
-        level : int
-            New optimisation level. Min = 0, Max = 2.
-        """
-        self._optimisation = min(2, max(0, level))
-
-    def stack_usage(self, enabled):
-        """Enable the usage of stack for compilation.
-        Will default to False if stack is not available.
-
-        Parameters
-        ----------
-        enabled : bool
-            True if stack should be enabled.
-
-        Returns
-        -------
-        enabled : bool
-            True if stack is now enabled.
-        """
-        self._stack = enabled and has_stack()
-        return self._stack
-
-    def compile(self, filepath, libpath, more_options=tuple(), _redirect=False):
+    """Pythas interface class for GHC."""
+    def compile(self, filepath, libpath, use_stack=has_stack(), more_options=tuple(), _redirect=False):
         """Compile a Haskell source file to a shared library.
 
         Parameters
@@ -190,6 +146,8 @@ class GHC:
             Pathlike object referencing the Haskell source file.
         libpath : str
             Pathlike object referencing the shared library file.
+        use_stack : bool
+            If True uses stack ghc as compile command if available. Defaults to availability.
         more_options : tuple(str) = ()
             Additional flags handed to GHC.
         _redirect : bool = False
@@ -202,9 +160,9 @@ class GHC:
         """
         cwd = os.getcwd()
         os.chdir( os.path.dirname(filepath) )
-        flags = self.flags(filepath, libpath, _redirect)
+        flags = self.flags(filepath, libpath, use_stack, _redirect)
         flags += more_options
-        cmd = self.ghc_compile_cmd(flags)
+        cmd = self.ghc_compile_cmd(use_stack, flags)
 
         check_ghc_version()
         print('Compiling with: {}'.format(cmd[0]))
@@ -225,7 +183,7 @@ class GHC:
             os.chdir(cwd)
             return libpath
 
-    def flags(self, filename, libname, _redirect=False):
+    def flags(self, filename, libname, use_stack, _redirect=False):
         """Creates the flags needed for successful compilation of Haskell FFI files
         using Pythas.
 
@@ -235,6 +193,8 @@ class GHC:
             Pathlike object referencing the Haskell source file.
         libpath : str
             Pathlike object referencing the shared library file.
+        use_stack : bool
+            If True uses stack ghc as compile command.
         _redirect : bool = False
             Internal binaries are redirect into Pythas' bin directory for clean pip uninstall.
 
@@ -266,30 +226,31 @@ class GHC:
             ('-hidir', BIN, '-odir', BIN) if _redirect else ())
             # Old options: '-fexternal-dynamic-refs'
 
-        GHC_OPT_OPTIMISATION = ['', '-O', '-O2', '-optc-O3']
         GHC_OUT = '-o'
 
         if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
             GHC_OPTIONS = ('-dynamic',) + GHC_OPTIONS
-            LIB_HS_RTS = '-lHSrts-ghc' + self.VERSION
+            LIB_HS_RTS = '-lHSrts-ghc' + get_ghc_version(use_stack)
             flags = (
-                GHC_OPT_OPTIMISATION[self.optimisation], *GHC_OPTIONS,
-                GHC_OUT, libname, filename, *PYTHAS_TYPES, HS_BRACKET_C, LIB_HS_RTS
+                *GHC_OPTIONS, GHC_OUT, libname, filename,
+                *PYTHAS_TYPES, HS_BRACKET_C, LIB_HS_RTS
                 )
 
         elif sys.platform.startswith('win32'):
             flags = (
-                GHC_OPT_OPTIMISATION[self.optimisation], *GHC_OPTIONS,
-                GHC_OUT, libname, filename, *PYTHAS_TYPES, HS_BRACKET_C
+                *GHC_OPTIONS, GHC_OUT, libname, filename,
+                *PYTHAS_TYPES, HS_BRACKET_C
                 )
 
         return flags
 
-    def ghc_compile_cmd(self, options):
+    def ghc_compile_cmd(self, use_stack, options):
         """Generates the compile command to GHC.
 
         Parameters
         ----------
+        use_stack : bool
+            If True uses stack ghc as compile command.
         options : tuple(str)
             The flags handed to GHC.
 
@@ -299,7 +260,7 @@ class GHC:
             The entire command to initiate compilation.
         """
         GHC_CMD = 'ghc'
-        if self._stack:
+        if use_stack:
             # https://gitlab.haskell.org/ghc/ghc/-/issues/17926
             STACK_OPTIONS = ('--resolver=lts-14.27',) if sys.platform.startswith('win32') else ()
 

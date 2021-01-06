@@ -7,25 +7,47 @@ import tempfile
 import re
 import sys
 
-from .haskell import GHC, ffi_creator
+from .haskell import GHC, ffi_creator, has_stack, get_ghc_version
 from .utils import shared_library_suffix, remove_created_files, \
                    flatten, custom_attr_getter, ffi_libs_exports
 from .parser import parse_haskell
 
+DEFAULT_FLAGS = ('-O2',)
+
 class Compiler:
     """Interface for the compiler used to create shared libraries.
 
+    Parameters
+    ----------
+    flags : Tuple[str]
+        Compile time flags to append. Default value is using the "-O2" flag.
+
     Attributes
     ----------
+    GHC_VERSION : str
+        Version number string of the used GHC instance.
     ghc : GHC
         More concrete implementation of the actual compiler.
     flags : tuple(str)
         Flags for `compiler`.
+    stack_usage : bool
+        Enable the usage of stack for compilation.
+        Will default to False if stack is not available.
     """
-    def __init__(self):
+    def __init__(self, flags=DEFAULT_FLAGS):
         self.__fficreator = ffi_creator
         self.__compiler = GHC()
-        self._flags = list()
+        self._flags = list(flags)
+        self._stack = has_stack()
+
+    def copy(self):
+        new = Compiler(self.flags)
+        new.stack_usage = self.stack_usage
+        return new
+
+    @property
+    def GHC_VERSION(self):
+        return get_ghc_version(self._stack)
 
     @property
     def ghc(self):
@@ -34,6 +56,14 @@ class Compiler:
     @property
     def flags(self):
         return tuple(flatten(self._flags))
+
+    @property
+    def stack_usage(self):
+        return self._stack
+
+    @stack_usage.setter
+    def stack_usage(self, enabled):
+        self._stack = enabled if has_stack() else False
 
     def add_flag(self, flag):
         """Adds a flag to `flags`.
@@ -56,22 +86,6 @@ class Compiler:
         """
         if flag in self._flags:
             self._flags.remove(flag)
-
-    def stack_usage(self, enabled):
-        """Enable the usage of stack for compilation.
-        Will default to False if stack is not available.
-
-        Parameters
-        ----------
-        enabled : bool
-            True if stack should be enabled.
-
-        Returns
-        -------
-        enabled : bool
-            True if stack is now enabled.
-        """
-        return self.__compiler.stack_usage(enabled)
 
     def compile(self, filename):
         """Creates an FFI file, compiles and links it against the
@@ -122,27 +136,33 @@ class Compiler:
 
 class SourceModule:
     """Wrapper for runtime created Haskell source.
+    Will instantiate its own instance of ``Compiler``
+    unless an alternative is provided.
+    Other settings will not be permanently made in
+    the compiler instance.
 
     Parameters
     ----------
     code : str
         The Haskell source code to wrap.
+    compiler : Compiler
+        Compiler instance to use settings from.
     use_stack : bool
         Use stack if available. Default value is True.
-    optimisation_level : int
-        The optimisation flag level to be used.
-        Maximum is 2, minimum is 0, default value is 2.
     flags : Tuple[str]
-        Compile time flags to append. Default value is an empty tuple.
+        Compile time flags to append. Default value is using the "-O2" flag.
     """
-    def __init__(self, code, use_stack=True, optimisation_level=2, flags=tuple()):
+    def __init__(self, code, compiler=None, use_stack=True, flags=DEFAULT_FLAGS):
         code = re.sub('\n[ \t]+','\n',code)
         haskell = 'module Temp where\n'+code
-        compiler = Compiler()
-        compiler.stack_usage(use_stack)
-        compiler.ghc.optimisation(optimisation_level)
-        for flag in flags:
-            compiler.add_flag(flag)
+
+        if compiler is None:
+            compiler = Compiler(flags)
+        else:
+            compiler = compiler.copy()
+            for flag in flags:
+                compiler.add_flag(flag)
+        compiler.stack_usage = use_stack
 
         with tempfile.TemporaryDirectory() as dir:
             temp = os.path.join(dir,"Temp.hs")
