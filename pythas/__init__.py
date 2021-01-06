@@ -13,6 +13,7 @@ check_has_ghc()
 
 from .core import install
 from .compiler import compiler, SourceModule
+from .parser.utils import TypeWarning
 
 install(compiler)
 

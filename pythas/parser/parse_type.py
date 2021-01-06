@@ -3,18 +3,24 @@
 import ctypes as cl
 from functools import partial
 from logging import getLogger
+from warnings import warn
 
 from .data import FuncInfo
-from .utils import lmap, apply, strip_io, tuple_types, parse_generator
+from .utils import lmap, apply, strip_io, tuple_types, parse_generator, TypeWarning
 from ..types import *
 
 logger = getLogger(__name__)
+
+EXPERIMENTAL = {
+          'Int':cl.c_int # Experimental!
+        , 'Integer':cl.c_longlong # Experimental!
+        }
 
 HS2PY = {
         ### void ###
           '()':None
 
-        ### INTEGRAL ####
+        ### INTEGRAL ###
         , 'CInt':cl.c_int32
         , 'CBool':cl.c_bool
         , 'Char':cl.c_char
@@ -30,6 +36,15 @@ HS2PY = {
         , 'CWchar':cl.c_wchar
         , 'CLLong':cl.c_longlong
         , 'CULLong':cl.c_ulonglong
+        # Usually wrapped
+        , 'Int8':cl.c_byte
+        , 'Word8':cl.c_ubyte
+        , 'Int16':cl.c_short
+        , 'Word16':cl.c_ushort
+        , 'Int32':cl.c_int
+        , 'Word32':cl.c_uint
+        , 'Int64':cl.c_long
+        , 'Word64':cl.c_ulong
 
         ### FLOATING POINT ###
         , 'CDouble':cl.c_double
@@ -60,18 +75,29 @@ def simple_hs_2_py(hs_type):
     pytype : type
         The Python type.
 
-    Raises
-    ------
-    TypeError : Type cannot be used with Pythas
+    Warnings
+    --------
+    TypeWarning : Custom types are an experimental feature in Pythas.
     """
     if hs_type in HS2PY:
         return HS2PY[hs_type]
+    elif hs_type in EXPERIMENTAL:
+        warn(
+                'Usage of the type < {} > is experimental'
+                'consider using a type from Foreign.C.Types'
+                'instead.'.format(hs_type)
+            ,   TypeWarning
+            )
+        return EXPERIMENTAL[hs_type]
     else:
         logger.debug("Type {} not found within supported types".format(hs_type))
-        raise TypeError(
-                'Non-simple type "{}" cannot '
-                'be used with Pythas'.format(hs_type)
-                )
+        warn(
+                'Usage of custom types like < {} > '
+                'is considered experimental in Pythas! '
+                'It will be passed as a ctypes.c_void_p'.format(hs_type)
+            ,   TypeWarning
+            )
+        return cl.POINTER(None)
 
 def hs2py(hs_type):
     """Maps Haskell to Python types.

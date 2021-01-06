@@ -4,7 +4,7 @@ import os.path
 from ctypes import cdll, c_wchar_p, c_voidp
 from sys import platform
 
-from .ghc import GHC
+from .ghc import GHC, has_stack
 from ..utils import shared_library_suffix
 
 dir = os.path.join(
@@ -18,7 +18,7 @@ lib = os.path.join(dir, "libpythasffi")
 if not os.path.exists( lib ):
     lib += shared_library_suffix()
 
-GHC().compile(src, lib, _redirect=True)
+GHC.compile(src, lib, _redirect=True)
 
 ffi_creator = cdll.LoadLibrary( lib )
 ffi_creator.createFileBindings.argtype = [c_wchar_p]
