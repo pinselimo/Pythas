@@ -26,8 +26,6 @@ class Compiler:
     ----------
     GHC_VERSION : str
         Version number string of the used GHC instance.
-    ghc : GHC
-        More concrete implementation of the actual compiler.
     flags : tuple(str)
         Flags for `compiler`.
     stack_usage : bool
@@ -36,7 +34,6 @@ class Compiler:
     """
     def __init__(self, flags=DEFAULT_FLAGS):
         self.__fficreator = ffi_creator
-        self.__compiler = GHC()
         self._flags = list(flags)
         self._stack = has_stack()
 
@@ -48,10 +45,6 @@ class Compiler:
     @property
     def GHC_VERSION(self):
         return get_ghc_version(self._stack)
-
-    @property
-    def ghc(self):
-        return self.__compiler
 
     @property
     def flags(self):
@@ -128,7 +121,7 @@ class Compiler:
                 delete = not windows
                 ) as lib_file:
 
-            self.__compiler.compile(name, lib_file.name, self.flags)
+            GHC.compile(name, lib_file.name, self.flags)
             if windows: lib_file.close()
             lib = cdll.LoadLibrary(lib_file.name)
 
