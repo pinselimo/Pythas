@@ -61,6 +61,7 @@ In both cases some limitations exist on which Haskell functions and constants ca
 
 Invalid functions or constants will not be available from the Python context. However, they will not trigger any errors. Thus, they can be used within the Haskell context without risk.
 
+<<<<<<< HEAD
 Call signatures
 ---------------
 
@@ -105,4 +106,10 @@ We will end up with the following on Python's side:
 The call signature of ``b`` doesn't change, but ``a`` requires unwrapping now and it shows. In effect, you lose the visible difference the IO monad would cause on Python's side in the first example.
 
 Note that the purity of your code itself does not suffer under this restriction! It just makes the call syntax a little weird.
+
+Custom types
+------------
+
+Support for pointers to custom types defined with ``newtype`` or ``data`` within Haskell is currently **experimental**.
+To make the function or constant names accessible from a Python context, you will need to manually add ``foreign export ccall`` exports to your module. Within Python the values are then treated as NULL-pointers. Thus, you can hand them from one Haskell function to another.
 

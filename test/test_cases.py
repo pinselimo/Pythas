@@ -1,6 +1,7 @@
 from hypothesis import given
 import hypothesis.strategies as strat
 from math import sin
+import warnings
 
 from .context import pythas
 from .t_types import *
@@ -12,7 +13,9 @@ list_integers = strat.lists(c_integers)
 list_strings  = strat.lists(c_strings)
 list_str_nst3 = strat.lists(strat.lists(list_strings))
 
-import test.hs.testcases as t
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=pythas.TypeWarning)
+    import test.hs.testcases as t
 
 def test_constantInt():
     assert t.constantInt == 63
@@ -37,6 +40,11 @@ def test_constantTriple():
 
 def test_constantQuadruple():
     assert t.constantQuadruple() == (63, 0.1, b'?', b'a')
+
+def test_customType():
+    arg = (63,42)
+    custom = t.makesCustomType(*arg)
+    assert t.takesCustomType(custom) == arg
 
 ### SIDE EFFECTS CURRENTLY NOT TESTED ###
 

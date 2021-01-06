@@ -19,22 +19,25 @@ def test_sourcemodules():
 
             f :: [(String, String)] -> Int
             f = length
-            ''')
+            '''
+            , compiler = pythas.compiler
+            )
     assert m.i == 63
     assert m.f([('a','b'),('c','d')]) == 2
 
 def test_stack_switch():
-    pythas.compiler.ghc.stack_usage(False)
+    pythas.compiler.stack_usage = False
     import test.hs.testcases as t
     assert t.constantInt == 63
 
 @given(tuples(strings,strings), strings)
 def test_compilerflags(t,s):
+    base_flags = pythas.compiler.flags
     pythas.compiler.add_flag(t)
     pythas.compiler.add_flag(s)
-    assert pythas.compiler.flags == t + (s,)
+    assert pythas.compiler.flags == base_flags + t + (s,)
     pythas.compiler.remove_flag(t)
-    assert pythas.compiler.flags == (s,)
+    assert pythas.compiler.flags == base_flags + (s,)
     pythas.compiler.remove_flag(s)
-    assert pythas.compiler.flags == ()
+    assert pythas.compiler.flags == base_flags
 
