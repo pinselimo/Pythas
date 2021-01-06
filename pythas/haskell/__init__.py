@@ -4,7 +4,7 @@ import os.path
 from ctypes import cdll, c_wchar_p, c_voidp
 from sys import platform
 
-from .ghc import GHC
+from .ghc import GHC, has_stack, get_ghc_version
 from ..utils import shared_library_suffix
 
 dir = os.path.join(
