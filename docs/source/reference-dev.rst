@@ -1,7 +1,7 @@
-Pythas package
-==============
+Pythas package full reference
+=============================
 
-Full reference for the ``Pythas`` package.
+Full reference for the ``Pythas`` package. Targeting developers.
 
 pythas module
 -------------

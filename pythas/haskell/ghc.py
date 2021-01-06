@@ -51,6 +51,7 @@ class GHC:
         cmd = GHC.compile_cmd(use_stack, flags)
 
         GHC.check_version(use_stack)
+
         logger.debug('Compiling with: {}'.format(' '.join(cmd)))
         proc = subprocess.run(cmd, capture_output=True)
 

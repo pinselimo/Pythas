@@ -6,7 +6,7 @@
 Welcome to Pythas' documentation!
 ==================================
 
-With ``Pythas`` it is possible to import Haskell modules into Python just as if they were native modules. It automatically creates the FFI exports including all relevant type conversions, compiles and binds your Haskell code to the Python at runtime.
+With ``Pythas`` it is possible to import Haskell modules into Python just as if they were native modules. It automatically creates the FFI exports including all relevant type conversions, compiles and binds your Haskell code to the Python at runtime. It was designed with ease of use in mind and supports a pythonic, intuitive interface.
 
 Dependencies
 ------------
@@ -44,6 +44,10 @@ Most code of the ``Pythas`` package is licensed under the LGPLv3 license. This l
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
+   installation
+   usage
+   reference-dev
 
 Indices and tables
 ==================
