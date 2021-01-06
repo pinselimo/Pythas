@@ -7,7 +7,7 @@ import tempfile
 import re
 import sys
 
-from .haskell import GHC, ffi_creator, has_stack, get_ghc_version
+from .haskell import GHC, ffi_creator, has_stack
 from .utils import shared_library_suffix, remove_created_files, \
                    flatten, custom_attr_getter, ffi_libs_exports
 from .parser import parse_haskell
@@ -44,7 +44,7 @@ class Compiler:
 
     @property
     def GHC_VERSION(self):
-        return get_ghc_version(self._stack)
+        return GHC.get_version(self._stack)
 
     @property
     def flags(self):

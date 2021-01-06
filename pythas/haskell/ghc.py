@@ -16,125 +16,6 @@ def has_stack():
     """
     return which('stack') is not None
 
-def get_ghc_version_from_cmdln(stack_ghc):
-    """Retrieves the GHC version number from the command line.
-
-    Parameters
-    ----------
-    stack_ghc : bool
-        True if stack's GHC is used.
-
-    Returns
-    -------
-    version : str
-        Version number string.
-    """
-    REGEX_HS_VERSION = b'(?<=[a-z A-Z])[0-9.]+'
-
-    if stack_ghc:
-        cmd = ('stack','ghc','--','--version')
-    else:
-        cmd = ('ghc','--version')
-
-    py_vn = sys.version_info
-    if py_vn == 3 and py_vn.minor > 6:
-        stdout = subprocess.run(cmd,capture_output=True).stdout
-    else:
-        stdout = subprocess.run(cmd,stdout=subprocess.PIPE).stdout
-
-    version = re.search(REGEX_HS_VERSION, stdout )
-    return version.group(0).decode('utf-8')
-
-def get_ghc_version_from_header():
-    """Retrieves the GHC version number from the `ghcversion.h` header.
-
-    Returns
-    -------
-    version : str
-        Version number string.
-
-    Raises
-    ------
-    ImportError : Version-Number of GHC could not be found
-    """
-    GHC_VERSION_H = '/usr/lib/ghc/include/ghcversion.h'
-    REGEX_C_CONSTANTS = '#define[ \t\n\r\f\v]+([a-zA-Z0-9_]+)[ \t\n\r\f\v]+([0-9]+)'
-
-    consts = {}
-    with open(GHC_VERSION_H,'r') as header:
-        for name, value in re.findall(REGEX_C_CONSTANTS, header.read()):
-            consts[name] = value
-
-            try:
-                pl = consts['__GLASGOW_HASKELL_PATCHLEVEL1__']
-            except KeyError:
-                pl = '0'
-
-            try:
-                vn = consts['__GLASGOW_HASKELL__']
-                v = str(int(vn)//100)
-                n = str(int(vn)%100)
-                return v+'.'+n+'.'+pl
-
-            except KeyError:
-                raise ImportError('Version-Number of GHC could not be found')
-
-def get_ghc_version(stack_ghc):
-    """Retrieves the GHC version number.
-    Defaults to getting it from the command line,
-    reverts to the `ghcversion.h` header.
-
-    Parameters
-    ----------
-    stack_ghc : bool
-        True if stack's GHC is used.
-
-    Returns
-    -------
-    version : str
-        Version number string.
-
-    See Also
-    --------
-    get_ghc_version_from_cmdln
-    get_ghc_version_from_header
-
-    Raises
-    ------
-    ImportError : Version-Number of GHC could not be found
-    """
-    try:
-        return get_ghc_version_from_cmdln(stack_ghc)
-    except AttributeError: # Regex didn't match, fallback
-        return get_ghc_version_from_header()
-
-def check_ghc_version(stack=has_stack()):
-    """Checks if the GHC version required is installed.
-
-    Parameters
-    ----------
-    stack : bool
-        If True check version of stack ghc.
-
-    Raises
-    ------
-    ImportError : Version-Number of GHC is too low
-    """
-    ghc_version = get_ghc_version(stack)
-
-    major,minor,micro = ghc_version.split('.')
-    if int(major) < 8:
-        if stack:
-            raise ImportError(
-                    'Stack GHC version {} too low.'.format(ghc_version) +
-                    'Update it to at least 8.0.2 by changing the stack config file.'
-                    )
-        else:
-            raise ImportError(
-                    'GHC version {} too low.'.format(ghc_version) +
-                    'Update it to at least 8.0.2 or install stack.'
-                    )
-
 class GHC:
     """Pythas interface class for GHC."""
     @staticmethod
@@ -163,9 +44,9 @@ class GHC:
         os.chdir( os.path.dirname(filepath) )
         flags = GHC.flags(filepath, libpath, use_stack, _redirect)
         flags += more_options
-        cmd = GHC.ghc_compile_cmd(use_stack, flags)
+        cmd = GHC.compile_cmd(use_stack, flags)
 
-        check_ghc_version()
+        GHC.check_version(use_stack)
         print('Compiling with: {}'.format(cmd[0]))
         proc = subprocess.run(cmd, capture_output=True)
 
@@ -232,7 +113,7 @@ class GHC:
 
         if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
             GHC_OPTIONS = ('-dynamic',) + GHC_OPTIONS
-            LIB_HS_RTS = '-lHSrts-ghc' + get_ghc_version(use_stack)
+            LIB_HS_RTS = '-lHSrts-ghc' + GHC.get_version(use_stack)
             flags = (
                 *GHC_OPTIONS, GHC_OUT, libname, filename,
                 *PYTHAS_TYPES, HS_BRACKET_C, LIB_HS_RTS
@@ -247,7 +128,7 @@ class GHC:
         return flags
 
     @staticmethod
-    def ghc_compile_cmd(use_stack, options):
+    def compile_cmd(use_stack, options):
         """Generates the compile command to GHC.
 
         Parameters
@@ -270,6 +151,129 @@ class GHC:
             return ('stack',) + STACK_OPTIONS + (GHC_CMD, '--') + options
         else:
             return (GHC_CMD,) + options
+
+    @staticmethod
+    def get_version_from_cmdln(stack_ghc):
+        """Retrieves the GHC version number from the command line.
+
+        Parameters
+        ----------
+        stack_ghc : bool
+            True if stack's GHC is used.
+
+        Returns
+        -------
+        version : str
+            Version number string.
+        """
+        REGEX_HS_VERSION = b'(?<=[a-z A-Z])[0-9.]+'
+
+        if stack_ghc:
+            cmd = ('stack','ghc','--','--version')
+        else:
+            cmd = ('ghc','--version')
+
+        py_vn = sys.version_info
+        if py_vn == 3 and py_vn.minor > 6:
+            stdout = subprocess.run(cmd,capture_output=True).stdout
+        else:
+            stdout = subprocess.run(cmd,stdout=subprocess.PIPE).stdout
+
+        version = re.search(REGEX_HS_VERSION, stdout )
+        return version.group(0).decode('utf-8')
+
+    @staticmethod
+    def get_version_from_header():
+        """Retrieves the GHC version number from the `ghcversion.h` header.
+
+        Returns
+        -------
+        version : str
+            Version number string.
+
+        Raises
+        ------
+        ImportError : Version-Number of GHC could not be found
+        """
+        GHC_VERSION_H = '/usr/lib/ghc/include/ghcversion.h'
+        REGEX_C_CONSTANTS = '#define[ \t\n\r\f\v]+([a-zA-Z0-9_]+)[ \t\n\r\f\v]+([0-9]+)'
+
+        consts = {}
+        with open(GHC_VERSION_H,'r') as header:
+            for name, value in re.findall(REGEX_C_CONSTANTS, header.read()):
+                consts[name] = value
+
+                try:
+                    pl = consts['__GLASGOW_HASKELL_PATCHLEVEL1__']
+                except KeyError:
+                    pl = '0'
+
+                try:
+                    vn = consts['__GLASGOW_HASKELL__']
+                    v = str(int(vn)//100)
+                    n = str(int(vn)%100)
+                    return v+'.'+n+'.'+pl
+
+                except KeyError:
+                    raise ImportError('Version-Number of GHC could not be found')
+
+    @staticmethod
+    def get_version(stack_ghc):
+        """Retrieves the GHC version number.
+        Defaults to getting it from the command line,
+        reverts to the `ghcversion.h` header.
+
+        Parameters
+        ----------
+        stack_ghc : bool
+            True if stack's GHC is used.
+
+        Returns
+        -------
+        version : str
+            Version number string.
+
+        See Also
+        --------
+        get_ghc_version_from_cmdln
+        get_ghc_version_from_header
+
+        Raises
+        ------
+        ImportError : Version-Number of GHC could not be found
+        """
+        try:
+            return GHC.get_version_from_cmdln(stack_ghc)
+        except AttributeError: # Regex didn't match, fallback
+            return GHC.get_version_from_header()
+
+    @staticmethod
+    def check_version(stack=has_stack()):
+        """Checks if the GHC version required is installed.
+
+        Parameters
+        ----------
+        stack : bool
+            If True check version of stack ghc.
+
+        Raises
+        ------
+        ImportError : Version-Number of GHC is too low
+        """
+        ghc_version = GHC.get_version(stack)
+
+        major,minor,micro = ghc_version.split('.')
+        if int(major) < 8:
+            if stack:
+                raise ImportError(
+                        'Stack GHC version {} too low.'.format(ghc_version) +
+                        'Update it to at least 8.0.2 by changing the stack config file.'
+                        )
+            else:
+                raise ImportError(
+                        'GHC version {} too low.'.format(ghc_version) +
+                        'Update it to at least 8.0.2 or install stack.'
+                        )
 
 class CompileError(ImportError):
     pass
