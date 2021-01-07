@@ -220,11 +220,13 @@ def parse_type(line_nr, name, hs_type):
         argt, constructor = argtype(i)
         argtypes.append(argt)
         constructors.append(constructor)
+    logger.debug("Found argument types: {} for {}".format(argtypes, name)
 
-    restp, reconstructor= restype(out)
+    result_type, reconstructor = restype(out)
+    logger.debug("Found result type: {} for {}".format(result_type, name)
 
     return FuncInfo(
-              name, argtypes, restp, constructors
+              name, argtypes, result_type, constructors
             , reconstructor, hs_type
             )
 
