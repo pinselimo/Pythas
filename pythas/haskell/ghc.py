@@ -4,7 +4,10 @@ import subprocess
 import sys
 import re
 import os.path
+import logging
 from shutil import which
+
+logger = logging.getLogger(__name__)
 
 def has_stack():
     """Looks for stack on the `$PATH`.
@@ -40,6 +43,7 @@ class GHC:
         libpath : str
             Pathlike object referencing the shared library path.
         """
+        logger.debug("Received compile request for: {}".format(filepath))
         cwd = os.getcwd()
         os.chdir( os.path.dirname(filepath) )
         flags = GHC.flags(filepath, libpath, use_stack, _redirect)
@@ -47,22 +51,21 @@ class GHC:
         cmd = GHC.compile_cmd(use_stack, flags)
 
         GHC.check_version(use_stack)
-        print('Compiling with: {}'.format(cmd[0]))
+
+        logger.debug('Compiling with: {}'.format(' '.join(cmd)))
         proc = subprocess.run(cmd, capture_output=True)
 
         if proc.returncode > 0:
-            logfile = os.path.join(cwd, '.pythas.log')
-            with open(logfile, 'wb') as f:
-                f.write(proc.stdout)
-                f.write(proc.stderr)
-
-            raise CompileError(
-                        "Stack failed with exit code {} \n"
-                        "The log has been written to {}"
-                        "".format(proc.returncode, logfile)
-                        )
+            errormessage = "\n".join([
+                                "Failed with exit code {}".format(proc.returncode),
+                                "The following error message was retrieved:",
+                                str(proc.stdout, sys.stdout.encoding),
+                                str(proc.stderr, sys.stderr.encoding)
+                                ])
+            raise CompileError(errormessage)
         else:
             os.chdir(cwd)
+            logger.info("Successfully compiled into {}".format(libpath))
             return libpath
 
     @staticmethod
@@ -243,9 +246,13 @@ class GHC:
         ImportError : Version-Number of GHC could not be found
         """
         try:
-            return GHC.get_version_from_cmdln(stack_ghc)
+            version = GHC.get_version_from_cmdln(stack_ghc)
+            logger.info("Found GHC version from CMD: {}".format(version))
+            return version
         except AttributeError: # Regex didn't match, fallback
-            return GHC.get_version_from_header()
+            version = GHC.get_version_from_header()
+            logger.info("Found GHC version from HEADER: {}".format(version))
+            return version
 
     @staticmethod
     def check_version(stack=has_stack()):

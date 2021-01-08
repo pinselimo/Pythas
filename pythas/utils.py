@@ -4,6 +4,7 @@ from ctypes import _SimpleCData, _Pointer
 from collections import abc
 from shutil import which
 from functools import reduce
+from logging import getLogger
 import os
 import sys
 
@@ -63,10 +64,12 @@ class PythasFunc:
 
     def __call__(self, *args):
         args = flatten([constr(a) for constr,a in zip(self.constructors, args)])
+        getLogger(self.__name__).debug("Calling function with args: {}".format(args))
         val = self._funcPtr(*args)
         res = self.reconstructor(val)
 
         if self.destructor:
+            getLogger(self.__name__).debug("Calling destructor")
             self.destructor(val)
         return res
 
@@ -116,6 +119,8 @@ def custom_attr_getter(obj, name):
     ------
     AttributeError : No corresponding foreign import could be found for `name`.
     """
+    logger = getLogger(obj.__name__)
+
     ffi_libs = obj._ffi_libs
     not_found = AttributeError(
             '{} object has no attribute {} '
@@ -123,11 +128,13 @@ def custom_attr_getter(obj, name):
             ''.format(obj.__name__,repr(name))
             )
     for lib, info in ffi_libs:
+        logger.debug("Looking for {} in {}".format(name, info.name))
         if name in info.exported_ffi:
-            func = getattr(lib,name)
+            func = getattr(lib, name)
             func_infos = info.func_infos[name]
 
             if is_constant(func_infos):
+                logger.debug("Solving constant {}".format(name))
                 res = func()
             else:
                 finalizerName = name + 'Finalizer'
@@ -135,6 +142,7 @@ def custom_attr_getter(obj, name):
                     destrPtr = getattr(lib, finalizerName)
                 else:
                     destrPtr = None
+                logger.debug("Wrapping function {}".format(name))
                 res = PythasFunc(name, func_infos, func, destrPtr)
 
             return res
@@ -214,7 +222,9 @@ def remove_created_files(filename):
     path,fname = os.path.split(filename)
     basename,_ = os.path.splitext(fname)
     for ext in ('.hs','.hi','.o','_stub.h'):
-        os.remove(os.path.join(path,basename+ext))
+        fn = os.path.join(path,basename+ext)
+        getLogger(__name__).info("Removing: {}".format(fn))
+        os.remove(fn)
 
 def ffi_libs_exports(ffi_libs):
     """Collects the exported function names of
