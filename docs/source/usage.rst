@@ -61,7 +61,6 @@ In both cases some limitations exist on which Haskell functions and constants ca
 
 Invalid functions or constants will not be available from the Python context. However, they will not trigger any errors. Thus, they can be used within the Haskell context without risk.
 
-<<<<<<< HEAD
 Call signatures
 ---------------
 
