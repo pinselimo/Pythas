@@ -54,6 +54,30 @@ Inspired by *pyCUDA* the ``SourceModule`` - Object was added as another option f
     >>> m.increment(1)
     2
 
+By default a new ``SouceModule`` will spawn its own ``Compiler`` instance. This is done to avoid irreproducible outcomes. However, all options configurable on a ``Compiler`` can also be set as key word arguments of the ``SourceModule``. Furthermore, it also accepts a key word argument ``compiler`` where an existing instance can be passed.
+Options set on other key word arguments will override those of the ``Compiler`` instance passed to the ``SourceModule``, but not alter the instance itself.
+Usage example:
+
+.. code-block:: python
+
+    >>> from pythas import SourceModule, compiler
+    >>> compiler.stack_usage = True
+    >>> m = SourceModule('''
+            increment :: Int -> Int
+            increment !i = 1 + i
+            '''
+            , compiler=compiler
+            , flags=compiler.flags + ('-XBangPatterns',)
+            )
+    >>> m.increment(1)
+    2
+    >>> compiler.stack_usage
+    True
+    >>> compiler.flags
+    ('-O2',)
+
+The example shows how a ``SourceModule`` is compiled with individual compile time flags set using an existing instance of ``Compiler``. However, the flags set on the ``Compiler`` instance are not altered permanently.
+
 Limitations
 -----------
 
