@@ -39,6 +39,14 @@ class Compiler:
         self._stack = has_stack()
 
     def copy(self):
+        """Creates a new instance of ``Compiler`` from an existing one.
+        Flags and ``stack_usage`` will be consistent.
+
+        Returns
+        -------
+        new : Compiler
+            The new Compiler instance.
+        """
         new = Compiler(self.flags)
         new.stack_usage = self.stack_usage
         return new
