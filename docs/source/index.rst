@@ -6,19 +6,19 @@
 Welcome to Pythas' documentation!
 ==================================
 
-With *Pythas* it is possible to import Haskell modules into Python just as if they were native modules. It automatically creates the FFI exports including all relevant type conversions, compiles and binds your Haskell code to the Python at runtime. It was designed with ease of use in mind and supports a pythonic, intuitive interface.
+With *Pythas* it is possible to import Haskell modules into Python just as if they were native modules. It automatically creates the FFI exports including all relevant type conversions, compiles and binds your Haskell code to Python at runtime. It was designed with ease of use in mind and sports a pythonic, intuitive interface.
 
 Dependencies
 ------------
 
-One development goal for *Pythas* was to keep users out of cabal hell. Thus, the pacakage includes all Haskell and C source files needed. To compile its own source and other Haskell modules *Pythas* needs either *Stack* or a plain *GHC* installation.
-f either of those is installed they can be detected automatically. If *Stack* is installed, it will always be used as default.
+One development goal for *Pythas* was to keep users out of cabal hell. Thus, the package includes all Haskell and C source files needed. To compile its own source and other Haskell modules *Pythas* needs either *Stack* or a plain *GHC* installation.
+If either of those is installed they can be detected automatically. If *Stack* is installed, it will always be used as the default.
 A more detailed explanation can be found in chapter :ref:`pythas_installation`.
 
 Basic Usage
 -----------
 
-With an ``example/Example.hs`` file containing a Hello World function ``hello :: IO ()``
+Usage is as easy as it gets if you already know how to import Python modules. If we have an ``example/Example.hs`` file containing a Hello World function ``hello :: IO ()``:
 
 .. code-block:: python
 
@@ -27,7 +27,7 @@ With an ``example/Example.hs`` file containing a Hello World function ``hello ::
     >>> e.hello()
     Hello from Haskell!
 
-In the :ref:`pythas_usage` chapter you can find more details on using *Pythas*. More practical examples are collected in a separate repository `Pythas-Examples <https://github.com/pinselimo/Pythas-Examples>`_.
+In the :ref:`pythas_usage` chapter you can find more details on how to use *Pythas*. More practical examples are collected in a separate repository `Pythas-Examples <https://github.com/pinselimo/Pythas-Examples>`_.
 
 Contents
 ========
