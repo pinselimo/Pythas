@@ -76,7 +76,7 @@ Usage example:
     >>> compiler.flags
     ('-O2',)
 
-The example shows how a ``SourceModule`` is compiled with individual compile time flags set using an existing instance of ``Compiler``. However, the flags set on the ``Compiler`` instance are not altered permanently.
+The example shows how a ``SourceModule`` is compiled with individual compile time flags set using an existing instance of ``Compiler``. However, the flags set on the ``Compiler`` instance are not altered permanently. (Note: By far not all language extensions can be used with Pythas, consider them experimental within this framework)
 
 Limitations
 -----------
