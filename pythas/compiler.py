@@ -6,6 +6,7 @@ import os.path
 import tempfile
 import re
 import sys
+from logging import getLogger
 
 from .haskell import GHC, ffi_creator, has_stack
 from .utils import shared_library_suffix, remove_created_files, \
@@ -146,8 +147,8 @@ class SourceModule:
         Compile time flags to append. Default value is using the "-O2" flag.
     """
     def __init__(self, code, compiler=None, use_stack=True, flags=DEFAULT_FLAGS):
-        code = re.sub('\n[ \t]+','\n',code)
-        haskell = 'module Temp where\n'+code
+        code = re.sub('\n[ \t]+','\n', code)
+        haskell = 'module Temp where\n' + code
 
         if compiler is None:
             compiler = Compiler(flags)
@@ -159,6 +160,7 @@ class SourceModule:
 
         with tempfile.TemporaryDirectory() as dir:
             temp = os.path.join(dir,"Temp.hs")
+            getLogger(__name__).info("Created temporary module Temp")
             with open(temp,'w') as f:
                 f.write(haskell)
             ffi_libs = compiler.compile(temp)

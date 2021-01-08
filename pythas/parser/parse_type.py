@@ -2,11 +2,14 @@
 
 import ctypes as cl
 from functools import partial
+from logging import getLogger
 from warnings import warn
 
 from .data import FuncInfo
 from .utils import lmap, apply, strip_io, tuple_types, parse_generator, TypeWarning
 from ..types import *
+
+logger = getLogger(__name__)
 
 EXPERIMENTAL = {
           'Int':cl.c_int # Experimental!
@@ -87,6 +90,7 @@ def simple_hs_2_py(hs_type):
             )
         return EXPERIMENTAL[hs_type]
     else:
+        logger.debug("Type {} not found within supported types".format(hs_type))
         warn(
                 'Usage of custom types like < {} > '
                 'is considered experimental in Pythas! '
@@ -116,7 +120,7 @@ def hs2py(hs_type):
     parse = parse_generator(
             # new_* functions are used because ctypes is strictly typed
             # to the point where two separately created linked_list
-            # classes through a TypeError. So one instance has to be used
+            # classes throw a TypeError. So one instance has to be used
             # throughout the function usage.
               lambda hs_inner:cl.POINTER(new_linked_list(hs2py(hs_inner)))
             , lambda hs_inner:cl.POINTER(new_c_array(hs2py(hs_inner)))
@@ -180,11 +184,13 @@ def restype(hs_type):
 
     return rtype, parse(hs_type)
 
-def parse_type(name, hs_type):
+def parse_type(line_nr, name, hs_type):
     """Parses the type of an FFI exported Haskell function or constant.
 
     Parameters
     ----------
+    line_nr : int
+        Line number of the parsed line.
     name : str
         Name of the function or constant.
     hs_type : str
@@ -202,8 +208,8 @@ def parse_type(name, hs_type):
     types = [t.strip() for t in hs_type.split('->')]
     if any(t.count('(') != t.count(')') for t in types):
         raise TypeError(
-            'Functions as arguments like "{}" '
-            'are not supported'.format(hs_type)
+            'In Line Number {} - Functions as arguments like "{}" '
+            'are not supported'.format(line_nr, hs_type)
             )
 
     *inp,out = types
@@ -214,11 +220,13 @@ def parse_type(name, hs_type):
         argt, constructor = argtype(i)
         argtypes.append(argt)
         constructors.append(constructor)
+    logger.debug("Found argument types: {} for {}".format(argtypes, name))
 
-    restp, reconstructor= restype(out)
+    result_type, reconstructor = restype(out)
+    logger.debug("Found result type: {} for {}".format(result_type, name))
 
     return FuncInfo(
-              name, argtypes, restp, constructors
+              name, argtypes, result_type, constructors
             , reconstructor, hs_type
             )
 

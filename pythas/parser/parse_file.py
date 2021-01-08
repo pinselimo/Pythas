@@ -1,9 +1,12 @@
 """Parse Haskell modules/files."""
 
 import os.path
+from logging import getLogger
 
 from .data import ParseInfo, FuncInfo
 from .parse_type import parse_type
+
+logger = getLogger(__name__)
 
 def parse_haskell(hs_file):
     """Parses a Haskell file for exported functions and ffi exports.
@@ -54,7 +57,7 @@ def _parse_haskell(hs_lines, parse_info):
         Informations parsed from `hs_lines`.
     """
     in_comment = False
-    for hs_line in hs_lines:
+    for line_nr, hs_line in enumerate(hs_lines):
         for hs_line in hs_line.split(';'):
             # Pre-processing of hs_line
             hs_line = hs_line.strip()
@@ -64,7 +67,7 @@ def _parse_haskell(hs_lines, parse_info):
                     or hs_line.startswith('\n')
                     or hs_line.startswith('--')
                     ):
-                parse_line(hs_line, parse_info)
+                parse_line(line_nr+1, hs_line, parse_info)
 
             elif in_comment:
                 in_comment = not '-}' in hs_line
@@ -120,6 +123,7 @@ def parse_head(hs_lines, name):
 
     head = hs_cont[module_decl_end : where].strip()
     if len(head) == 0:
+        logger.info("No export restrictions found")
         return None
     else:
         return {
@@ -128,11 +132,13 @@ def parse_head(hs_lines, name):
             if len(n) > 0
             }
 
-def parse_line(hs_line, parse_info):
+def parse_line(line_nr, hs_line, parse_info):
     """Parses a single line of Haskell source code.
 
     Parameters
     ----------
+    linr_nr : int
+        Line number of the current line.
     hs_line : str
         Line of Haskell code.
     parse_info : ParseInfo
@@ -145,5 +151,5 @@ def parse_line(hs_line, parse_info):
         name = name.strip()
 
         parse_info.exported_ffi.add(name)
-        parse_info.func_infos[name] = parse_type(name, type_def)
+        parse_info.func_infos[name] = parse_type(line_nr, name, type_def)
 

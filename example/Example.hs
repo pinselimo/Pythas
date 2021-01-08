@@ -3,9 +3,9 @@ module Example where
 import Foreign.C.Types (CInt(..))
 import Foreign.C.String
 
-newtype Custom = Custom {
-    getCustom :: Int
-                        }
+newtype Custom = Custom
+    { getCustom :: Int
+    } deriving (Show, Eq)
 
 toCustom = Custom
 fromCustom = getCustom
