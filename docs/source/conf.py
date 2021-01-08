@@ -14,7 +14,6 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../..'))
 
-
 # -- Project information -----------------------------------------------------
 
 project = 'Pythas'
@@ -22,7 +21,8 @@ copyright = '2020, Simon Plakolb'
 author = 'Simon Plakolb'
 
 # The full version, including alpha/beta/rc tags
-version = release = '0.01dev'
+from pythas import __version__
+version = release = __version__
 
 
 # -- General configuration ---------------------------------------------------
