@@ -130,7 +130,7 @@ class Compiler:
                 delete = not windows
                 ) as lib_file:
 
-            GHC.compile(name, lib_file.name, self.flags)
+            GHC.compile(name, lib_file.name, use_stack=self.stack_usage, add_flags=self.flags)
             if windows: lib_file.close()
             lib = cdll.LoadLibrary(lib_file.name)
 

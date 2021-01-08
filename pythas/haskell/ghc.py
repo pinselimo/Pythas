@@ -22,7 +22,7 @@ def has_stack():
 class GHC:
     """Pythas interface class for GHC."""
     @staticmethod
-    def compile(filepath, libpath, use_stack=has_stack(), more_options=tuple(), _redirect=False):
+    def compile(filepath, libpath, use_stack=has_stack(), add_flags=tuple(), _redirect=False):
         """Compiles a Haskell source file to a shared library.
 
         Parameters
@@ -33,10 +33,10 @@ class GHC:
             Pathlike object referencing the shared library file.
         use_stack : bool
             If True uses stack ghc as compile command if available. Defaults to availability.
-        more_options : tuple(str) = ()
-            Additional flags handed to GHC.
-        _redirect : bool = False
-            Internal binaries are redirect into Pythas' bin directory for clean pip uninstall.
+        add_flags : Tuple[str]
+            Additional flags handed to GHC. Default is empty.
+        _redirect : bool
+            If True internal binaries are redirect into Pythas' bin directory for clean pip uninstall. Default is False.
 
         Returns
         -------
@@ -47,7 +47,7 @@ class GHC:
         cwd = os.getcwd()
         os.chdir( os.path.dirname(filepath) )
         flags = GHC.flags(filepath, libpath, use_stack, _redirect)
-        flags += more_options
+        flags += add_flags
         cmd = GHC.compile_cmd(use_stack, flags)
 
         GHC.check_version(use_stack)
