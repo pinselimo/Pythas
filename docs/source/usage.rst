@@ -155,5 +155,6 @@ The ``example/Example.hs`` file contained in the repository of *Pythas* contains
     63
 
 Due to the immense simplicity of the "Custom" type just wrapping an ``Int`` this works. Note that otherwise it will be more effort to make ``Custom`` an instance of ``Foreign.Storable (Storable)`` and provide a pointer through the FFI.
+Future releases of *Pythas* may feature a more supportive implementation of custom types.
 
 
