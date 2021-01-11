@@ -37,15 +37,15 @@ While in Haskell lists **have** to be used, in Python any kind of sequence can b
 
 ## Tuples
 
-Tuples are only supported as result types of functions. Tuples as input arguments fall under sequences in Python and are not supported more directly. Try to ```curry``` your functions appropriately. 
+You can use tuples to pack results of different types into a single one. It is no problem to nest them and lists or vice versa. Checkout ```test.hs.Test.hs``` to see what Pythas is (successfully) tested for.
 
 ~~~python
->>>from example.example import tuple
+>>>from example.example import tuple, hsnd
 >>>tuple()
 (1,"a")
+>>>hsnd((1,2))
+2
 ~~~
-
-You can use tuples to pack results of different types into a single one. It is no problem to nest them and lists or vice versa. Checkout ```test.hs.Test.hs``` to see what Pythas is (successfully) tested for.
 
 ## Requirements
 
@@ -73,11 +73,11 @@ $ pip install .
 
 ## Constraints
 
-Only Python versions 3.7 and up are supported. Unfortunately, only [PEP 562] introduced ```__getattr__``` for modules. This renders level of abstraction ```Pythas``` aims for impossible on lower Python versions.
+Only Python versions 3.7 and up are supported. Unfortunately, only [PEP 562] introduced ```__getattr__``` for modules. This renders the level of abstraction ```Pythas``` aims for impossible on lower Python versions.
 
 Only functions having their type declared will be imported. You can handle the export of the function yourself by adding a ```foreign export ccall``` for the function, otherwise ```Pythas``` will do that for you. To exclude a function just omit the functions type. Functions of types that are not supported won't get exported either.
 
-All Haskell constants in the IO monad are imported as functions. Due to lists being turned into ```CArray```s or ```CTuple{x}```s, also constant lists must be called like a function without arguments:
+All Haskell constants in the IO monad are imported as functions. Due to lists being turned into ```CArray```s even constant lists must be called like a function without arguments:
 
 ~~~python
 >>>from example.example import someConstant, haskellList
@@ -86,6 +86,8 @@ All Haskell constants in the IO monad are imported as functions. Due to lists be
 >>>haskellList()
 [63]
 ~~~
+
+The same is true for tuples which are turned into or ```CTuple{x}```s.
 
  ```Pythas``` enforces the file naming scheme of Haskell for  ```.hs``` files as does the ```GHC```! This is primarily due to  ```GHC``` failing to find the imported module at compile time. Thus, we fail early and raise a ```ModuleNotFoundError```.
 
@@ -103,7 +105,7 @@ The Software in this repository is licensed under the LGPLv3 License.
 See COPYING.LESSER file for details.
 
     Pythas  Copyright (C) 2020  Simon Plakolb
-    This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
+    This program comes with ABSOLUTELY NO WARRANTY
     This is free software, and you are welcome to redistribute it
     under certain conditions; see COPYING and COPYING.LESSER.
 

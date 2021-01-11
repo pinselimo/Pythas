@@ -39,6 +39,14 @@ class Compiler:
         self._stack = has_stack()
 
     def copy(self):
+        """Creates a new instance of ``Compiler`` from an existing one.
+        Flags and ``stack_usage`` will be consistent.
+
+        Returns
+        -------
+        new : Compiler
+            The new Compiler instance.
+        """
         new = Compiler(self.flags)
         new.stack_usage = self.stack_usage
         return new
@@ -129,7 +137,7 @@ class Compiler:
         return lib, parse_infos
 
 class SourceModule:
-    """Wrapper for runtime created Haskell source.
+    """Module created from inline Haskell source code.
     Will instantiate its own instance of ``Compiler``
     unless an alternative is provided.
     Other settings will not be permanently made in
@@ -138,7 +146,7 @@ class SourceModule:
     Parameters
     ----------
     code : str
-        The Haskell source code to wrap.
+        The Haskell source code to construct the module from.
     compiler : Compiler
         Compiler instance to use settings from.
     use_stack : bool
