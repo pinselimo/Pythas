@@ -242,3 +242,6 @@ def ffi_libs_exports(ffi_libs):
     """
     return reduce(lambda a,b: a | b[1].exported_ffi, ffi_libs, set())
 
+def building_docs():
+    return any('sphinx-build' in arg for arg in sys.argv)
+
