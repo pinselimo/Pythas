@@ -19,13 +19,15 @@ __copyright__  = 'Copyright 2020, Simon Plakolb'
 __license__    = 'LGPLv3'
 __status__     = 'Development'
 
-from .utils import check_has_ghc
+from .utils import check_has_ghc, building_docs
 
-check_has_ghc()
+if not building_docs():
+    check_has_ghc()
 
 from .core import install
 from .compiler import compiler, SourceModule
 from .parser.utils import TypeWarning
 
-install(compiler)
+if not building_docs():
+    install(compiler)
 
