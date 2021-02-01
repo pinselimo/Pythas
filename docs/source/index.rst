@@ -11,14 +11,13 @@ With *Pythas* it is possible to import Haskell modules into Python just as if th
 Dependencies
 ------------
 
-One development goal for *Pythas* was to keep users out of cabal hell. Thus, the package includes all Haskell and C source files needed. To compile its own source and other Haskell modules *Pythas* needs either *Stack* or a plain *GHC* installation.
-If either of those is installed they can be detected automatically. If *Stack* is installed, it will always be used as the default.
-A more detailed explanation can be found in chapter :ref:`pythas_installation`.
+One development goal for *Pythas* was to keep users out of Haskell's package managing details ("cabal hell"). Thus, the package ships with all Haskell and C source files it needs. To compile its own source and other Haskell modules *Pythas* needs either *Stack* or a plain *GHC* installation. For a Guide on how to install either refer to :ref:`pythas_installation`.
+If either is already installed they can be detected automatically. If *Stack* is installed, it will always be used as the default.
 
 Basic Usage
 -----------
 
-Usage is as easy as it gets if you already know how to import Python modules. If we have an ``example/Example.hs`` file containing a Hello World function ``hello :: IO ()``:
+Usage is as easy as importing any Python modules. If we have an ``example/Example.hs`` file containing a Hello World function ``hello :: IO ()`` which prints "Hello from Haskell" we would import and use it like that:
 
 .. code-block:: python
 
