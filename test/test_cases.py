@@ -104,9 +104,9 @@ def test_listOfTuplesNested(s,i):
 def test_listOfTuplesWithList(ss):
     assert t.listOfTuplesWithList(ss) == [[([ss]*63,[63])]]
 
-@given(c_ints)
-def test_tupleWithList(i):
-    assert t.tupleWithList(i) == (['Haskell']*i,[63]*i)
+# @given(c_ints)
+# def test_tupleWithList(i):
+#     assert t.tupleWithList(i) == (['Haskell']*i,[63]*i)
 
 @given(c_ints, c_strings)
 def test_tupleWithNestedList(i,s):
