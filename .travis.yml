@@ -3,10 +3,10 @@ os: linux
 dist: xenial
 git:
     submodules: true
-#cache:
-#    directories:
-#        - $HOME/.local/bin
-#        - $HOME/.stack
+cache:
+    directories:
+        - $HOME/.local/bin
+        - $HOME/.stack
 python:
     - "3.7"
     - "3.8"
