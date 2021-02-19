@@ -79,9 +79,9 @@ def test_pureOperationMixed(i,d):
 def test_listOfIntegers(l):
     assert t.listOfInteger(l) == len(l)
 
-@given(strat.lists(c_ints))
-def test_listMixed(l):
-    assert t.listMixed(l) == list(map(lambda x:x*0.25,l))
+# @given(strat.lists(c_ints))
+# def test_listMixed(l):
+#     assert t.listMixed(l) == list(map(lambda x:x*0.25,l))
 
 @given(list_str_nst3)
 def test_listNested(lll):
