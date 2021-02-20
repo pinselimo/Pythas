@@ -65,10 +65,17 @@ $ ghc --version
 
 ## Install
 
-```Pythas``` can be installed using pip:
+```Pythas``` can be installed using pip. Run the following command to install and compile it at once:
 
 ~~~sh
-$ pip install .
+$ pip install pythas && python -c "import pythas"
+~~~
+
+or from source:
+
+~~~sh
+$ git clone https://github.com/pinselimo/Pythas.git && cd Pythas
+$ pip install . && python -c "import pythas"
 ~~~
 
 ## Constraints
