@@ -2,6 +2,8 @@ from hypothesis import given
 import hypothesis.strategies as strat
 from math import sin
 import warnings
+import pytest
+import sys
 
 from .context import pythas
 from .t_types import *
@@ -72,6 +74,7 @@ def test_pureOperationString(s):
     assert t.pureOperationString(s) == ''.join(filter(lambda x:x!='a',s))
 
 @given(c_ints, c_doubles)
+@pytest.mark.skipif(sys.platform.startswith('win32'), reason="GHC's sinus function returns faulty values")
 def test_pureOperationMixed(i,d):
     assert t.pureOperationMixed(i,d) == i*sin(d)
 
