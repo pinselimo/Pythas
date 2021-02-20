@@ -1,4 +1,4 @@
-# Pythas [![Build](https://img.shields.io/travis/pinselimo/Pythas.svg)](https://travis-ci.org/pinselimo/Pythas)
+# Pythas [![Python package](https://github.com/pinselimo/Pythas/actions/workflows/python-package.yml/badge.svg)](https://github.com/pinselimo/Pythas/actions/workflows/python-package.yml)
 
 Import Haskell modules as if they were Python modules. If an imported name does not exist as Python module/package, Pythas will traverse the specified subdirectory below your ```cwd``` to look for a matching Haskell file. If one is found it is imported just as if it was a Python module.
 
