@@ -13,7 +13,7 @@ jobs:
   build:
     strategy:
       matrix:
-        platform: [ubuntu-latest]
+        platform: [macos-latest]
         python-version: [3.7, 3.8, 3.9]
 
     runs-on: ${{ matrix.platform }}
@@ -31,7 +31,6 @@ jobs:
     - name: Setup up Haskell
       uses: actions/setup-haskell@v1
       with:
-        ghc-version: '8.8.4'
         stack-version: 'latest'
 
     - name: Cache
@@ -53,8 +52,7 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
         stack update
-        sudo apt-get update
-        sudo apt-get install gdb
+        brew install gdb
 
     - name: Test with gdb
       run: |
