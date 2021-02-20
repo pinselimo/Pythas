@@ -127,7 +127,7 @@ class Compiler:
         with tempfile.NamedTemporaryFile(
                 suffix = shared_library_suffix(),
                 # Deleting on windows causes access denied
-                delete = not windows
+                delete = False # not windows
                 ) as lib_file:
 
             GHC.compile(name, lib_file.name, use_stack=self.stack_usage, add_flags=self.flags)
