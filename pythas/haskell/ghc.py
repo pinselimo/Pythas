@@ -107,7 +107,7 @@ class GHC:
                 ] \
                 + [os.path.join(*PATH_CSTRUCTS, 'Structs.hs')]
 
-        GHC_OPTIONS = ('-shared', '-fexternal-interpreter', '-fPIC', '-i:'+os.path.dirname(filename)) + (
+        GHC_OPTIONS = ('-shared', '-fPIC', '-i:'+os.path.dirname(filename)) + (
             # We redirect our own binaries into the 'bin' dir to not pollute everything
             ('-hidir', BIN, '-odir', BIN) if _redirect else ())
             # Old options: '-fexternal-dynamic-refs'
