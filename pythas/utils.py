@@ -64,7 +64,7 @@ class PythasFunc:
 
     def __call__(self, *args):
         args = flatten([constr(a) for constr,a in zip(self.constructors, args)])
-        getLogger(self.__name__).warn("Calling function with args: {}".format(args))
+        getLogger(self.__name__).warning("Calling function with args: {}".format(args))
         val = self._funcPtr(*args)
         res = self.reconstructor(val)
 
