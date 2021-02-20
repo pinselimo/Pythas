@@ -1,4 +1,4 @@
-# Pythas [![Build](https://img.shields.io/travis/pinselimo/Pythas.svg)](https://travis-ci.org/pinselimo/Pythas)
+# Pythas [![Python package](https://github.com/pinselimo/Pythas/actions/workflows/python-package.yml/badge.svg)](https://github.com/pinselimo/Pythas/actions/workflows/python-package.yml)
 
 Import Haskell modules as if they were Python modules. If an imported name does not exist as Python module/package, Pythas will traverse the specified subdirectory below your ```cwd``` to look for a matching Haskell file. If one is found it is imported just as if it was a Python module.
 
@@ -93,10 +93,10 @@ The same is true for tuples which are turned into or ```CTuple{x}```s.
 
 ## Testing
 
-Currently only testing of the library as a whole is implemented. Run:
+The sub-repositories Pythas incorporates all ship their own testing facilities. Testing of the ```pythas``` package itself therefore focuses on the main functionality and user interface. It incorporates some unit tests and property based testing mostly focusing on ensuring the interface does not alter any data. To execute the tests in bulk just move to the project root and execute:
 
 ~~~bash
-$ python test/testpythasffi.py
+$ pytest
 ~~~
 
 ## License

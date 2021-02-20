@@ -14,6 +14,8 @@ with open('requirements.txt') as f:
     requirements_lines = f.readlines()
 install_requires = [r.strip() for r in requirements_lines]
 
+import pythas
+
 setup(
    name='Pythas',
    version='0.01dev',
@@ -24,8 +26,8 @@ setup(
    author='Simon Plakolb',
    author_email='s.plakolb@gmail.com',
    url="https://www.behaviour.space/",
-   packages=['pythas','pythas.haskell'],
-   package_dir={'pythas':'pythas','pythas.haskell':'pythas/haskell'},
+   packages=['pythas','pythas.parser','pythas.haskell'],
+   package_dir={'pythas':'pythas','pythas.parser':'pythas/parser','pythas.haskell':'pythas/haskell'},
    package_data={'pythas.haskell': [d+'*'+s for d in dirs for s in suffices]},
    install_requires=install_requires,
 )
