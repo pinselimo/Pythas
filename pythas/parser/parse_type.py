@@ -83,8 +83,8 @@ def simple_hs_2_py(hs_type):
         return HS2PY[hs_type]
     elif hs_type in EXPERIMENTAL:
         warn(
-                'Usage of the type < {} > is experimental'
-                'consider using a type from Foreign.C.Types'
+                'Usage of the type < {} > is experimental '
+                'consider using a type from Foreign.C.Types '
                 'instead.'.format(hs_type)
             ,   TypeWarning
             )
