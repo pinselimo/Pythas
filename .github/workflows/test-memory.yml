@@ -57,6 +57,4 @@ jobs:
 
     - name: Test with gdb
       run: |
-        gdb --args python -m pytest ./test/test_cases.py
-        run
-        backtrace
+        gdb --batch --args python "-m pytest ./test/test_cases.py" run backtrace
