@@ -31,6 +31,7 @@ jobs:
     - name: Setup up Haskell
       uses: actions/setup-haskell@v1
       with:
+        ghc-version: '8.8.4'
         stack-version: 'latest'
 
     - name: Cache
