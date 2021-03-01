@@ -9,11 +9,17 @@ import sys
 from logging import getLogger
 
 from .haskell import GHC, ffi_creator, has_stack
-from .utils import shared_library_suffix, remove_created_files, \
-                   flatten, custom_attr_getter, ffi_libs_exports
+from .utils import (
+    shared_library_suffix,
+    remove_created_files,
+    flatten,
+    custom_attr_getter,
+    ffi_libs_exports,
+)
 from .parser import parse_haskell
 
-DEFAULT_FLAGS = ('-O2',)
+DEFAULT_FLAGS = ("-O2",)
+
 
 class Compiler:
     """Interface for the compiler used to create shared libraries.
@@ -33,6 +39,7 @@ class Compiler:
         Enable the usage of stack for compilation.
         Will default to False if stack is not available.
     """
+
     def __init__(self, flags=DEFAULT_FLAGS):
         self.__fficreator = ffi_creator
         self._flags = list(flags)
@@ -123,18 +130,22 @@ class Compiler:
         (lib, parse_infos) : The linked library and its parsed infos
         """
         parse_infos = parse_haskell(name)
-        windows = sys.platform.startswith('win32')
+        windows = sys.platform.startswith("win32")
         with tempfile.NamedTemporaryFile(
-                suffix = shared_library_suffix(),
-                # Deleting on windows causes access denied
-                delete = not windows
-                ) as lib_file:
+            suffix=shared_library_suffix(),
+            # Deleting on windows causes access denied
+            delete=not windows,
+        ) as lib_file:
 
-            GHC.compile(name, lib_file.name, use_stack=self.stack_usage, add_flags=self.flags)
-            if windows: lib_file.close()
+            GHC.compile(
+                name, lib_file.name, use_stack=self.stack_usage, add_flags=self.flags
+            )
+            if windows:
+                lib_file.close()
             lib = cdll.LoadLibrary(lib_file.name)
 
         return lib, parse_infos
+
 
 class SourceModule:
     """Module created from inline Haskell source code.
@@ -154,9 +165,10 @@ class SourceModule:
     flags : Tuple[str]
         Compile time flags to append. Default value is using the "-O2" flag.
     """
+
     def __init__(self, code, compiler=None, use_stack=True, flags=DEFAULT_FLAGS):
-        code = re.sub('\n[ \t]+','\n', code)
-        haskell = 'module Temp where\n' + code
+        code = re.sub("\n[ \t]+", "\n", code)
+        haskell = "module Temp where\n" + code
 
         if compiler is None:
             compiler = Compiler(flags)
@@ -167,15 +179,15 @@ class SourceModule:
         compiler.stack_usage = use_stack
 
         with tempfile.TemporaryDirectory() as dir:
-            temp = os.path.join(dir,"Temp.hs")
+            temp = os.path.join(dir, "Temp.hs")
             getLogger(__name__).info("Created temporary module Temp")
-            with open(temp,'w') as f:
+            with open(temp, "w") as f:
                 f.write(haskell)
             ffi_libs = compiler.compile(temp)
 
         self._ffi_libs = ffi_libs
         self._exported = ffi_libs_exports(ffi_libs)
-        self.__name__ = 'SourceModule'
+        self.__name__ = "SourceModule"
 
     def __getattr__(self, name):
         return custom_attr_getter(self, name)
@@ -183,5 +195,5 @@ class SourceModule:
     def __dir__(self):
         return list(self.__dict__) + self._exported
 
-compiler = Compiler()
 
+compiler = Compiler()
