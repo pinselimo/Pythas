@@ -18,7 +18,7 @@ import pythas
 
 setup(
    name='Pythas',
-   version='0.01dev',
+   version='0.01',
    description='Import Haskell modules as if they were Python modules',
    license='LGPLv3',
    long_description=long_description,
