@@ -6,3 +6,4 @@ include CHANGELOG.md
 global-include *.hs
 global-include *.c
 global-include *.h
+global-include stack.yaml
