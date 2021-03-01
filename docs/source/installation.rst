@@ -14,7 +14,7 @@ For compilation of Haskell source *Pythas* makes use of the *Glasgow Haskell Com
 Cabal/GHC vs Stack
 ^^^^^^^^^^^^^^^^^^
 
-The GHC compiler can be installed in various ways:
+The GHC compiler can be installed in various ways (without claim to completeness):
 
   + As a bare bones `compiler executable <https://www.haskell.org/ghc/download.html>`_.
   + As a `minimal package <https://www.haskell.org/downloads/#minimal>`_ also including the build tools *Cabal* and *Stack*.
@@ -22,7 +22,7 @@ The GHC compiler can be installed in various ways:
   + With the full blown `Haskell Platform <https://www.haskell.org/platform/>`_ installation providing the most common libraries and build tools altogether.
 
 If a *Stack* install is available, *Pythas* will default to utilizing it. This means that available ``stack.yaml`` files are taken into consideration providing stable and consistent compilation results.
-This choice implies that any other *GHC* installs are ignored if the ``stack`` command is found to be available. If you prefer to use ``ghc`` instead you can tell *Pythas* to disable ``stack``:
+This choice implies that any other *GHC* installations are ignored if the ``stack`` command is found to be available. If you prefer to use ``ghc`` instead you can tell *Pythas* to disable ``stack``:
 
 .. code-block:: python
 
@@ -50,10 +50,10 @@ Pythas is available for download from the Python Package Index ``pypi`` via ``pi
 From source
 ^^^^^^^^^^^
 
-If you want to be at the newest stage of development, you can install this package from source using these commands::
+If you want to be at the newest stage of development, you can install this package from source using the following commands::
 
     $ git clone --recurse-submodules -j8 https://github.com/pinselimo/Pythas.git
     $ cd Pythas && pip install .
-    $ cd ~
+    $ cd ..
     $ python -c "import pythas" # Will compile the Haskell source
 
