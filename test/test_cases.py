@@ -131,7 +131,7 @@ def test_listOfTuplesWithList(ss):
     assert t.listOfTuplesWithList(ss) == [[([ss] * 63, [63])]]
 
 
-@given(strat.integers(min_value=-1, max_value=1000))
+@given(c_ints)
 def test_tupleWithList(i):
     assert t.tupleWithList(i) == (["Haskell"] * i, [63] * i)
 
