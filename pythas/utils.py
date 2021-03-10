@@ -71,11 +71,16 @@ class PythasFunc:
         args = flatten([constr(a) for constr, a in zip(self.constructors, args)])
         getLogger(self.__name__).debug("Calling function with args: {}".format(args))
         val = self._funcPtr(*args)
-        res = self.reconstructor(val)
 
         if self.destructor:
-            getLogger(self.__name__).debug("Calling destructor")
-            self.destructor(val)
+            def __del__(obj):
+                getLogger(self.__name__).debug("Calling destructor")
+                # if val._b_needsfree_ == 1:
+                obj.destructor(val)
+            val.destructor = self.destructor
+            val.__del__ = __del__
+
+        res = self.reconstructor(val)
         return res
 
 
