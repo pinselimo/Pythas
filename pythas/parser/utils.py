@@ -171,9 +171,9 @@ def parse_generator(f_llist, f_carray, f_tuple, f_string, f_default):
             logger.debug("Found tuple at {} in {}".format(tup, hs_type))
             return f_tuple(hs_type[tup + len("CTupleX ") :])
         ## String first
-        elif st + 1:
-            logger.debug("Found string at {} in {}".format(st, hs_type))
-            return f_string(hs_type[st + len("CWString ") :])
+        # elif st + 1:
+        #     logger.debug("Found string at {} in {}".format(st, hs_type))
+        #     return f_string(hs_type[st + len("CWString ") :])
         else:
             return f_default(hs_type)
 
