@@ -61,7 +61,7 @@ HS2PY = {
     # Our way around this problem is to 'hide' the string behind
     # a pointer:
     ,
-    "CWString": cl.POINTER(cl.c_wchar_p),
+    "CWString": cl.c_wchar_p,
 }
 
 
