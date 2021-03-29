@@ -12,12 +12,12 @@ parser : A basic parser for exported Haskell type declarations.
 
 """
 
-__version__ = "0.01"
+__version__ = "0.1.0"
 __author__ = "Simon Plakolb"
 __email__ = "s.plakolb@gmail.com"
 __copyright__ = "Copyright 2020, Simon Plakolb"
 __license__ = "LGPLv3"
-__status__ = "Development"
+__status__ = "Beta"
 
 from .utils import check_has_ghc, building_docs
 
