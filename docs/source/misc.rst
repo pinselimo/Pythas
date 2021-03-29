@@ -8,7 +8,7 @@ The source code of *Pythas* is split among multiple repositories:
 * `Pythas-Types <https://github.com/pinselimo/Pythas-Types>`_ defines the custom Haskell types required to exchange nested data types in between the two languages. Their Python equivalents are defined in ``pythas.types``.
 * `C-structs <https://github.com/pinselmo/cstructs-in-haskell>`_ is a Haskell package for variably typed, correctly aligned C structs.
 
-Contributions are welcome in all of these repositories. Please be advised to checkout the respective *CONTRIBUTING.md* file first. The preferred contribution work flow is to first raise an issue on github, then issue a pull request only after the issue's discussion was successful.
+Contributions are welcome in all of these repositories. Please be advised to checkout the respective *CONTRIBUTING.md* file first. The preferred contribution workflow is to first raise an issue on github, then issue a pull request only after the issue's discussion was successful.
 
 License
 =======
