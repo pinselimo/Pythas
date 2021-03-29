@@ -41,7 +41,7 @@ Contents
    reference
    reference-dev
    🐈 GitHub <https://github.com/pinselimo/Pythas>
-   Pythas-Examples <https://github.com/pinselimo/Pythas-Examples>
+   🔗 Pythas-Examples <https://github.com/pinselimo/Pythas-Examples>
 
 
 Indices and tables
