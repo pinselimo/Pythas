@@ -23,8 +23,8 @@ CLASSIFIERS = [
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Education",
     "Topic :: Software Development",
-    "Typing :: Typed"
-    ]
+    "Typing :: Typed",
+]
 
 DIRS = (
     ["res/cstructs-in-haskell/src/Foreign/C/" + s for s in ["", "Structs/"]]
@@ -64,5 +64,5 @@ setup(
     package_data={"pythas.haskell": [d + "*" + s for d in DIRS for s in SUFFICES]},
     install_requires=INSTALL_REQUIRES,
     python_requires=">=3.7",
-    classifiers=CLASSIFIERS
+    classifiers=CLASSIFIERS,
 )
