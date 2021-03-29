@@ -258,4 +258,4 @@ def ffi_libs_exports(ffi_libs):
 
 
 def building_docs():
-    return any("sphinx-build" in arg for arg in sys.argv)
+    return os.getenv("READTHEDOCS") == "True"
