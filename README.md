@@ -98,6 +98,15 @@ The same is true for tuples which are turned into or ```CTuple{x}```s.
 
  ```Pythas``` enforces the file naming scheme of Haskell for  ```.hs``` files as does the ```GHC```! This is primarily due to  ```GHC``` failing to find the imported module at compile time. Thus, we fail early and raise a ```ModuleNotFoundError```.
 
+## Docs
+
++ Plentiful documentation is available at [ReadTheDocs.io](https://pythas.readthedocs.io/en/latest/)
++ Practical examples can be found in the [sister repository](https://github.com/pinselimo/Pythas-Examples)
+
+## Contributing
+
+Meaningful contributions are always welcome, please refer to ```CONTRIBUTING.md``` for details.
+
 ## Testing
 
 The sub-repositories Pythas incorporates all ship their own testing facilities. Testing of the ```pythas``` package itself therefore focuses on the main functionality and user interface. It incorporates some unit tests and property based testing mostly focusing on ensuring the interface does not alter any data. To execute the tests in bulk just move to the project root and execute:
