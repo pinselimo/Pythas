@@ -1,4 +1,5 @@
 from setuptools import setup
+import os
 
 DESC = "Import Haskell modules as if they were Python modules"
 
