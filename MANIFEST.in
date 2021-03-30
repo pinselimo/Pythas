@@ -1,0 +1,9 @@
+include COPYING
+include COPYING.LESSER
+include requirements.txt
+include CONTRIBUTING.md
+include CHANGELOG.md
+global-include *.hs
+global-include *.c
+global-include *.h
+global-include stack.yaml

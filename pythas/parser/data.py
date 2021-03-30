@@ -2,9 +2,10 @@
 
 from collections import namedtuple
 
-_ParseInfo = namedtuple('ParseInfo',[
-    'name','dir','exported_mod','exported_ffi','func_infos'
-    ])
+_ParseInfo = namedtuple(
+    "ParseInfo", ["name", "dir", "exported_mod", "exported_ffi", "func_infos"]
+)
+
 
 class ParseInfo(_ParseInfo):
     """Container class for informations about a Haskell source module.
@@ -22,11 +23,15 @@ class ParseInfo(_ParseInfo):
     func_infos : dict(str, FuncInfo)
         Dictionary mapping function names to their respective FuncInfo instance.
     """
+
     pass
 
-_FuncInfo = namedtuple('FuncInfo',[
-    'name','argtypes','restype','constructors','reconstructor','htype'
-    ])
+
+_FuncInfo = namedtuple(
+    "FuncInfo",
+    ["name", "argtypes", "restype", "constructors", "reconstructor", "htype"],
+)
+
 
 class FuncInfo(_FuncInfo):
     """Container class for informations about a Haskell function.
@@ -46,5 +51,5 @@ class FuncInfo(_FuncInfo):
     htype : str
         Type as given by the Haskell FFI export.
     """
-    pass
 
+    pass

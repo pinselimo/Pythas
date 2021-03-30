@@ -62,3 +62,6 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+    - name: Test code formatting with black
+      run: |
+        black --check .

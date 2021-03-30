@@ -29,5 +29,6 @@ Running the test suite is as easy as:
 ~~~bash
 $ pip install -r requirements-dev.txt
 $ pytest
+$ black --check .
 ~~~
 

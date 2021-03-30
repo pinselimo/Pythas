@@ -1,4 +1,4 @@
-# Pythas [![Python package](https://github.com/pinselimo/Pythas/actions/workflows/python-package.yml/badge.svg)](https://github.com/pinselimo/Pythas/actions/workflows/python-package.yml)
+# Pythas [![Python package](https://github.com/pinselimo/Pythas/actions/workflows/python-package.yml/badge.svg)](https://github.com/pinselimo/Pythas/actions/workflows/python-package.yml) [![Documentation Status](https://readthedocs.org/projects/pythas/badge/?version=latest)](https://pythas.readthedocs.io/en/latest/?badge=latest)
 
 Import Haskell modules as if they were Python modules. If an imported name does not exist as Python module/package, Pythas will traverse the specified subdirectory below your ```cwd``` to look for a matching Haskell file. If one is found it is imported just as if it was a Python module.
 
@@ -65,10 +65,17 @@ $ ghc --version
 
 ## Install
 
-```Pythas``` can be installed using pip:
+```Pythas``` can be installed using pip. Run the following command to install and compile it at once:
 
 ~~~sh
-$ pip install .
+$ pip install pythas && python -c "import pythas"
+~~~
+
+or from source:
+
+~~~sh
+$ git clone https://github.com/pinselimo/Pythas.git && cd Pythas
+$ pip install . && python -c "import pythas"
 ~~~
 
 ## Constraints
@@ -90,6 +97,15 @@ All Haskell constants in the IO monad are imported as functions. Due to lists be
 The same is true for tuples which are turned into or ```CTuple{x}```s.
 
  ```Pythas``` enforces the file naming scheme of Haskell for  ```.hs``` files as does the ```GHC```! This is primarily due to  ```GHC``` failing to find the imported module at compile time. Thus, we fail early and raise a ```ModuleNotFoundError```.
+
+## Docs
+
++ Plentiful documentation is available at [ReadTheDocs.io](https://pythas.readthedocs.io/en/latest/)
++ Practical examples can be found in the [sister repository](https://github.com/pinselimo/Pythas-Examples)
+
+## Contributing
+
+Meaningful contributions are always welcome, please refer to ```CONTRIBUTING.md``` for details.
 
 ## Testing
 

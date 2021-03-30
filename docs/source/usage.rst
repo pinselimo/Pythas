@@ -5,7 +5,9 @@ Usage
 
 With *Pythas* installed you have multiple options of compiling and importing Haskell source code into Python. In all cases ``import pythas`` is the precondition to any consequent use of Haskell.
 
-Note that the first time you use ``import pythas`` *Pythas*' parts implemented in Haskell are compiled, which impacts import time. Following usages will not require this additional time. Only updates of *Pythas* which alter parts of its Haskell source will trigger recompilation.
+Two majorly distinct use cases are supported: Importing static Haskell modules and inline Haskell source code from within Python. Both are outlined below.
+
+*Note:* The first time you use ``import pythas`` *Pythas*' parts implemented in Haskell are compiled, which impacts import time. Therefore, it is suggested to run ``python -c "import pythas"`` directly after installation to prompt compilation. Following usages will not require this additional time. Only updates of *Pythas* which alter parts of its Haskell source will trigger recompilation.
 
 Static Haskell Modules
 ----------------------
@@ -62,7 +64,7 @@ Inspired by *pyCUDA* the ``SourceModule`` - Object was added as another option f
     >>> m.increment(1)
     2
 
-By default a new ``SouceModule`` will spawn its own ``Compiler`` instance. This is done to avoid irreproducible outcomes. However, all options configurable on a ``Compiler`` can also be set as key word arguments of the ``SourceModule``. Furthermore, it also accepts a key word argument ``compiler`` where an existing instance can be passed.
+By default a new ``SouceModule`` will spawn its own ``Compiler`` instance. This is done to avoid irreproducible outcomes. However, all options configurable on a ``Compiler`` can also be set as key word arguments of the ``SourceModule``. Furthermore, it also accepts a ``compiler`` key word argument where an existing ``Compiler`` instance can be passed.
 Options set on other key word arguments will override those of the ``Compiler`` instance passed to the ``SourceModule``, but not alter the instance itself.
 Usage example:
 
@@ -89,7 +91,7 @@ The example shows how a ``SourceModule`` is compiled with individual compile tim
 Limitations
 -----------
 
-In both cases some limitations exist on which Haskell functions and constants can and will be imported. Most notably, type declarations are paramount for the imports as *Pythas* does not do its own type inference. All basic Haskell types are supported, including nested lists and tuples and strings.
+In both cases, static and inline Haskell source, some limitations exist on which Haskell functions and constants can and will be imported. Most notably, type declarations are paramount for the imports. *Pythas* does not do its own type inference. All basic Haskell types are supported, including strings and nested lists and tuples.
 
 Unsupported functions or constants will not be available from the Python context. However, they will not trigger any errors. Thus, they can be used within the Haskell context without risk. Checking what populates the namespace of a module imported through *Pythas* is as easy as for any Python module:
 
@@ -157,5 +159,4 @@ The ``example/Example.hs`` file contained in the repository of *Pythas* contains
 
 Due to the immense simplicity of the "Custom" type just wrapping an ``Int`` this works. Note that otherwise it will be more effort to make ``Custom`` an instance of ``Foreign.Storable (Storable)`` and provide a pointer through the FFI.
 Future releases of *Pythas* may feature a more supportive implementation of custom types.
-
 
