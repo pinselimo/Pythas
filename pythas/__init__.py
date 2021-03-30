@@ -12,7 +12,7 @@ parser : A basic parser for exported Haskell type declarations.
 
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1b1"
 __author__ = "Simon Plakolb"
 __email__ = "s.plakolb@gmail.com"
 __copyright__ = "Copyright 2020, Simon Plakolb"

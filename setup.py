@@ -46,7 +46,7 @@ else:
 
 setup(
     name="pythas",
-    version="0.1.0",
+    version="0.1b1",
     description=DESC,
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
