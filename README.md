@@ -74,7 +74,7 @@ $ pip install pythas && python -c "import pythas"
 or from source:
 
 ~~~sh
-$ git clone https://github.com/pinselimo/Pythas.git && cd Pythas
+$ git clone --recurse-submodules -j8 https://github.com/pinselimo/Pythas.git && cd Pythas
 $ pip install . && python -c "import pythas"
 ~~~
 
@@ -94,7 +94,7 @@ All Haskell constants in the IO monad are imported as functions. Due to lists be
 [63]
 ~~~
 
-The same is true for tuples which are turned into or ```CTuple{x}```s.
+The same is true for tuples which are turned into ```CTuple{x}```s.
 
  ```Pythas``` enforces the file naming scheme of Haskell for  ```.hs``` files as does the ```GHC```! This is primarily due to  ```GHC``` failing to find the imported module at compile time. Thus, we fail early and raise a ```ModuleNotFoundError```.
 
